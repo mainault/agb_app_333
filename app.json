@@ -1,25 +1,19 @@
 {
   "expo": {
-    "name": "agb_app_333",
+    "name": "AS Golf de Baugé",
     "slug": "agb_app_333",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "version": "1.2.1",
+    "orientation": "default",
+    "icon": "./assets/images/logo_as_transparent.png",
     "scheme": "agbapp333",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "sdkVersion": "55.0.0",
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.mainault.agb_app_333",
     },
     "web": {
       "output": "static",
@@ -27,22 +21,27 @@
     },
     "plugins": [
       "expo-router",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "image": "./assets/images/splash_as.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#ffffff"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7098e334-639c-4ee2-9d72-d833814d0751"
+      }
     }
   }
 }

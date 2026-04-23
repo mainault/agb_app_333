@@ -267,7 +267,7 @@ export default function Index() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-        <ScreenContainer onMenuPress={handleMenuPress} isHome={true}>
+        <ScreenContainer onMenuPress={handleMenuPress} isHome={true} appVersion={currentVersion}>
           <View style={styles.contentContainer}>
             <ImageBackground
               source={require('../assets/images/background.jpg')}

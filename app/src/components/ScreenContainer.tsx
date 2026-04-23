@@ -9,6 +9,7 @@ interface ScreenContainerProps {
   showHeader?: boolean;
   onMenuPress?: () => void;
   isHome?: boolean; // Nouvelle prop
+  appVersion?: string; // Nouvelle prop pour la version de l'app
 }
 
 export default function ScreenContainer({
@@ -16,6 +17,7 @@ export default function ScreenContainer({
   showHeader = true,
   onMenuPress,
   isHome = false,
+  appVersion,
 }: ScreenContainerProps) {
   return (
     <View style={styles.container}>
@@ -23,6 +25,7 @@ export default function ScreenContainer({
         <CustomHeader
           onMenuPress={onMenuPress}
           isHome={isHome}
+          appVersion={appVersion}
         />
       )}
       <SafeAreaView style={styles.scrollView}>

@@ -16,6 +16,7 @@ import ScreenContainer from './src/components/ScreenContainer';
 import MenuModal from './src/components/MenuModal';
 import { useIsFocused } from '@react-navigation/native';
 import { isVersionLower } from './src/utils/version';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 import {
   getGlobalAppVersionObject,
@@ -42,7 +43,7 @@ import { showAlert } from './src/utils/utilities';
 import { GlobalAppVersionObject } from './src/store/GlobalStore';
 
 const { width, height } = Dimensions.get('window');
-
+const UPDATE_DISMISSED_KEY = 'update_dismissed_version';
 const menus: MenuItemType[] = [
   {
     name: "Compétitions",
@@ -160,7 +161,7 @@ export default function Index() {
     switch (jsonObject.operationType) {
       case "getAppVersion": {
         if (jsonObject.status === "KO") {
-          showAlert("Erreur", jsonObject.error || "Impossible de récupérer les compétitions.");
+          showAlert("Erreur", jsonObject.error || "Impossible de récupérer la version courante  de l'application.");
           return;
         }
         const data = jsonObject.version as GlobalAppVersionObject;
@@ -177,20 +178,32 @@ export default function Index() {
           return;
         }
 
-// 2. update optionnelle
-if (
-  isVersionLower(currentVersion, latest) &&
-  !updateShownRef.current
-) {
-  updateShownRef.current = true;
-  showUpdateAlert(data);
-}
+        // 2. update optionnelle
+        checkOptionalUpdate(data, latest);
         break;
       }
       default:
         break;
     }
   };
+
+  const checkOptionalUpdate = async (data: any, latest: string) => {
+    try {
+      const dismissedVersion = await AsyncStorage.getItem(UPDATE_DISMISSED_KEY);
+
+      if (
+        isVersionLower(currentVersion, latest) &&
+        !updateShownRef.current &&
+        dismissedVersion !== latest
+      ) {
+        updateShownRef.current = true;
+        showUpdateAlert(data);
+      }
+    } catch (e) {
+      console.warn("Erreur AsyncStorage:", e);
+    }
+  };
+
   const showForceUpdateAlert = (data: any) => {
     const storeUrl =
       Platform.OS === 'ios'
@@ -222,7 +235,7 @@ if (
     return () => clearTimeout(timer);
   }, []);
 
- // 🔔 popup update
+  // 🔔 popup update
   const showUpdateAlert = (data: any) => {
     const storeUrl =
       Platform.OS === 'ios'
@@ -234,7 +247,15 @@ if (
       data.message || `Version ${data.latestVersion} disponible.`,
       [
         { text: "Mettre à jour", onPress: () => Linking.openURL(storeUrl) },
-        { text: "Plus tard", style: "cancel" }
+        { text: "Plus tard",
+          style: "cancel",
+          onPress: async () => {
+            await AsyncStorage.setItem(
+              UPDATE_DISMISSED_KEY,
+              data.latestVersion
+            );
+          }
+       }
       ]
     );
   };

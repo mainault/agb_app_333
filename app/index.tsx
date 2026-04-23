@@ -164,28 +164,27 @@ export default function Index() {
           return;
         }
         const data = jsonObject.version as GlobalAppVersionObject;
+
         setGlobalAppVersionObject(data);
-        const appVersion = getGlobalAppVersionObject();
 
-        const latest = appVersion?.latestVersion;
-        const min = appVersion?.minVersion;
+        const latest = data?.latestVersion ?? '0.0.0';
 
-        if (!latest || !min) {
-          console.warn("Version serveur incomplète");
-          return;
-        }
-        console.log(`Version actuelle: ${currentVersion}, Version minimale: ${min}, Dernière version: ${latest}`);  
-        // 1. blocage obligatoire
-        if (isVersionLower(currentVersion, min)) {
-          showForceUpdateAlert(appVersion);
+        console.log( `Version actuelle: ${currentVersion}, Min: ${data?.minVersion}, Latest: ${latest}`);
+
+        // 1. force update
+        if (data?.minVersion && isVersionLower(currentVersion, data.minVersion)) {
+          showForceUpdateAlert(data);
           return;
         }
 
-        // 2. update optionnelle
-        if (isVersionLower(currentVersion, latest) && !updateShownRef.current) {
-          updateShownRef.current = true;
-          showUpdateAlert(appVersion);
-        }
+// 2. update optionnelle
+if (
+  isVersionLower(currentVersion, latest) &&
+  !updateShownRef.current
+) {
+  updateShownRef.current = true;
+  showUpdateAlert(data);
+}
         break;
       }
       default:

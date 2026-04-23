@@ -1460,6 +1460,7 @@ export interface GlobalCovoiturageObject {
 export type GlobalAppVersionObject = {
   latestVersion: string;
   minVersion: string;
+  force_update: boolean;
   message: string;
   features?: string[]; // 👈 ARRAY DE STRING
 }

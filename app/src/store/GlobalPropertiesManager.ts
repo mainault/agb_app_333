@@ -547,6 +547,7 @@ export const resetGlobalAppVersionObject = () => {
   globalAppVersionObject = {
     latestVersion: "",
     minVersion: "",
+    force_update: false,
     message: "",
     features: []
   };

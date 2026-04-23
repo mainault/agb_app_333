@@ -1,0 +1,87 @@
+
+GIT + EAS PROCESS (Expo React Native)
+
+====================================================
+1. BEFORE CODING
+====================================================
+git status
+git pull origin main
+-> Ensure project is up to date
+
+====================================================
+2. DURING DEVELOPMENT
+====================================================
+Code normally in your project
+No git action required
+
+====================================================
+3. BEFORE COMMIT CHECK
+====================================================
+git status
+-> Verify:
+   - modified files are expected
+   - deleted files are expected
+   - no unexpected files
+
+====================================================
+4. COMMIT YOUR WORK
+====================================================
+git add .
+git commit -m "type: short description"
+
+Types:
+- feat: new feature
+- fix: bug fix
+- refactor: code cleanup
+- chore: maintenance
+
+Examples:
+git commit -m "fix: version crash undefined"
+git commit -m "feat: add version system"
+git commit -m "refactor: menu structure cleanup"
+
+====================================================
+5. PUSH TO GITHUB
+====================================================
+git push origin main
+-> REQUIRED before EAS build
+
+====================================================
+6. CHECK APP VERSION
+====================================================
+app.json:
+"version": "1.2.0"
+
+Rules:
+- bug fix -> 1.2.1
+- feature -> 1.3.0
+- major -> 2.0.0
+
+====================================================
+7. EAS BUILD
+====================================================
+eas build --profile preview --platform android
+or
+eas build --profile production --platform android
+
+IMPORTANT:
+- build uses last Git commit
+- always push before build
+
+====================================================
+8. FINAL CHECK BEFORE BUILD
+====================================================
+git log -1
+-> Verify correct commit
+
+====================================================
+9. GOLDEN RULE
+====================================================
+1 commit = 1 build version
+
+NEVER:
+- build without commit
+- change version without commit
+- forget git push before EAS
+
+====================================================

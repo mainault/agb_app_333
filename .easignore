@@ -1,0 +1,42 @@
+# Node modules sont gérés par EAS, inutile de les inclure
+node_modules
+
+# Logs
+*.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Caches et fichiers temporaires
+.expo
+.expo-shared
+.cache
+.tmp
+*.swp
+
+# Builds locaux Android & iOS
+android/app/build
+ios/build
+build
+
+# IDE et fichiers système
+.vscode
+.idea
+*.iml
+*.DS_Store
+
+# Tests et snapshots
+__tests__
+*.spec.js
+*.test.js
+*.snap
+
+# Médias lourds inutiles pour la build (optionnel)
+*.mp4
+*.mov
+*.zip
+*.rar
+*.7z
+
+# Scripts ou dossiers internes que tu n'as pas besoin de packager
+scripts

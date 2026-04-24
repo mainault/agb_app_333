@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', // 👈 clé pour empiler verticalement
   },
   version: {
-    fontSize: 8,
+    fontSize: 10,
     opacity: 0.9,
     marginTop: 2,
   },

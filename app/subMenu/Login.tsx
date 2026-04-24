@@ -148,6 +148,11 @@ const LoginScreen = () => {
             return;
           }
         }
+        if(jsonObject.isAlreadyPaid === true && selectedCompetitionKey === "OLP"){
+          showAlert("Information", "Vous avez déjà réglé votre participation à cette compétition");
+          router.replace("/");
+          return;
+        }
         if(subMenuTitle === "Mes scores"){
           resetGlobalJsonObjectForRanking();
           setGlobalJsonObjectForRanking(jsonObject);

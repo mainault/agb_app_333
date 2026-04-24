@@ -214,7 +214,6 @@ export default function ChoixCompetition() {
 
         {competitionType === "OLP" ? (
           <>
-
               <View style={styles.radioGroup}>
                 {["Eclectic", "Ringer Score", "Challenge hiver", "Autres compétitions"].map((option) => (
                   <View key={option} style={styles.radioOption}>

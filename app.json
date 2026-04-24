@@ -2,7 +2,7 @@
   "expo": {
     "name": "AS Golf de Baugé",
     "slug": "agb_app_333",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "orientation": "default",
     "icon": "./assets/images/logo_as_transparent.png",
     "scheme": "agbapp333",

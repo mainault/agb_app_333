@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "build:dev": "cross-env APP_ENV=dev npm run build",
-    "build:prod": "cross-env APP_ENV=prod npm run build"
+    "deploy": "deploy.bat"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

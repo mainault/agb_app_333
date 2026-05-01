@@ -19,8 +19,6 @@ import { isVersionLower } from './src/utils/version';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 import {
-  getGlobalAppVersionObject,
-  getGlobalAppVersionProperty,
   resetGlobalAsTarifs,
   resetGlobalJsonObject,
   resetGlobalJsonObjectForRanking,
@@ -31,8 +29,6 @@ import {
   resetGlobalTeamLeader,
   resetGlobalUsersList,
   setGlobalAppVersionObject,
-  setGlobalAppVersionProperty,
-  setGlobalProperty,
 } from './src/store/GlobalPropertiesManager';
 
 import { MenuItemType } from './src/types/menuTypes';
@@ -250,13 +246,14 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, []);
 
+  /*
   useEffect(() => {
     Alert.alert(
       "DEBUG",
       `ENV=${process.env.EXPO_PUBLIC_APP_ENV}\nURL=${appConfig.apiUrl}`
     );
   }, []);
-
+  */
   // 🔔 popup update
   const showUpdateAlert = (data: any) => {
     const storeUrl =

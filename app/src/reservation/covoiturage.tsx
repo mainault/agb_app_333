@@ -4,10 +4,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Dropdown from '../components/dropDown';
 import CustomButton from '../components/CustomButton';
-import { sendRequest } from '../functions/httpRequest';
+
 import { showAlert } from '../utils/utilities';
 import { getGlobalCovoiturageObject, getGlobalCovoiturageProperty, getGlobalJsonObject, setGlobalCovoiturageObject } from '../store/GlobalPropertiesManager';
 import ScreenContainer from '../components/ScreenContainer';
+import { sendRequest } from '../utils/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 

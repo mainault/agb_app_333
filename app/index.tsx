@@ -38,10 +38,11 @@ import {
 import { MenuItemType } from './src/types/menuTypes';
 import Constants from 'expo-constants';
 import { appConfig } from './src/config';
-import { sendRequest } from './src/functions/httpRequest';
+
 import { showAlert } from './src/utils/utilities';
 import { GlobalAppVersionObject } from './src/store/GlobalStore';
 import * as Application from "expo-application";
+import { sendRequest } from './src/utils/api';
 
 const getAppVersion = () => {
   if (__DEV__) {

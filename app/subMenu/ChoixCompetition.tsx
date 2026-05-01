@@ -7,7 +7,7 @@ import ScreenContainer from './../src/components/ScreenContainer';
 import { formatHtmlForAlert } from '../src/utils/htmlUtils';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../src/components/CustomButton';
-import { getGlobalAsTarif, getGlobalAsTarifs, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
+import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
 
 // Définition des types
@@ -165,6 +165,7 @@ export default function ChoixCompetition() {
       list: "no",
       isMassResaAccess: false,
       isComplete: "normal",
+      isOLP: competitionType === "OLP",
     };
     requestServer(donnees);
   };
@@ -207,7 +208,7 @@ export default function ChoixCompetition() {
   };
 
   return (
-    <ScreenContainer showHeader={false}>
+    <ScreenContainer showHeader={false} appVersion={getGlobalAppVersionObject()?.latestVersion}>
       <View style={styles.container}>
         <Text style={styles.title}>Choix de la compétition</Text>
         <Text style={styles.subtitle}>Formule : {parentName}</Text>

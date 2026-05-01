@@ -96,10 +96,14 @@ const menus: MenuItemType[] = [
         ],
       },
       {
-        name: "Payer droit de jeu en ligne", parentName: "Paiement droit de jeu en ligne", competitionType: "OLP", screen: "subMenu", params: { subMenuTitle: "OLP" },
+        name: "Covoiturage",
+        subMenus: [
+          { name: "Inscription covoiturage", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_inscription" } },
+          {name: "Liste des covoiturages", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_liste" } }
+          ]
       },
       {
-        name: "Covoiturage", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage" },
+        name: "Payer droit de jeu en ligne", parentName: "Paiement droit de jeu en ligne", competitionType: "OLP", screen: "subMenu", params: { subMenuTitle: "OLP" },
       },
     ],
   },
@@ -145,7 +149,6 @@ export default function Index() {
   const requestServer = async (donnees: any) => {
     try {
       setIsLoading(true);
-      console.log("Données envoyées au serveur :", donnees);
       getServerResponse(await sendRequest(donnees));
     } catch (error) {
       console.error("Erreur :", error);
@@ -169,8 +172,6 @@ export default function Index() {
         setGlobalAppVersionObject(data);
 
         const latest = data?.latestVersion ?? '0.0.0';
-
-        console.log( `Version actuelle: ${currentVersion}, Min: ${data?.minVersion}, Latest: ${latest}`);
 
         // 1. force update
         if (data?.minVersion && isVersionLower(currentVersion, data.minVersion)) {
@@ -300,7 +301,7 @@ export default function Index() {
 // 🎨 STYLES
 const styles = StyleSheet.create({
   safeArea: {
-    height: '97%',
+    height: '99%',
     backgroundColor: 'white',
     marginTop: -25,
   },

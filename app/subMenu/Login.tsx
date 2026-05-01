@@ -27,6 +27,11 @@ const LoginScreen = () => {
     selectedCompetitionName: string;
   }>();
 
+  const normalizedSubMenuTitle =
+  subMenuTitle === "Inscription covoiturage"
+    ? "covoiturage"
+    : subMenuTitle;
+
   // État pour gérer l'état de chaque bouton par son ID
   const [buttonStates, setButtonStates] = useState<Record<string, boolean>>({
     'valider-btn': true,    // Désactivé par défaut
@@ -130,7 +135,7 @@ const LoginScreen = () => {
     switch(jsonObject.operationType){
       case "validateUserLogin":
         if(jsonObject.status == "KO"){
-          console.log("jsonObject.error = ", jsonObject);
+          //console.log("jsonObject.error = ", jsonObject);
           if (getGlobalProperties().nbrAttempt === 0) {
               setGlobalProperty('nbrAttempt', 1);
               displayErrorMessage(jsonObject.error, "OK");
@@ -167,8 +172,9 @@ const LoginScreen = () => {
 
           return;
         }
+        console.log("normalizedSubMenuTitle = ", normalizedSubMenuTitle);
         // Gestion du dispatch en fonction du sous-menu  ou présence covoiturage
-        switch (subMenuTitle){
+        switch (normalizedSubMenuTitle) {
           case "Mes scores":
             router.push({
               pathname: `/src/reservation/mesScores`,
@@ -206,7 +212,7 @@ const LoginScreen = () => {
             });
             break;
 
-          case "Covoiturage":
+          case "covoiturage":
             router.push({
               pathname: `/src/reservation/covoiturage`,
               params: {
@@ -219,6 +225,18 @@ const LoginScreen = () => {
             });
             break;
 
+          case "Liste des covoiturages":
+            router.push({
+              pathname: `/src/reservation/covoiturageList`,
+              params: {
+                menuTitle: subMenuTitle,
+                parentMenuName: parentName,
+                competitionType: competitionType,
+                competitionName: selectedCompetitionName,
+                returnTo: "",
+              },
+            });
+            break;
             default:
               router.push({
                 pathname: `/src/reservation/resa`,
@@ -834,6 +852,7 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: 'bold',
   },
+  
 });
 
 export default LoginScreen;

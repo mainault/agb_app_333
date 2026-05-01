@@ -31,6 +31,7 @@ export default function RootLayout() {
           <Stack.Screen name="src/reservation/displayListInscrits" options={{ headerShown: false }} />
           <Stack.Screen name="src/reservation/mesScores" options={{ headerShown: false }} />
           <Stack.Screen name="src/reservation/covoiturage" options={{ headerShown: false }} />
+          <Stack.Screen name="src/reservation/covoiturageList" options={{ headerShown: false }} />
         </Stack>
       </MenuProvider>
     </PaperProvider>

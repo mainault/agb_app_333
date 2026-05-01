@@ -283,6 +283,7 @@ const Covoiturage = () => {
                 </View>
                 {/* Deuxième vue - Sélection du joueur */}
                 <View style={styles.playerSelectionContainer}>
+                    <Text style={styles.sectionTitle}>Si vous êtes un passager</Text>
                     <Text style={styles.sectionTitle}>Choisissez un conducteur dans la liste</Text>
                     <Text style={styles.departTitle}>Exemple choix horaire : 1D = Tranche 1 Début</Text>
                     {isLoading ? (
@@ -340,15 +341,16 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     sectionTitle: {
-        fontSize: 17,
+        fontSize: 15,
         fontWeight: '600',
-        marginBottom: 15,
+        marginBottom: 5,
         color: '#333',
     },
     departTitle: {
         fontSize: 15,
         fontWeight: '600',
-        marginBottom: 15,
+        marginTop: 10,
+        marginBottom: 5,
         color: '#333',
     },
     typeSelectionContainer: {

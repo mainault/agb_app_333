@@ -38,7 +38,6 @@ import {
 import { MenuItemType } from './src/types/menuTypes';
 import Constants from 'expo-constants';
 import { appConfig } from './src/config';
-
 import { showAlert } from './src/utils/utilities';
 import { GlobalAppVersionObject } from './src/store/GlobalStore';
 import * as Application from "expo-application";
@@ -249,6 +248,13 @@ export default function Index() {
   useEffect(() => {
     const timer = setTimeout(checkAppVersion, 800);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    Alert.alert(
+      "DEBUG",
+      `ENV=${process.env.EXPO_PUBLIC_APP_ENV}\nURL=${appConfig.apiUrl}`
+    );
   }, []);
 
   // 🔔 popup update

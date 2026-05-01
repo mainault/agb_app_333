@@ -13,7 +13,8 @@
     },
     "android": {
       "predictiveBackGestureEnabled": false,
-      "package": "com.mainault.agb_app_333"
+      "package": "com.mainault.agb_app_333",
+      "versionCode": 65
     },
     "web": {
       "output": "static",

@@ -41,6 +41,19 @@ import { appConfig } from './src/config';
 import { sendRequest } from './src/functions/httpRequest';
 import { showAlert } from './src/utils/utilities';
 import { GlobalAppVersionObject } from './src/store/GlobalStore';
+import * as Application from "expo-application";
+
+const getAppVersion = () => {
+  if (__DEV__) {
+    return Constants.expoConfig?.version ?? "0.0.0";
+  }
+
+  return (
+    Application.nativeApplicationVersion ??
+    Constants.expoConfig?.version ??
+    "0.0.0"
+  );
+};
 
 const { width, height } = Dimensions.get('window');
 const UPDATE_DISMISSED_KEY = 'update_dismissed_version';
@@ -125,7 +138,8 @@ export default function Index() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const updateShownRef = useRef(false);
-  const currentVersion = Constants.expoConfig?.version ?? '0.0.0';
+  //const currentVersion = Constants.expoConfig?.version ?? '0.0.0';
+  const currentVersion = getAppVersion();
 
   // 🔧 Reset global data
   useEffect(() => {

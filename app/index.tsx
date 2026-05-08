@@ -8,7 +8,8 @@ import {
   Dimensions,
   Alert,
   Linking,
-  Platform
+  Platform,
+  BackHandler
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -136,6 +137,35 @@ export default function Index() {
   const updateShownRef = useRef(false);
   //const currentVersion = Constants.expoConfig?.version ?? '0.0.0';
   const currentVersion = getAppVersion();
+
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const backAction = () => {
+      if (menuVisible) {
+        setMenuVisible(false);
+        return true;
+      }
+
+      Alert.alert(
+        "Quitter l'application",
+        "Voulez-vous fermer l'application ?",
+        [
+          { text: "Non", style: "cancel" },
+          { text: "Oui", onPress: () => BackHandler.exitApp() },
+        ]
+      );
+
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [isFocused, menuVisible]);
 
   // 🔧 Reset global data
   useEffect(() => {

@@ -1,23 +1,11 @@
 // app/_layout.tsx
-import { router, Stack, } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Stack, } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { MenuProvider } from './context/MenuContext';
-import { BackHandler } from 'react-native';
+
 
 
 export default function RootLayout() {
-  useEffect(() => {
-    const backAction = () => {
-      router.replace('/'); // Retour à l'accueil
-      return true; // Empêche le comportement par défaut
-    };
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-    return () => backHandler.remove();
-  }, []);
 
   return (
     <PaperProvider>

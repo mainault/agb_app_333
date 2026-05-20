@@ -660,7 +660,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <ScreenContainer showHeader={false}>
+    <ScreenContainer showHeader={true}>
       <View style={styles.container}>
         <Text style={styles.title}>Connexion</Text>
         <SafeAreaView style={styles.inputContainer}>
@@ -776,11 +776,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    marginTop: 20,
+    marginTop: 100,
     paddingHorizontal: 0,
   },
   container: {
-    height: '94%',
+    flex: 1,
     padding: 20,
     justifyContent: 'center',
     marginBottom: 10,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
-    marginTop: -20,
+    marginTop: 20,
     textAlign: 'center',
   },
   sectionTitle: {
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 15,
-    height: '100%',
+    flex:1,
   },
   label: {
     fontSize: 16,

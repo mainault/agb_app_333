@@ -19,11 +19,9 @@ export default ({ config }) => {
     },
   };
 
-  if (!environments[ENV]) {
-    console.warn(`⚠️ Unknown ENV "${ENV}", fallback to development`);
-  }
-
   const current = environments[ENV] ?? environments.development;
+
+  const basePackage = 'com.mainault.agb_app_333';
 
   return {
     ...config,
@@ -32,7 +30,13 @@ export default ({ config }) => {
 
     android: {
       ...config.android,
-      package: `com.mainault.agb_app_333${current.packageSuffix}`,
+      package: `${basePackage}${current.packageSuffix}`,
+    },
+
+    ios: {
+      ...config.ios,
+      bundleIdentifier: `${basePackage}${current.packageSuffix}`,
+      supportsTablet: true,
     },
 
     extra: {

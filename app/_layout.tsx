@@ -1,29 +1,46 @@
-// app/_layout.tsx
-import { Stack, } from 'expo-router';
+import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
 import { MenuProvider } from './context/MenuContext';
-
-
+import { StatusBar } from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 export default function RootLayout() {
-
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setBackgroundColorAsync('#aacdeeff');
+    }
+  }, []);
   return (
-    <PaperProvider>
-      <MenuProvider>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="subMenu" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/resa" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/displayListPlayers" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/displayRanking" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/displayListInscrits" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/mesScores" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/covoiturage" options={{ headerShown: false }} />
-          <Stack.Screen name="src/reservation/covoiturageList" options={{ headerShown: false }} />
-        </Stack>
-      </MenuProvider>
-    </PaperProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <PaperProvider>
+        <MenuProvider>
+          <StatusBar
+            style="dark"
+          />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#aacdeeff' },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="subMenu" />
+            <Stack.Screen name="src/reservation/resa" />
+            <Stack.Screen name="src/reservation/displayListPlayers" />
+            <Stack.Screen name="src/reservation/displayRanking" />
+            <Stack.Screen name="src/reservation/displayListInscrits" />
+            <Stack.Screen name="src/reservation/mesScores" />
+            <Stack.Screen name="src/reservation/covoiturage" />
+            <Stack.Screen name="src/reservation/covoiturageList" />
+          </Stack>
+        </MenuProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
-
-

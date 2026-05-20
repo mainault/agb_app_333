@@ -541,15 +541,7 @@ const DisplayRanking = () => {
               <View style={styles.filtersContainer}>
                 {renderPickers()}
               </View>
-              <View style={styles.buttonsContainer}>
-                <TouchableOpacity
-                  style={styles.finishButton}
-                  onPress={handleFinishPress}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.finishButtonText}>Terminer</Text>
-                </TouchableOpacity>
-              </View>
+
             </>
           )}
         </View>

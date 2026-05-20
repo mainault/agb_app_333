@@ -1,8 +1,9 @@
 // components/MenuModal.tsx
 import React, { useState } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MenuItemType {
   name: string;
@@ -23,7 +24,7 @@ interface MenuModalProps {
 export default function MenuModal({ visible, onClose, menus }: MenuModalProps) {
   const [currentMenu, setCurrentMenu] = useState<MenuItemType[]>(menus);
   const [menuStack, setMenuStack] = useState<{name: string, items: MenuItemType[]}[]>([]);
-
+  const insets = useSafeAreaInsets();
   const handleMenuPress = (item: MenuItemType) => {
 
     if (item.subMenus) {
@@ -56,59 +57,73 @@ export default function MenuModal({ visible, onClose, menus }: MenuModalProps) {
     }
   };
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
+
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          {menuStack.length > 0 && (
-            <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <Ionicons name="arrow-back" size={24} color="black" />
-              <Text style={styles.backButtonText}>Retour</Text>
-            </TouchableOpacity>
-          )}
-          <Text style={styles.menuTitle}>
-            {menuStack.length > 0 ? menuStack[menuStack.length - 1].name : "Menu Principal"}
-          </Text>
-          <ScrollView style={styles.menuScroll}>
-            {currentMenu.map((item, index) => (
-              <React.Fragment key={index}>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => handleMenuPress(item)}
-                >
-                  <Text style={styles.menuItemText}>{item.name}</Text>
-                  {item.subMenus && (
-                    <Ionicons name="chevron-forward" size={20} color="#666" />
+
+
+          <View
+            style={[
+              styles.modalContent,
+            ]}
+          >
+            {menuStack.length > 0 && (
+              <TouchableOpacity style={styles.backButton} onPress={goBack}>
+                <Ionicons name="arrow-back" size={24} color="black" />
+                <Text style={styles.backButtonText}>Retour</Text>
+              </TouchableOpacity>
+            )}
+
+            <Text style={styles.menuTitle}>
+              {menuStack.length > 0
+                ? menuStack[menuStack.length - 1].name
+                : "Menu Principal"}
+            </Text>
+
+            <ScrollView style={styles.menuScroll}>
+              {currentMenu.map((item, index) => (
+                <React.Fragment key={index}>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => handleMenuPress(item)}
+                  >
+                    <Text style={styles.menuItemText}>{item.name}</Text>
+                    {item.subMenus && (
+                      <Ionicons name="chevron-forward" size={20} color="#666" />
+                    )}
+                  </TouchableOpacity>
+
+                  {item.subMenus && index < currentMenu.length - 1 && (
+                    <View style={styles.separator} />
                   )}
-                </TouchableOpacity>
-                {item.subMenus && index < currentMenu.length - 1 && (
-                  <View style={styles.separator} />
-                )}
-              </React.Fragment>
-            ))}
-          </ScrollView>
+                </React.Fragment>
+              ))}
+            </ScrollView>
+          </View>
         </View>
       </View>
-    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#aacdeeff',
+    zIndex: 9999,
+    elevation: 9999,
   },
   modalContent: {
+    flex: 1,
     backgroundColor: '#aacdeeff',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    padding: 20,
-    flex: 0.85,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  menuScroll: {
+    flex: 1,
   },
   backButton: {
     flexDirection: 'row',
@@ -125,9 +140,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     color: '#0d0d0eff',
-  },
-  menuScroll: {
-    maxHeight: '100%',
   },
   menuItem: {
     flexDirection: 'row',

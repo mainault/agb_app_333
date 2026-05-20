@@ -170,7 +170,7 @@ const PlayerSeriesList = () => {
         <Text style={styles.competitionTitle}>{globalJsonObject?.nom_competition}
           
         </Text>
-        <Text style={styles.nbrPlayersRow}>
+        <Text style={styles.nbrPlayersRow} numberOfLines={1} adjustsFontSizeToFit>
           <Text style={styles.dateText}> {formatDateCompetition()}</Text> - 
           <Text style={styles.playersCountText}> {getGlobalPlayersList().nbrPlayers}</Text> <Text style={styles.playersText}> joueurs</Text>
         </Text>
@@ -210,12 +210,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(228, 234, 240)',
     borderBottomWidth: 1,
     borderBottomColor: '#dee2e6',
-    height: 40,
+    minHeight: 44,
   },
+
   competitionHeaderTitle: {
     paddingTop: 5,
-    paddingBottom: 5,
-    height:60,
+    paddingBottom: 8,
+    minHeight: 70,
   },
   competitionTitle: {
     fontSize: 17,
@@ -229,8 +230,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     color: '#0a7ef1',
-    height: 40,
-
   },
   listContainer: {
     flex: 1,
@@ -265,9 +264,7 @@ const styles = StyleSheet.create({
   },
   nbrPlayersRow: {
     paddingTop: 5,
-    flexDirection: 'row',
     textAlign: 'center',
-    flex: 1,
   },
   playersCountText: {
     color: '#dc3545',

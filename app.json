@@ -2,9 +2,9 @@
   "expo": {
     "name": "AS Golf de Baugé",
     "slug": "agb_app_333",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "orientation": "default",
-    "icon": "./assets/images/logo_as_transparent.png",
+    "icon": "./assets/images/icon_ios.png",
     "scheme": "agbapp333",
     "userInterfaceStyle": "automatic",
     "sdkVersion": "55.0.0",
@@ -12,6 +12,10 @@
       "supportsTablet": true
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo_as_transparent.png",
+        "backgroundColor": "#aacdeeff"
+      },
       "predictiveBackGestureEnabled": false,
       "package": "com.mainault.agb_app_333",
       "versionCode": 71

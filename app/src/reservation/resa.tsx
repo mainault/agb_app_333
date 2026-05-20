@@ -2360,7 +2360,7 @@ const ResaScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    height: '79.5%',
+    flex: 1,
     backgroundColor: '#aacdeeff',
   },
   globalContainer: {
@@ -2368,11 +2368,11 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: 'space-between',
     marginBottom: 10,
-    marginTop: -45
+    marginTop: 0,
   },
   competitionTitleContainer: {
     marginBottom: 10,
-    marginTop: 0,
+    marginTop: -10,
     alignItems: 'center',
   },
   competitionTitle: {

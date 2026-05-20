@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../src/components/CustomButton';
 import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Définition des types
 interface Competition {
@@ -51,8 +52,8 @@ export default function ChoixCompetition() {
   const [asTarifs, setAsTarifs] = useState<ASTarifs | null>(null);
   const [isOLPTransactionModalVisible, setIsOLPTransactionModalVisible] = useState(false);
   const [selectedTarifType, setSelectedTarifType] = useState<'adulte' | 'enfant' | 'membre'>('adulte');
-
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   // Fonction pour mettre à jour l'état d'un bouton
   const setButtonState = (id: string, enabled: boolean) => {
@@ -208,8 +209,11 @@ export default function ChoixCompetition() {
   };
 
   return (
-    <ScreenContainer showHeader={false} appVersion={getGlobalAppVersionObject()?.latestVersion}>
-      <View style={styles.container}>
+    <ScreenContainer
+        showHeader={true}
+        appVersion={getGlobalAppVersionObject()?.latestVersion}
+      >
+        <View style={styles.container}>
         <Text style={styles.title}>Choix de la compétition</Text>
         <Text style={styles.subtitle}>Formule : {parentName}</Text>
 
@@ -311,6 +315,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     height: "40%",
   },
+
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -318,9 +323,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   container: {
-    height: '95.5%',
-    marginTop: 0,
-    padding: 30,
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: 30,
+    paddingBottom: 30,
   },
   title: {
     fontSize: 20,

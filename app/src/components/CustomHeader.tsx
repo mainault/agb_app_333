@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type CustomHeaderProps = {
   onMenuPress?: () => void;
@@ -25,39 +26,46 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   };
 
   return (
-    <View style={styles.headerContainer}>
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <View style={styles.headerContainer}>
 
-      {/* LEFT - LOGO */}
-      <View style={styles.leftContainer}>
-        <Image
-          source={require('../../../assets/images/logo_as_transparent.png')}
-          style={styles.logo}
-        />
+
+        {/* LEFT - LOGO */}
+        <View style={styles.leftContainer}>
+          <Image
+            source={require('../../../assets/images/logo_as_transparent.png')}
+            style={styles.logo}
+          />
+        </View>
+
+        {/* CENTER - TITLE */}
+        <View style={styles.centerContainer}>
+          <Text style={styles.companyName}>AS golf de Baugé</Text>
+        </View>
+
+        {/* RIGHT - MENU + VERSION */}
+        <View style={styles.rightContainer}>
+          <TouchableOpacity onPress={handleMenuPress}>
+            <Ionicons name="menu" size={30} color="black" />
+          </TouchableOpacity>
+
+          {appVersion && (
+            <Text style={styles.version}>
+              v{appVersion}
+            </Text>
+          )}
+        </View>
+
       </View>
-
-      {/* CENTER - TITLE */}
-      <View style={styles.centerContainer}>
-        <Text style={styles.companyName}>AS golf de Baugé</Text>
-      </View>
-
-      {/* RIGHT - MENU + VERSION */}
-      <View style={styles.rightContainer}>
-        <TouchableOpacity onPress={handleMenuPress}>
-          <Ionicons name="menu" size={30} color="black" />
-        </TouchableOpacity>
-
-        {appVersion && (
-          <Text style={styles.version}>
-            v{appVersion}
-          </Text>
-        )}
-      </View>
-
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: '#83bff7ff',
+  },
+
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -65,10 +73,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#83bff7ff',
     height: 90,
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginTop: 30,
-    zIndex: 1000,
   },
   logoContainer: {
     flexDirection: 'row',

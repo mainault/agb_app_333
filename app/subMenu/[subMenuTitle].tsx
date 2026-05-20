@@ -13,110 +13,53 @@ export default function SubMenuDetailScreen() {
     subMenuTitle?: string;
     parentName?: string;
     competitionType?: string;
-    name: string,
+    name?: string;
   }>();
-  params.subMenuTitle = params.name;
-  setGlobalProperty('sous_menu', params.name);
-  const { isAuthenticated } = useAuth();
-  const { selectedCompetition } = useCompetition();
 
-  if(params.subMenuTitle.includes('Classement')) {
-    // Utilisation de useEffect pour gérer les redirections
-    React.useEffect(() => {
-      // Cas spécial pour les pages de classement
-      if (params.subMenuTitle && params.subMenuTitle.includes('Classement')) {
-        // Utilisation de router.push pour la redirection
-        router.push({
-          pathname: `subMenu/Login` as any,
-          params: {
-            subMenuTitle: params.subMenuTitle,
-            menuTitle: params.subMenuTitle,
-            parentName: params.parentName,
-            competitionType: params.competitionType,
-          },
-        })
-      }
-    });
-    return;
+  const subMenuTitle = params.name ?? params.subMenuTitle ?? '';
+
+  React.useEffect(() => {
+    if (subMenuTitle.includes('Classement')) {
+      setGlobalProperty('sous_menu', subMenuTitle);
+
+      router.replace({
+        pathname: '/subMenu/Login',
+        params: {
+          subMenuTitle,
+          menuTitle: subMenuTitle,
+          parentName: params.parentName ?? '',
+          competitionType: params.competitionType ?? '',
+        },
+      });
+    }
+  }, [subMenuTitle, params.parentName, params.competitionType]);
+
+  if (subMenuTitle.includes('Classement')) {
+    return null;
   }
 
-  // Si une compétition sélectionnée, redirige vers ChoixCompetition
-  if (params.subMenuTitle) {
+  setGlobalProperty('sous_menu', subMenuTitle);
+
+  if (subMenuTitle) {
     return (
       <Redirect
         href={{
-          pathname: `/subMenu/ChoixCompetition`,
+          pathname: '/subMenu/ChoixCompetition',
           params: {
-            subMenuTitle: params.subMenuTitle || '',
-            parentName: params.parentName || '',
-            competitionType: params.competitionType || '',
-            name: params.name || '',
+            subMenuTitle,
+            parentName: params.parentName ?? '',
+            competitionType: params.competitionType ?? '',
+            name: params.name ?? '',
           },
         }}
       />
     );
   }
 
-  // Sinon, redirige vers la page métier correspondante
-  const getPagePath = () => {
-    if (!params.subMenuTitle || !params.parentName) {
-      return null;
-    }
-
-    const { subMenuTitle, parentName, name } = params;
-    switch (parentName) {
-      case 'Standard':
-        return { pathname: `/subMenu/standard/${subMenuTitle}` };
-      case 'Eclectic':
-        return { pathname: `/subMenu/eclectic/${subMenuTitle.replace('eclectic_', '')}` };
-      case 'Challenge - hiver':
-        return { pathname: `/subMenu/challenge_hiver/${subMenuTitle.replace('is_', '')}` };
-      case 'Ringer score':
-        return { pathname: `/subMenu/ringer_score/${subMenuTitle.replace('rs_', '')}` };
-      case 'Payer droit de jeu en ligne':
-        return { pathname: '/subMenu/OLP' };
-      case 'Covoiturage':
-        return { pathname: '/subMenu/covoiturage' };
-      default:
-        return { pathname: '/subMenu/standard/inscription' };
-    }
-  };
-  
-  // Affichage par défaut (si aucune redirection n'est déclenchée)
   return (
     <ScreenContainer>
       <View style={styles.container}>
-        <Text style={styles.text}>
-          Vous êtes dans le sous-menu :{' '}
-          <Text style={styles.highlight}>
-            {params.subMenuTitle || "Non défini"}
-          </Text>
-        </Text>
-        {params.parentName && (
-          <Text style={styles.text}>
-            Parent :{' '}
-            <Text style={styles.highlight}>
-              {params.parentName}
-            </Text>
-          </Text>
-        )}
-        {params.competitionType && (
-          <Text style={styles.text}>
-            Type de compétition :{' '}
-            <Text style={styles.highlight}>
-              {params.competitionType}
-            </Text>
-          </Text>
-        )}
-        <FormButton
-          title="Accéder au menu"
-          onPress={() => {
-            const path = getPagePath();
-            if (path) {
-              router.push(path as any);
-            }
-          }}
-        />
+        <Text style={styles.text}>Sous-menu non défini</Text>
       </View>
     </ScreenContainer>
   );
@@ -125,9 +68,7 @@ export default function SubMenuDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 30,
   },
   text: {
     fontSize: 17,

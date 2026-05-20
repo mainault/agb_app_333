@@ -11,13 +11,13 @@ import {
   Platform,
   BackHandler
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import ScreenContainer from './src/components/ScreenContainer';
 import MenuModal from './src/components/MenuModal';
 import { useIsFocused } from '@react-navigation/native';
 import { isVersionLower } from './src/utils/version';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
+
 
 import {
   resetGlobalAsTarifs,
@@ -314,58 +314,56 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.safeArea}>
-        <ScreenContainer onMenuPress={handleMenuPress} isHome={true} appVersion={currentVersion}>
-          <View style={styles.contentContainer}>
-            <ImageBackground
-              source={require('../assets/images/background.jpg')}
-              style={styles.backgroundImage}
-              resizeMode="cover"
-            >
-              <View style={styles.overlay}>
-                <View style={styles.container}>
-                  <Text style={styles.title}>
-                    Bienvenue sur le site de l'AS
-                    {"\n"}
-                    <Text>du golf de Baugé en Anjou</Text>
-                  </Text>
-                </View>
-              </View>
-            </ImageBackground>
+    <ScreenContainer
+      onMenuPress={handleMenuPress}
+      isHome={true}
+      appVersion={currentVersion}
+    >
+      <View style={[ styles.contentContainer, ]}>
+        <ImageBackground
+          source={require('../assets/images/background.jpg')}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <View style={styles.overlay}>
+            <View style={styles.container}>
+              <Text style={styles.title}>
+                Bienvenue sur le site de l'AS
+                {"\n"}
+                <Text>du golf de Baugé en Anjou</Text>
+              </Text>
+            </View>
           </View>
-        </ScreenContainer>
+        </ImageBackground>
+      </View>
 
-        <MenuModal
-          visible={menuVisible}
-          onClose={() => setMenuVisible(false)}
-          menus={menus}
-        />
-      </SafeAreaView>
-    </SafeAreaProvider>
+      <MenuModal
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        menus={menus}
+      />
+    </ScreenContainer>
   );
 }
 
 // 🎨 STYLES
 const styles = StyleSheet.create({
   safeArea: {
-    height: '99%',
+    flex: 1,
     backgroundColor: 'white',
-    marginTop: -25,
   },
   contentContainer: {
     justifyContent: 'center',
-    height: '90%',
+    flex: 1,
     padding: 20,
+    paddingBottom: 50,
   },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    justifyContent: 'center',
   },
   overlay: {
     flex: 1,
-    width: '100%',
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',

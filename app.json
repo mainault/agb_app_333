@@ -18,7 +18,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.mainault.agb_app_333",
-      "versionCode": 71
+      "versionCode": 75
     },
     "web": {
       "output": "static",

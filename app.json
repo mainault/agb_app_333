@@ -12,13 +12,9 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo_as_transparent.png",
-        "backgroundColor": "#aacdeeff"
-      },
       "predictiveBackGestureEnabled": false,
       "package": "com.mainault.agb_app_333",
-      "versionCode": 77
+      "versionCode": 80
     },
     "web": {
       "output": "static",

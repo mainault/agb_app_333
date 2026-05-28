@@ -21,7 +21,8 @@ export default ({ config }) => {
 
   const current = environments[ENV] ?? environments.development;
 
-  const basePackage = 'com.mainault.agb_app_333';
+  const androidPackage = 'com.mainault.agb_app_333';
+  const iosBundleIdentifier = 'com.mainault.agbapp333';
 
   return {
     ...config,
@@ -30,12 +31,12 @@ export default ({ config }) => {
 
     android: {
       ...config.android,
-      package: `${basePackage}${current.packageSuffix}`,
+      package: `${androidPackage}${current.packageSuffix}`,
     },
 
     ios: {
       ...config.ios,
-      bundleIdentifier: `${basePackage}${current.packageSuffix}`,
+      bundleIdentifier: `${iosBundleIdentifier}${current.packageSuffix}`,
       supportsTablet: true,
     },
 

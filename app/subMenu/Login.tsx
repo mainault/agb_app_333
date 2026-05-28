@@ -98,6 +98,7 @@ const LoginScreen = () => {
     let action = subMenuTitle.includes("Classement") ? "classement" : "";
     action = subMenuTitle.includes("Mes scores") ? "scoreManagement" : action;
     action = subMenuTitle.includes("Liste des inscrits") ? "list" : action;
+    action = subMenuTitle.includes("Liste des covoiturages") ? "listeCovoiturage" : action;
     const donnees = ({
       action: action,
       isCookieAccept: false,

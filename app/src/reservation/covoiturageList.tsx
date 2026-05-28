@@ -78,6 +78,7 @@ export default function CovoiturageScreen() {
   const getServerResponse = (jsonObject: any) => {
     if (jsonObject.status === "KO") {
       showAlert("Erreur", jsonObject.error);
+      router.replace("/");
       return;
     }
 

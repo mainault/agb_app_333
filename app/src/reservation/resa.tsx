@@ -282,11 +282,16 @@ const ResaScreen = () => {
   };
 
   // Fonction pour obtenir la période depuis getGlobalJsonObject()
-  const getPeriodeFromGlobal = (): string | null => {
-    const periodeHtml = getGlobalJsonObject().periode?.title;
-    if (!periodeHtml) return null;
-    return extractPeriodeFromHtml(periodeHtml);
-  };
+const getPeriodeFromGlobal = (): string | null => {
+  const periodeHtml =
+    getGlobalJsonObject().periode?.title ||
+    getGlobalJsonObject().periode?.title ||
+    getGlobalResaMember()?.position?.title;
+
+  if (!periodeHtml) return null;
+
+  return extractPeriodeFromHtml(periodeHtml);
+};
 
   // Fonction pour convertir le texte de période en ID
   const getPeriodeIdFromText = (periodeText: string | null): number | null => {
@@ -931,19 +936,29 @@ const ResaScreen = () => {
           showAlert(jsonObject.error, "OK");
           break;
         }
-        if(getGlobalProperties().sous_menu === "desinscription"){
+        if (getGlobalProperties().sous_menu === "desinscription") {
           router.replace("/");
           break;
-        } 
-        const dataForPlayersList = {
-          operationType: 'getCompetitionPlayers',
-          isEclectic: getGlobalJsonObject().isEclectic,
-          nom_competition: getGlobalJsonObject().nom_competition,
-          action: 'displayList',
-          isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
-          accessType: 'resa',
-        };
-        fetchDataFromServer(dataForPlayersList);
+        }
+
+        if (
+          getGlobalJsonObject().isAlreadyPaid === true ||
+          getGlobalProperties().isPEL === false
+        ) {
+          const dataForPlayersList = {
+            operationType: 'getCompetitionPlayers',
+            isEclectic: getGlobalJsonObject().isEclectic,
+            nom_competition: getGlobalJsonObject().nom_competition,
+            action: 'displayList',
+            isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
+            accessType: 'resa',
+          };
+
+          fetchDataFromServer(dataForPlayersList);
+        } else {
+          setIsAlertVisible(true);
+        }
+
         break;
 
         case "sendTeamResaMailRemoveMember":
@@ -1201,72 +1216,87 @@ const ResaScreen = () => {
   };
 
   // Fonction setTranchesManagement
-  const setTranchesManagement = (jsonObject: any) => {
+    const setTranchesManagement = (jsonObject: any) => {
     if (jsonObject.status === "KO") {
       showAlert("Erreur", jsonObject.error);
       return;
     }
 
-    // Mettre à jour les propriétés globales
     setGlobalProperty('trancheId', jsonObject.id);
     setGlobalProperty('tranche_duree', parseInt(jsonObject.tranche_duree));
     setGlobalProperty('duree_trou', parseInt(jsonObject.duree_trou));
     setGlobalProperty('nbre_joueurs', parseInt(jsonObject.nbre_joueurs));
     calculateJauge();
 
-    // Récupérer les IDs de tranche et la période depuis les propriétés globales
     const globalTrancheIds = getGlobalProperties().trancheId || [];
     const periodeText = getPeriodeFromGlobal();
     const periodeId = periodeText ? getPeriodeIdFromText(periodeText) : null;
     const nbTranches = jsonObject.tranches?.length || 0;
 
-    // Mettre à jour les tranches avec les bonnes informations
+    const currentTrancheId =
+      Number(getGlobalJsonObject().tranche?.id) ||
+      Number(getGlobalResaMember()?.tranche?.id) ||
+      null;
+
     const updatedTranches: any = tranches.map((tranche, index) => {
       const rawTitle = jsonObject.tranches?.[index];
       const cleanTitle = rawTitle ? cleanHtml(rawTitle) : `Tranche ${index + 1}`;
-      // Récupérer l'ID de tranche correspondant depuis le tableau global
+
       const trancheId = globalTrancheIds[index] || tranche.id;
+
+      const isCurrentTranche =
+        currentTrancheId !== null && Number(trancheId) === currentTrancheId;
+
       const options = tranche.options.map(option => ({
         ...option,
         isActive: index < nbTranches && !(getGlobalProperties().shotgun && option.id !== 1),
       }));
 
-      // Sélectionner automatiquement la période si elle correspond à cette tranche
       let selectedOption = tranche.selectedOption;
+
       if (getGlobalProperties().shotgun && index === 0) {
         selectedOption = 1;
-      } else if (periodeId && index === 0) {
-        // Si nous avons une période globale et que c'est la première tranche,
-        // nous la sélectionnons automatiquement
+      } else if (periodeId && isCurrentTranche) {
         selectedOption = periodeId;
+      } else if (!isCurrentTranche) {
+        selectedOption = undefined;
       }
+
       return {
         ...tranche,
-        id: trancheId, // Utiliser l'ID de tranche du tableau global
+        id: trancheId,
         title: cleanTitle,
         isActive: index < nbTranches && (index === 0 || !getGlobalProperties().shotgun),
-        options: options,
-        selectedOption: selectedOption,
+        options,
+        selectedOption,
       };
     });
+
     setTranches(updatedTranches);
-    if(getGlobalJsonObject().asAlreadyRESA === '1'){
-      setTranchePeriode(getGlobalResaMember().tranche.id, getPeriodeIdFromText(getGlobalResaMember().position.title) as any);
+
+    if (getGlobalJsonObject().asAlreadyRESA === '1') {
+      const resaTrancheId = getGlobalResaMember()?.tranche?.id;
+      const resaPositionTitle = getGlobalResaMember()?.position?.title;
+      const resaPeriodeId = getPeriodeIdFromText(
+      extractPeriodeFromHtml(
+        getGlobalResaMember()?.position?.title ?? ""
+      ) || ""
+    );
+
+      if (resaTrancheId && resaPeriodeId) {
+        setTranchePeriode(Number(resaTrancheId), resaPeriodeId);
+      }
     }
 
-    // Gestion spécifique pour le mode shotgun
     if (getGlobalProperties().shotgun) {
       const firstTrancheId = globalTrancheIds[0] || 1;
       setGlobalProperty('numTranche', firstTrancheId);
       setGlobalProperty('labelPeriode', "Début");
-    } else if (periodeId) {
-      // Si nous avons une période globale, nous la sélectionnons dans la première tranche
-      const firstTrancheId = globalTrancheIds[0] || 1;
-      setGlobalProperty('numTranche', firstTrancheId);
+    } else if (periodeId && currentTrancheId) {
+      setGlobalProperty('numTranche', currentTrancheId);
       setGlobalProperty('labelPeriode', periodeText || "Début");
     }
   };
-
 
   // Fonction setResa
   const setResa = async (repas: any, flag: boolean) => {
@@ -1536,25 +1566,26 @@ const ResaScreen = () => {
 
   // Fonction pour récupérer la tranche et la période sélectionnées
   const getSelectedTrancheAndPeriode = (): { trancheId: number | null; periodeLabel: string } => {
-    // Vérifier d'abord si une période est sélectionnée dans l'interface
     for (const tranche of tranches) {
       if (tranche.selectedOption !== undefined) {
         const selectedOption = tranche.options.find(option => option.id === tranche.selectedOption);
         if (selectedOption) {
           return {
-            trancheId: tranche.id,
+            trancheId: Number(tranche.id),
             periodeLabel: selectedOption.label
           };
         }
       }
     }
 
-    // Si aucune période n'est sélectionnée dans l'UI, vérifier la période globale
     const periodeText = getPeriodeFromGlobal();
+
     if (periodeText) {
+      const globalTranche = getGlobalJsonObject().tranche;
+
       return {
-        trancheId: 1, // Par défaut tranche 1 si période globale existe
-        periodeLabel: periodeText
+        trancheId: globalTranche?.id ? Number(globalTranche.id) : null,
+        periodeLabel: periodeText,
       };
     }
 

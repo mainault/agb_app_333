@@ -389,7 +389,7 @@ const LoginScreen = () => {
         return false;
       }
       if (getGlobalJsonObject().teamMember === "OK") {
-        if (getGlobalProperties().sous_menu !== "Désinscription") {
+        if (getGlobalProperties().sous_menu !== "Désinscription" && getGlobalProperties().sous_menu !== "Payer droit de jeu en ligne") {
             showAlert("Information", "Vous êtes membre d'une équipe de Scramble\nPour modifier votre participation contactez votre capitaine");
             return false;
         }

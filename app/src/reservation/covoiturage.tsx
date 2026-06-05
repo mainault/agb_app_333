@@ -220,7 +220,6 @@ const Covoiturage = () => {
             return;
         }
         */
-                                   console.log("Selected player for conducteur:", selectedPlayer);
         if (selectedType === "ANNULATION") {
             const choice = await new Promise<boolean>((resolve) => {
                 showAlert("Confirmation", "Êtes-vous sûr de vouloir annuler votre participation ?", {
@@ -249,6 +248,7 @@ const Covoiturage = () => {
             statut_covoiturage: selectedType.toLowerCase(),
             nom_prenom: getGlobalCovoiturageObject()?.nom_prenom,
             source: params.returnTo,
+            isConducteur: selectedType === "CONDUCTEUR",
         };
         
         // Appel au serveur pour sauvegarder le covoiturage

@@ -38,6 +38,10 @@ export default ({ config }) => {
       ...config.ios,
       bundleIdentifier: `${iosBundleIdentifier}${current.packageSuffix}`,
       supportsTablet: true,
+      infoPlist: {
+        ...config.ios?.infoPlist,
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
 
     extra: {
@@ -45,5 +49,22 @@ export default ({ config }) => {
       apiUrl: current.apiUrl,
       env: ENV,
     },
+    plugins: [
+      ...(config.plugins ?? []),
+      [
+        "expo-build-properties",
+        {
+          ios: {
+            useFrameworks: "static",
+            extraPods: [
+              {
+                name: "GoogleUtilities",
+                modular_headers: true,
+              },
+            ],
+          },
+        },
+      ],
+    ],
   };
 };

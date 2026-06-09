@@ -9,12 +9,13 @@
     "userInterfaceStyle": "automatic",
     "sdkVersion": "55.0.0",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "buildNumber": "5"
     },
     "android": {
       "predictiveBackGestureEnabled": false,
       "package": "com.mainault.agb_app_333",
-      "versionCode": 83
+      "versionCode": 84
     },
     "web": {
       "output": "static",

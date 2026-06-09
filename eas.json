@@ -42,5 +42,12 @@
         "EXPO_PUBLIC_APP_ENV": "production"
       }
     }
+  },
+  "submit": {
+      "production": {
+        "ios": {
+          "ascAppId": "6778500510"
+        }
+      }
   }
 }

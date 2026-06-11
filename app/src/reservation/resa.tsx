@@ -2310,11 +2310,13 @@ const getPeriodeFromGlobal = (): string | null => {
         visible={!!paymentUrl && !showConfirmation}
         animationType="slide"
         transparent={false}
+        presentationStyle="fullScreen"
       >
         <SafeAreaView style={{ flex: 1 }}>
           {paymentUrl && (
             <WebView
-              style={{ flex: 1 }}
+              style={{ flex: 1}}
+              edges={["top", "bottom"]}
               source={{ uri: paymentUrl }}
               originWhitelist={["*"]}
               javaScriptEnabled={true}

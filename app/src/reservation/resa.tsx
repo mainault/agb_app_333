@@ -940,10 +940,13 @@ const getPeriodeFromGlobal = (): string | null => {
           router.replace("/");
           break;
         }
-
+      const isPelFacultatif = getGlobalJsonObject().pel_facultatif === "1";
+      const isPelObligatoire = getGlobalJsonObject().pel_obligatoire === "1";
+      const isPaymentAllowedForCompetition = isPelFacultatif || isPelObligatoire;
         if (
           getGlobalJsonObject().isAlreadyPaid === true ||
-          getGlobalProperties().isPEL === false
+          getGlobalProperties().isPEL === false ||
+          !isPaymentAllowedForCompetition
         ) {
           const dataForPlayersList = {
             operationType: 'getCompetitionPlayers',
@@ -2305,18 +2308,22 @@ const getPeriodeFromGlobal = (): string | null => {
           )}
         </View>
       </SafeAreaView>
-      {/* WebView pour le paiement (superposé) */}
       <Modal
         visible={!!paymentUrl && !showConfirmation}
         animationType="slide"
         transparent={false}
         presentationStyle="fullScreen"
       >
-        <SafeAreaView style={{ flex: 1 }}>
-          {paymentUrl && (
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "#fff" }}
+          edges={["top", "bottom"]}
+        >
+            {/*
+            <View style={{ height: 50, backgroundColor: 'red' }} />
+            */}
+            {paymentUrl && (
             <WebView
-              style={{ flex: 1}}
-              edges={["top", "bottom"]}
+              style={{ flex: 1 }}
               source={{ uri: paymentUrl }}
               originWhitelist={["*"]}
               javaScriptEnabled={true}
@@ -2331,7 +2338,6 @@ const getPeriodeFromGlobal = (): string | null => {
                   [{ text: "OK", onPress: () => router.replace("/") }]
                 );
               }}
-
               renderLoading={() => (
                 <ActivityIndicator
                   size="large"

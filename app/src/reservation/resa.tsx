@@ -7,6 +7,7 @@ import {
   FlatList,
   Keyboard,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -940,9 +941,9 @@ const getPeriodeFromGlobal = (): string | null => {
           router.replace("/");
           break;
         }
-      const isPelFacultatif = getGlobalJsonObject().pel_facultatif === "1";
-      const isPelObligatoire = getGlobalJsonObject().pel_obligatoire === "1";
-      const isPaymentAllowedForCompetition = isPelFacultatif || isPelObligatoire;
+        const isPelFacultatif = getGlobalJsonObject().pel_facultatif === "1";
+        const isPelObligatoire = getGlobalJsonObject().pel_obligatoire === "1";
+        const isPaymentAllowedForCompetition = isPelFacultatif || isPelObligatoire;
         if (
           getGlobalJsonObject().isAlreadyPaid === true ||
           getGlobalProperties().isPEL === false ||
@@ -2318,9 +2319,9 @@ const getPeriodeFromGlobal = (): string | null => {
           style={{ flex: 1, backgroundColor: "#fff" }}
           edges={["top", "bottom"]}
         >
-            {/*
-            <View style={{ height: 50, backgroundColor: 'red' }} />
-            */}
+            {Platform.OS === "ios" && (
+              <View style={{ height: 50 }} />
+            )}
             {paymentUrl && (
             <WebView
               style={{ flex: 1 }}

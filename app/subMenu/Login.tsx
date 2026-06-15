@@ -114,6 +114,7 @@ const LoginScreen = () => {
       userLogin: email,
       userPassword: password,
     });
+    console.log("donnees requête login ", donnees);
     fetchDataFromServer(donnees as any);
   }
 
@@ -154,6 +155,12 @@ const LoginScreen = () => {
             return;
           }
         }
+        if(subMenuTitle === "Compléter équipe" && (jsonObject.teamLeader === "OK" || jsonObject.teamMember === "OK")){
+          const labelError = jsonObject.teamLeader === "OK" ? "Vous êtes déjà Capitaine d'une équipe" : "Vous êtes déjà Membre d'une équipe";
+          showAlert("Information", labelError);
+            router.replace("/");
+            return;
+        }
         if(jsonObject.isAlreadyPaid === true && selectedCompetitionKey === "OLP"){
           showAlert("Information", "Vous avez déjà réglé votre participation à cette compétition");
           router.replace("/");
@@ -173,7 +180,6 @@ const LoginScreen = () => {
 
           return;
         }
-        console.log("normalizedSubMenuTitle = ", normalizedSubMenuTitle);
         // Gestion du dispatch en fonction du sous-menu  ou présence covoiturage
         switch (normalizedSubMenuTitle) {
           case "Mes scores":

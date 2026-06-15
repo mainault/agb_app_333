@@ -41,6 +41,8 @@ export default ({ config }) => {
       infoPlist: {
         ...config.ios?.infoPlist,
         ITSAppUsesNonExemptEncryption: false,
+        CFBundleDevelopmentRegion: 'fr',
+        CFBundleLocalizations: ['fr'],
       },
     },
 

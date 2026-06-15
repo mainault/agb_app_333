@@ -137,6 +137,7 @@ export default function Index() {
   const updateShownRef = useRef(false);
   //const currentVersion = Constants.expoConfig?.version ?? '0.0.0';
   const currentVersion = getAppVersion();
+  const IOS_APP_ID = '6778500510';
 
   useEffect(() => {
     if (!isFocused) return;
@@ -248,7 +249,7 @@ export default function Index() {
   const showForceUpdateAlert = (data: any) => {
     const storeUrl =
       Platform.OS === 'ios'
-        ? 'https://apps.apple.com/app/idXXXXX'
+        ? `https://apps.apple.com/app/id${IOS_APP_ID}`
         : 'https://play.google.com/store/apps/details?id=com.mainault.agb_app_333';
 
     Alert.alert(
@@ -288,7 +289,7 @@ export default function Index() {
   const showUpdateAlert = (data: any) => {
     const storeUrl =
       Platform.OS === 'ios'
-        ? 'https://apps.apple.com/app/idXXXXX'
+        ? `https://apps.apple.com/app/id${IOS_APP_ID}`
         : 'https://play.google.com/store/apps/details?id=com.mainault.agb_app_333';
 
     Alert.alert(

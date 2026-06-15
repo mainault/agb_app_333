@@ -7,7 +7,7 @@ import ScreenContainer from './../src/components/ScreenContainer';
 import { formatHtmlForAlert } from '../src/utils/htmlUtils';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../src/components/CustomButton';
-import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
+import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, getGlobalProperties, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -135,7 +135,7 @@ export default function ChoixCompetition() {
         action: "displayLogin",
         list: subMenuTitle === "Liste des inscrits" ? "yes" : "no",
         isMassResaAccess: false,
-        isComplete: "normal",
+        isComplete: getGlobalProperties().menuEquipeIncomplete ? "incomplete" : "normal",
         isBacattss: parentName === "BACATTSS" ? true : false,
       };
     }
@@ -186,7 +186,7 @@ export default function ChoixCompetition() {
       showAlert("Erreur", "Veuillez sélectionner une compétition.");
       return;
     }
-    if(subMenuTitle === "Compléter équipe" && getSelectedCompetitionAbstract()?.formule.includes("scramble") !== true) {
+    if(subMenuTitle === "Compléter équipe" && getSelectedCompetitionAbstract()?.formule.includes("Scramble") !== true) {
       showAlert("Erreur", "La fonctionnalité de compléter équipe n'est disponible que pour les compétitions en formule scramble.");
       return;
     }

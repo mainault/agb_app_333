@@ -2142,7 +2142,22 @@ const getPeriodeFromGlobal = (): string | null => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.globalContainer}>
           <View style={styles.competitionTitleContainer}>
-            <Text style={styles.competitionTitle}>{params.competitionName} - {getGlobalJsonObject().date_competition}</Text>
+            <TouchableOpacity
+              onPress={() =>
+                Alert.alert(
+                  "Compétition",
+                  `${params.competitionName} - ${getGlobalJsonObject().date_competition}`
+                )
+              }
+            >
+              <Text
+                style={styles.competitionTitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {params.competitionName} - {getGlobalJsonObject().date_competition}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {isLoading ? (
@@ -2405,18 +2420,20 @@ const styles = StyleSheet.create({
   },
   globalContainer: {
     flex: 1,
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    paddingBottom: 5,
     justifyContent: 'space-between',
-    marginBottom: 10,
-    marginTop: 0,
+    marginBottom: 0,
+    marginTop: -0,
   },
   competitionTitleContainer: {
     marginBottom: 10,
-    marginTop: -10,
+    marginTop: -20,
     alignItems: 'center',
   },
   competitionTitle: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1232e2ff',
   },

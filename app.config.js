@@ -53,6 +53,7 @@ export default ({ config }) => {
     },
     plugins: [
       ...(config.plugins ?? []),
+      "expo-secure-store",
       [
         "expo-build-properties",
         {

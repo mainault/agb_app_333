@@ -1,7 +1,7 @@
 // app/subMenu/Login.tsx
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getGlobalJsonObject, getGlobalJsonObjectForRanking, getGlobalOrphanList, getGlobalProperties, getGlobalUserOrphanList, resetGlobalJsonObject, resetGlobalJsonObjectForRanking, resetGlobalOrphanList, setGlobalIdentMember, setGlobalJsonObject, setGlobalJsonObjectForRanking, setGlobalOrphanList, setGlobalProperty, setGlobalUserOrphanList, setGlobalUsersList } from '../src//store/GlobalPropertiesManager';
@@ -9,6 +9,7 @@ import CustomButton from '../src/components/CustomButton';
 import ScreenContainer from '../src/components/ScreenContainer';
 import { sendRequest } from '../src/utils/api';
 import { showAlert } from '../src/utils/utilities';
+import * as SecureStore from 'expo-secure-store';
 
 // Fonction pour valider une adresse e-mail
 const isValidEmail = (email: string): boolean => {
@@ -56,6 +57,21 @@ const LoginScreen = () => {
   const toggleNewPasswordVisibility = () => setIsNewPasswordVisible(!isNewPasswordVisible);
   const toggleConfirmNewPasswordVisibility = () => setIsConfirmNewPasswordVisible(!isConfirmNewPasswordVisible);
 
+  useEffect(() => {
+  const loadCredentials = async () => {
+    const savedEmail = await SecureStore.getItemAsync('agb_email');
+    const savedPassword = await SecureStore.getItemAsync('agb_password');
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPassword) setPassword(savedPassword);
+  };
+  loadCredentials();
+  }, []);
+
+  const saveCredentials = async () => {
+    await SecureStore.setItemAsync('agb_email', email);
+    await SecureStore.setItemAsync('agb_password', password);
+  };
+
   const validateFields = () => {
     let isValid = true;
     if (!email) {
@@ -94,6 +110,8 @@ const LoginScreen = () => {
   };
 
   const handleLogin = async () => {
+  await SecureStore.setItemAsync('agb_email', email);
+  await SecureStore.setItemAsync('agb_password', password);
     if (!validateFields()) return;
     let action = subMenuTitle.includes("Classement") ? "classement" : "";
     action = subMenuTitle.includes("Mes scores") ? "scoreManagement" : action;
@@ -114,7 +132,6 @@ const LoginScreen = () => {
       userLogin: email,
       userPassword: password,
     });
-    console.log("donnees requête login ", donnees);
     fetchDataFromServer(donnees as any);
   }
 
@@ -137,7 +154,6 @@ const LoginScreen = () => {
     switch(jsonObject.operationType){
       case "validateUserLogin":
         if(jsonObject.status == "KO"){
-          //console.log("jsonObject.error = ", jsonObject);
           if (getGlobalProperties().nbrAttempt === 0) {
               setGlobalProperty('nbrAttempt', 1);
               displayErrorMessage(jsonObject.error, "OK");
@@ -155,6 +171,7 @@ const LoginScreen = () => {
             return;
           }
         }
+        
         if(subMenuTitle === "Compléter équipe" && (jsonObject.teamLeader === "OK" || jsonObject.teamMember === "OK")){
           const labelError = jsonObject.teamLeader === "OK" ? "Vous êtes déjà Capitaine d'une équipe" : "Vous êtes déjà Membre d'une équipe";
           showAlert("Information", labelError);
@@ -177,9 +194,10 @@ const LoginScreen = () => {
           setGlobalJsonObject(jsonObject);
         }
         if(!validateUserLogin()){
-
           return;
         }
+        saveCredentials();
+
         // Gestion du dispatch en fonction du sous-menu  ou présence covoiturage
         switch (normalizedSubMenuTitle) {
           case "Mes scores":

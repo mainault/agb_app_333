@@ -268,6 +268,7 @@ export default function Index() {
   const checkAppVersion = async () => {
     const donnees = {
       operationType: "getAppVersion",
+      platform: Platform.OS,
     };
     requestServer(donnees);
   };

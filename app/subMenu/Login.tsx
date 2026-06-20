@@ -10,6 +10,7 @@ import ScreenContainer from '../src/components/ScreenContainer';
 import { sendRequest } from '../src/utils/api';
 import { showAlert } from '../src/utils/utilities';
 import * as SecureStore from 'expo-secure-store';
+import { getCompetitionClassForRequest } from '../src/utils/competitionClass';
 
 // Fonction pour valider une adresse e-mail
 const isValidEmail = (email: string): boolean => {
@@ -110,28 +111,32 @@ const LoginScreen = () => {
   };
 
   const handleLogin = async () => {
-  await SecureStore.setItemAsync('agb_email', email);
-  await SecureStore.setItemAsync('agb_password', password);
     if (!validateFields()) return;
+
+    await SecureStore.setItemAsync('agb_email', email);
+    await SecureStore.setItemAsync('agb_password', password);
+
     let action = subMenuTitle.includes("Classement") ? "classement" : "";
     action = subMenuTitle.includes("Mes scores") ? "scoreManagement" : action;
     action = subMenuTitle.includes("Liste des inscrits") ? "list" : action;
     action = subMenuTitle.includes("Liste des covoiturages") ? "listeCovoiturage" : action;
-    const donnees = ({
+
+    const donnees = {
       action: action,
       isCookieAccept: false,
-      isEclectic: competitionType === "covoiturage" ? "isAllTypes" : competitionType,
+      competitionClass: getCompetitionClassForRequest(competitionType),
+      isEclectic: competitionType,
       isMobile: "1",
       list: "",
       menu: parentName,
       nbrAttempt: 1,
       newUserPassword: showChangePassword ? newPassword : "",
-      nom_competition: subMenuTitle.includes("Classement") ? "" : selectedCompetitionName,
+      nom_competition: subMenuTitle.includes("Classement") || subMenuTitle.includes("Mes scores") ? "" : selectedCompetitionName,
       operationType: "validateUserLogin",
       sous_menu: "",
       userLogin: email,
       userPassword: password,
-    });
+    };
     fetchDataFromServer(donnees as any);
   }
 

@@ -10,6 +10,7 @@ import CustomButton from '../src/components/CustomButton';
 import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, getGlobalProperties, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getCompetitionClassForRequest, getCompetitionClassFromType } from '../src/utils/competitionClass';
 
 // Définition des types
 interface Competition {
@@ -131,7 +132,7 @@ export default function ChoixCompetition() {
     } else {
       donnees = {
         operationType: "getCurrentCompetitions",
-        isEclectic: competitionType === "covoiturage" ? "isAllTypes" : competitionType,
+        competitionClass: getCompetitionClassForRequest(competitionType),
         action: "displayLogin",
         list: subMenuTitle === "Liste des inscrits" ? "yes" : "no",
         isMassResaAccess: false,
@@ -161,7 +162,7 @@ export default function ChoixCompetition() {
     }
     const donnees = {
       operationType: "getCurrentCompetitions",
-      isEclectic: isEclecticValue,
+      competitionClass: getCompetitionClassFromType(isEclecticValue),
       action: "displayLogin",
       list: "no",
       isMassResaAccess: false,

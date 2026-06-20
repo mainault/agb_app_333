@@ -98,7 +98,6 @@ const Covoiturage = () => {
                 const donnes = {
                     operationType: "sendCovoiturageMail",
                     nom_competition: jsonObject.nom_competition,
-                    isEclectic: 'isAllTypes',
                     licence_source: jsonObject.licence_source,
                     licence_cible: jsonObject.licence_cible,
                     moveFromSource: jsonObject.moveFromSource,
@@ -163,7 +162,7 @@ const Covoiturage = () => {
         const donnees = {
             operationType: 'getCurrentCovoiturage',
             nom_competition: params.competitionName,
-            isEclectic: 'isAllTypes',
+            competitionClass: 'isAllTypes',
             licence: getGlobalJsonObject().licence,
         };
         fetchDataFromServer(donnees);
@@ -242,7 +241,7 @@ const Covoiturage = () => {
         const donnees = {
             operationType: "setCurrentCovoiturage",
             nom_competition: params.competitionName,
-            isEclectic: getGlobalJsonObject().isEclectic,
+            competitionClass: getGlobalJsonObject().competitionClass,
             licence_source: getGlobalJsonObject().licence,
             licence_cible: user,
             statut_covoiturage: selectedType.toLowerCase(),

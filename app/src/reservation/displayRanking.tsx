@@ -91,7 +91,6 @@ const DisplayRanking = () => {
       trimestre: selectedTrimestre === "tous" ? "" : selectedTrimestre,
       isAppMobile: true,
     };
-    console.log("Données envoyées au serveur:", donnees);
     fetchDataFromServer(donnees);
   }, [sortBy, selectedTrimestre]);
 
@@ -101,7 +100,8 @@ const DisplayRanking = () => {
   };
 
   const getCompetitionTitle = () => {
-    return `Classement - Nombre de joueurs : ${getGlobalProperties().nbrPlayersForRanking}`;
+    const nbrPlayers = Number(getGlobalProperties().nbrPlayersForRanking ?? 0);
+    return `Classement - ${nbrPlayers} joueur${nbrPlayers > 1 ? "s" : ""}`;
   };
 
   const handleSortChange = (value: string) => {
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   pickerContainer: {
-    flex: 0.8,
+    flex: 1,
     marginHorizontal: 5,
   },
   pickersRowRS: {
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   picker: {
-    height: 50,
+    minHeight: 50,
     backgroundColor: '#f8f9fa',
     borderRadius: 5,
     borderWidth: 1,
@@ -715,8 +715,8 @@ const styles = StyleSheet.create({
     borderRightColor: '#eee',
   },
   playerCell: {
-    flex: 2,
-    minWidth: '35%',
+    flex: 1.7,
+    minWidth: '30%',
   },
   infoCell: {
     width: 30,

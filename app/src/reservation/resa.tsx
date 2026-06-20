@@ -658,7 +658,7 @@ const getPeriodeFromGlobal = (): string | null => {
     const trancheTitle = getGlobalJsonObject().tranche?.title;
     const donnees = {
       operationType: "getTranches",
-      isEclectic: getGlobalJsonObject().isEclectic,
+      competitionClass: getGlobalJsonObject().competitionClass,
       nom_competition: getGlobalJsonObject().nom_competition,
       isMassResaAccess: getGlobalProperties().isMassResaAccess,
       isActionForCompetitionTerminated: getGlobalProperties().isActionForCompetitionTerminated
@@ -951,7 +951,7 @@ const getPeriodeFromGlobal = (): string | null => {
         ) {
           const dataForPlayersList = {
             operationType: 'getCompetitionPlayers',
-            isEclectic: getGlobalJsonObject().isEclectic,
+            competitionClass: getGlobalJsonObject().competitionClass,
             nom_competition: getGlobalJsonObject().nom_competition,
             action: 'displayList',
             isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
@@ -968,9 +968,11 @@ const getPeriodeFromGlobal = (): string | null => {
         case "sendTeamResaMailRemoveMember":
           if (jsonObject.status === "KO") {
             showAlert(jsonObject.error, "OK");
+            break;
           }
+          router.replace("/");
           break;
-          
+
         default:
         break;
     }
@@ -1046,7 +1048,7 @@ const getPeriodeFromGlobal = (): string | null => {
           licence: value,
           nom_competition: getGlobalJsonObject().nom_competition,
           isMobile: "1",
-          isEclectic: getGlobalJsonObject().isEclectic,
+          competitionClass: getGlobalJsonObject().competitionClass,
         };
         fetchDataFromServer(donnees);
       } else {
@@ -1203,7 +1205,7 @@ const getPeriodeFromGlobal = (): string | null => {
         licence: jsonObject.licence,
         isMobile: '1',
         isComplete: getGlobalProperties().isComplete,
-        isEclectic: getGlobalJsonObject().isEclectic,
+        competitionClass: getGlobalJsonObject().competitionClass,
         repere: selectedRepere,
       };
       fetchDataFromServer(sendMailClosure);
@@ -1319,11 +1321,19 @@ const getPeriodeFromGlobal = (): string | null => {
     }
 
     let menu = null;
-    switch (getGlobalJsonObject().isEclectic) {
-      case "isEclectic": menu = "Eclectic"; break;
-      case "isRingerScore": menu = "RingerScore"; break;
-      case "isEclectic-IS": menu = "Eclectic-IS"; break;
-      default: menu = "Standard"; break;
+    switch (getGlobalJsonObject().competitionClass) {
+      case "ECLECTIC":
+        menu = "Eclectic";
+        break;
+      case "RINGER_SCORE":
+        menu = "RingerScore";
+        break;
+      case "CHALLENGE_HIVER":
+        menu = "Eclectic-IS";
+        break;
+      default:
+        menu = "Standard";
+        break;
     }
 
     if(getGlobalProperties().labelPeriode === null) {
@@ -1344,7 +1354,7 @@ const getPeriodeFromGlobal = (): string | null => {
       licence: getGlobalJsonObject().licence,
       civilite: getGlobalJsonObject().civilite,
       resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-      isEclectic: getGlobalJsonObject().isEclectic,
+      competitionClass: getGlobalJsonObject().competitionClass,
       isResaRepas: getGlobalJsonObject().isResaRepas == '1' ? true : false,
       menu_choice: '',
       isResaMenu: false,
@@ -1387,7 +1397,7 @@ const getPeriodeFromGlobal = (): string | null => {
       if (jsonObject.massResa == "NO") {
           dataForPlayersList = {
               operationType: 'getCompetitionPlayers',
-              isEclectic: getGlobalJsonObject().isEclectic,
+              competitionClass: getGlobalJsonObject().competitionClass,
               nom_competition: getGlobalJsonObject().nom_competition,
               action: 'displayList',
               isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
@@ -1498,7 +1508,7 @@ const getPeriodeFromGlobal = (): string | null => {
         licence: jsonObject.licence,
         isMobile: '1',
         isComplete: getGlobalProperties().isComplete,
-        isEclectic: getGlobalJsonObject().isEclectic,
+        competitionClass: getGlobalJsonObject().competitionClass,
         repere: selectedRepere,
       };
       fetchDataFromServer(donnees);
@@ -1540,7 +1550,7 @@ const getPeriodeFromGlobal = (): string | null => {
         metadata: {
           licence: getGlobalJsonObject().licence,
           nom_competition: getGlobalJsonObject().nom_competition,
-          isEclectic: getGlobalJsonObject().isEclectic,
+          competitionClass: getGlobalJsonObject().competitionClass,
           isOlpTransaction: false,
           isMobile: "1",
           targetSite: getGlobalProperties().site,
@@ -1611,12 +1621,13 @@ const getPeriodeFromGlobal = (): string | null => {
       mailAction = "Confirmation inscription compétition";
     }
     let _tranche = jsonObject.tranche.substring(jsonObject.tranche.indexOf(">") + 1, jsonObject.tranche.indexOf("</"));
-    if (jsonObject.removedMembers.length > 0) {
+    const removedMembers = jsonObject.removedMembers || jsonObject.identMember || [];
+    if (removedMembers.length > 0) {
       const removedMembersRemoveData = {
           operationType: "sendTeamResaMailRemoveMember",
           action: "removeUser",
           subject: "Confirmation désinscription compétition",
-          isEclectic: getGlobalJsonObject().isEclectic,
+          competitionClass: getGlobalJsonObject().competitionClass,
           identMember: jsonObject.identMember,
           removedMembers: jsonObject.removedMembers || [],
           competition: jsonObject.nom_competition,
@@ -1650,7 +1661,7 @@ const getPeriodeFromGlobal = (): string | null => {
       nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
       isComplete: getGlobalProperties().isComplete,
       resaMenu: [],
-      isEclectic: getGlobalJsonObject().isEclectic,
+      competitionClass: getGlobalJsonObject().competitionClass,
       removedMembers: jsonObject.removedMembers || [],
     };
 
@@ -1780,7 +1791,7 @@ const getPeriodeFromGlobal = (): string | null => {
         resaMenu: [],
         initialNbrPlayers: getGlobalProperties().initialNbrPlayers,
         nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
-        isEclectic: getGlobalJsonObject().isEclectic,
+        competitionClass: getGlobalJsonObject().competitionClass,
         menu: getGlobalProperties().menu,
         sous_menu: getGlobalProperties().sous_menu,
         removedMembers: removedMembers,
@@ -1800,7 +1811,7 @@ const getPeriodeFromGlobal = (): string | null => {
         licence: getGlobalJsonObject().licence,
         civilite: getGlobalJsonObject().civilite,
         resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-        isEclectic: getGlobalJsonObject().isEclectic,
+        competitionClass: getGlobalJsonObject().competitionClass,
         isResaRepas: getGlobalJsonObject().isResaRepas == '1' ? true : false,
         menu_choice: '',
         isResaMenu: false,
@@ -1900,11 +1911,22 @@ const getPeriodeFromGlobal = (): string | null => {
   // Gestion de la désinscription d'une RESA
   const handleRemove = async () => {
     let menu;
-    switch (getGlobalJsonObject().isEclectic) {
-      case "isEclectic": menu = "Eclectic"; break;
-      case "isRingerScore": menu = "RingerScore"; break;
-      case "isEclectic-IS": menu = "Eclectic-IS"; break;
-      default: menu = "Standard"; break;
+    switch (getGlobalJsonObject().competitionClass) {
+      case "ECLECTIC":
+        menu = "Eclectic";
+        break;
+
+      case "RINGER_SCORE":
+        menu = "RingerScore";
+        break;
+
+      case "CHALLENGE_HIVER":
+        menu = "Eclectic-IS";
+        break;
+
+      default:
+        menu = "Standard";
+        break;
     }
 
     const confirmed = await showAlert("Confirmation", "Êtes-vous sûr de vouloir vous désinscrire ?", {
@@ -1914,13 +1936,35 @@ const getPeriodeFromGlobal = (): string | null => {
       ],
       }).then((choice) => {
         if(choice){
+          if (getGlobalJsonObject().formule.includes("Scramble")) {
+            const data = {
+              operationType: 'setMassResaTeam',
+              createTeam: 'NO',
+              teamResa: 'YES',
+              action: 'removeTeam',
+              nbrOfPlayers: getGlobalProperties().members?.length || 1,
+              isMobile: '1',
+              updateTeam: 'OK',
+              nom_competition: getGlobalJsonObject().nom_competition,
+              teamLeader: getGlobalProperties().teamLeaderNomPrenom,
+              teamLeaderLicence: getGlobalJsonObject().licence,
+              tranche: getGlobalResaMember()?.tranche?.id,
+              periode: extractPeriodeFromHtml(getGlobalResaMember()?.position?.title || '')?.toLowerCase(),
+              jauge: getGlobalProperties().jauge,
+              initialNbrPlayers: getGlobalProperties().initialNbrPlayers,
+              nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
+              competitionClass: getGlobalJsonObject().competitionClass,
+            };
+            fetchDataFromServer(data);
+            return;
+          }
           const data = {
             operationType: 'removeResaUser',
             action: "removeUser",
             nom_competition: getGlobalJsonObject().nom_competition,
             licence: getGlobalJsonObject().licence,
             sendMail: true,
-            isEclectic: getGlobalJsonObject().isEclectic,
+            competitionClass: getGlobalJsonObject().competitionClass,
             isMobile: '1',
             menu: menu,
             sous_menu: "Désinscription - User",
@@ -1955,7 +1999,7 @@ const getPeriodeFromGlobal = (): string | null => {
     setIsAlertVisible(false);
     dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
-      isEclectic: getGlobalJsonObject().isEclectic,
+      competitionClass: getGlobalJsonObject().competitionClass,
       nom_competition: getGlobalJsonObject().nom_competition,
       action: 'displayList',
       isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
@@ -2003,7 +2047,7 @@ const getPeriodeFromGlobal = (): string | null => {
   if(params.competitionKey === "OLP"){
       donnees = {
       operationType: "getCurrentCompetition",
-      isEclectic: params.competitionType,
+      competitionClass: getGlobalJsonObject().competitionClass,
       action: "olpTransaction",
       list: "no",
       isMultiCompetition: 1,
@@ -2013,7 +2057,7 @@ const getPeriodeFromGlobal = (): string | null => {
     if(params.menuTitle === 'Liste des inscrits') {
       donnees = {
         operationType: "getCompetitionPlayers",
-        isEclectic: getGlobalJsonObject().isEclectic,
+        competitionClass: getGlobalJsonObject().competitionClass,
         nom_competition: getGlobalJsonObject().nom_competition,
         action: 'displayList',
         isFromCBReturn: false,
@@ -2025,7 +2069,7 @@ const getPeriodeFromGlobal = (): string | null => {
             operationType: "getOrphanList",
             nom_competition: getGlobalJsonObject().nom_competition,
             isMobile: "1",
-            formule: getGlobalJsonObject().isEclectic,
+            formule: getGlobalJsonObject().competitionClass,
             teamNumber: getGlobalProperties().nbrScramblePlayers,
             licence: getGlobalJsonObject().licence,
             isScramble: getGlobalProperties().isScramble
@@ -2036,7 +2080,7 @@ const getPeriodeFromGlobal = (): string | null => {
           operationType: "validateTeamLeader",
           licence: getGlobalJsonObject().licence,
           nom_competition: getGlobalJsonObject().nom_competition,
-          isEclectic: getGlobalJsonObject().isEclectic,
+          competitionClass: getGlobalJsonObject().competitionClass,
           isMobile: "1",
         };
       } else {
@@ -2044,7 +2088,7 @@ const getPeriodeFromGlobal = (): string | null => {
           operationType: "getResaMember",
           licence: getGlobalJsonObject().licence,
           nom_competition: getGlobalJsonObject().nom_competition,
-          isEclectic: getGlobalJsonObject().isEclectic,
+          competitionClass: getGlobalJsonObject().competitionClass,
           isMobile: "1",
         };
       };
@@ -2086,7 +2130,7 @@ const getPeriodeFromGlobal = (): string | null => {
   const fetchCompetitionPlayersAndPrepareData = async () => {
     const dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
-      isEclectic: getGlobalJsonObject().isEclectic,
+      competitionClass: getGlobalJsonObject().competitionClass,
       nom_competition: getGlobalJsonObject().nom_competition,
       action: 'displayList',
       isFromCBReturn: !!getGlobalJsonObject().isPEL_enabled,

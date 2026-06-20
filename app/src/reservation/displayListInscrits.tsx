@@ -65,7 +65,7 @@ const PlayerSeriesList = () => {
     const donnees = {
       accessType: "resa",
       action: "",
-      isEclectic: globalJsonObject.isEclectic,
+      competitionClass: globalJsonObject.competitionClass,
       nom_competition: globalJsonObject.nom_competition,
       operationType: "getCompetitionPlayers"
     };

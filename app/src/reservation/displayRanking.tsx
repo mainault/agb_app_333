@@ -2,13 +2,14 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RenderHTML from 'react-native-render-html';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getGlobalJsonObjectForRanking, getGlobalProperties, setGlobalProperty } from '../store/GlobalPropertiesManager';
 import { GlobalPlayerRanking, GlobalPlayerRankingRS } from '../store/GlobalStore';
 import { sendRequest } from '../utils/api';
 import { showAlert } from '../utils/utilities';
+import Dropdown from '../components/dropDown';
 
 const DisplayRanking = () => {
   const router = useRouter();
@@ -358,48 +359,39 @@ const DisplayRanking = () => {
           { label: "Nom", value: "nom" },
           { label: "Score", value: "brut-net" }
         ];
-
+    const screenWidth = Dimensions.get('window').width;
+    const dropdownWidth = (screenWidth - 60) / 2;
     return (
       <View style={isRingerScore ? styles.pickersRowRS : styles.pickersRow}>
         {!isRingerScore && (
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerLabel}>Trimestre:</Text>
-            <Picker
+            <Dropdown
               selectedValue={selectedTrimestre}
-              style={styles.picker}
               onValueChange={handleTrimestreChange}
-              enabled={!isLoading}
-            >
-              {trimestres.map((trimestre) => (
-                <Picker.Item
-                  key={`trimestre-${trimestre.value}`}
-                  label={trimestre.label}
-                  value={trimestre.value}
-                />
-              ))}
-            </Picker>
+              options={trimestres}
+              placeholder="Trimestre"
+              width={dropdownWidth}
+              dropdownWidth={dropdownWidth}
+              disabled={isLoading}
+            />
           </View>
         )}
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Classé par:</Text>
-          <Picker
+          <Dropdown
             selectedValue={sortBy}
-            style={styles.picker}
             onValueChange={handleSortChange}
-            enabled={!isLoading}
-          >
-            {sortOptions.map((option) => (
-              <Picker.Item
-                key={`sort-option-${option.value}`}
-                label={option.label}
-                value={option.value}
-              />
-            ))}
-          </Picker>
+            options={sortOptions}
+            placeholder="Classé par"
+            width={dropdownWidth}
+            dropdownWidth={dropdownWidth}
+            disabled={isLoading}
+          />
         </View>
       </View>
-    );
-  };
+      );
+    };
 
   const renderHoleScoresModal = () => {
     if (!selectedPlayer || !modalVisible) return null;
@@ -621,10 +613,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
+    gap: 12,
   },
+
   pickerContainer: {
     flex: 1,
-    marginHorizontal: 5,
   },
   pickersRowRS: {
     flexDirection: 'row',

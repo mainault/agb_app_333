@@ -1,3 +1,11 @@
+export const CompetitionClass = {
+  STANDARD: "STANDARD",
+  ECLECTIC: "ECLECTIC",
+  CHALLENGE_HIVER: "CHALLENGE_HIVER",
+  RINGER_SCORE: "RINGER_SCORE",
+  ALL_TYPES: "isAllTypes",
+} as const;
+
 export const getCompetitionClassFromType = (competitionType?: string | null): string | null => {
   switch (competitionType) {
     case "isEclectic":

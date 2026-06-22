@@ -10,7 +10,8 @@ import CustomButton from '../src/components/CustomButton';
 import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, getGlobalProperties, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getCompetitionClassForRequest, getCompetitionClassFromType } from '../src/utils/competitionClass';
+import { CompetitionClass, getCompetitionClassForRequest, getCompetitionClassFromType } from '../src/utils/competitionClass';
+
 
 // Définition des types
 interface Competition {
@@ -55,6 +56,7 @@ export default function ChoixCompetition() {
   const [selectedTarifType, setSelectedTarifType] = useState<'adulte' | 'enfant' | 'membre'>('adulte');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const isCovoiturage = parentName === "Covoiturage";
 
   // Fonction pour mettre à jour l'état d'un bouton
   const setButtonState = (id: string, enabled: boolean) => {
@@ -132,7 +134,7 @@ export default function ChoixCompetition() {
     } else {
       donnees = {
         operationType: "getCurrentCompetitions",
-        competitionClass: getCompetitionClassForRequest(competitionType),
+        competitionClass: isCovoiturage ? CompetitionClass.ALL_TYPES : getCompetitionClassForRequest(competitionType),
         action: "displayLogin",
         list: subMenuTitle === "Liste des inscrits" ? "yes" : "no",
         isMassResaAccess: false,

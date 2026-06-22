@@ -63,7 +63,6 @@ export default function CovoiturageScreen() {
         isMobile: "1",
         currentCompetition: params.competitionName ?? getGlobalJsonObject()?.nom_competition,
       };
-      console.log("donnees envoyées pour getListeCovoiturage :", donnees);
       const response = await sendRequest(donnees);
       getServerResponse(response);
     } catch (error) {

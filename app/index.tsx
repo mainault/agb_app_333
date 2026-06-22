@@ -209,6 +209,7 @@ export default function Index() {
           return;
         }
         const data = jsonObject.version as GlobalAppVersionObject;
+        console.log("VERSION SERVER =", JSON.stringify(data, null, 2));
 
         setGlobalAppVersionObject(data);
 
@@ -271,6 +272,8 @@ export default function Index() {
       platform: Platform.OS,
     };
     requestServer(donnees);
+    console.log("checkAppVersion called with data:", donnees);
+    console.log("API URL =", appConfig.apiUrl);
   };
 
   useEffect(() => {

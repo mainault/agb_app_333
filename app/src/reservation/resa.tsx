@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback,
   View
 } from 'react-native';
-import { Checkbox, RadioButton } from 'react-native-paper';
+import { Checkbox,} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import CarouselModal from '../components/CarouselModal';
@@ -2287,27 +2287,28 @@ const getPeriodeFromGlobal = (): string | null => {
               {(
                 <View style={styles.radioButtonContainer}>
                   <Text style={styles.radioTitre}>Vous pouvez changer le repère (Joueur 1)</Text>
-                  <RadioButton.Group
-                    onValueChange={(value) => {
-                      setSelectedRepere(value);
-                    }}
-                    value={selectedRepere}
-                  >
                     <View style={styles.radioContainer}>
                       {RADIO_OPTIONS.map((option) => (
-                        <View key={option.id} style={styles.radioItem}>
-                          <RadioButton.Item
-                            value={option.id}
-                            label={option.label}
-                            style={{ paddingHorizontal: 0 }}
-                            labelStyle={styles.radioLabel}
-                            color="#099237ff"
-                            uncheckedColor="#181717ff"
-                          />
-                        </View>
+                        <TouchableOpacity
+                          key={option.id}
+                          style={styles.customRadioItem}
+                          onPress={() => setSelectedRepere(option.id)}
+                        >
+                          <Text style={styles.radioLabel}>{option.label}</Text>
+
+                          <View
+                            style={[
+                              styles.customRadioButton,
+                              selectedRepere === option.id && styles.customRadioButtonSelected,
+                            ]}
+                          >
+                            {selectedRepere === option.id && (
+                              <View style={styles.customRadioButtonInner} />
+                            )}
+                          </View>
+                        </TouchableOpacity>
                       ))}
                     </View>
-                  </RadioButton.Group>
                 </View>
               )}
 
@@ -2622,16 +2623,14 @@ const styles = StyleSheet.create({
   },
   radioContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'nowrap',
-    marginHorizontal: -10,
-    marginBottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   radioTitre: {
+    fontSize: 15,
     fontWeight: 'bold',
-    marginTop: 5,
-    marginBottom: 0,
-    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 10,
   },
   radioItem: {
     flexDirection: 'row',
@@ -2752,6 +2751,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  customRadioItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginHorizontal: 8,
+  },
+  customRadioButton: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#181717ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  customRadioButtonSelected: {
+    borderColor: '#099237ff',
+  },
+
+  customRadioButtonInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#099237ff',
+  },
 
 });
 

@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback,
   View
 } from 'react-native';
-import { Checkbox,} from 'react-native-paper';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import CarouselModal from '../components/CarouselModal';
@@ -2264,13 +2264,23 @@ const getPeriodeFromGlobal = (): string | null => {
                     <View style={styles.optionsContainer}>
                       {tranche.options.map((option) => (
                         <View key={option.id} style={styles.optionItem}>
-                          <Checkbox
-                            status={tranche.selectedOption === option.id ? 'checked' : 'unchecked'}
-                            onPress={() => !getGlobalProperties().shotgun && setTranchePeriode(tranche.id, option.id)}
+                          <TouchableOpacity
+                            style={[
+                              styles.customCheckbox,
+                              tranche.selectedOption === option.id && styles.customCheckboxSelected,
+                              (!tranche.isActive || !option.isActive || getGlobalProperties().shotgun) && styles.disabledCustomCheckbox,
+                            ]}
+                            onPress={() => {
+                              if (!getGlobalProperties().shotgun && tranche.isActive && option.isActive) {
+                                setTranchePeriode(tranche.id, option.id);
+                              }
+                            }}
                             disabled={!tranche.isActive || !option.isActive || getGlobalProperties().shotgun}
-                            color="#099237ff"
-                            uncheckedColor="#181717ff"
-                          />
+                          >
+                            {tranche.selectedOption === option.id && (
+                              <Text style={styles.customCheckboxCheck}>✓</Text>
+                            )}
+                          </TouchableOpacity>
                           <Text style={[
                             styles.optionLabel,
                             (!tranche.isActive || !option.isActive || getGlobalProperties().shotgun) && styles.disabledOptionLabel
@@ -2668,9 +2678,10 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   optionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: -5,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginTop: 10,
+      marginBottom: 8,
   },
   optionItem: {
     flexDirection: 'row',
@@ -2686,7 +2697,7 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 0,
+    marginTop: 5,
   },
   transitionOverlay: {
     position: 'absolute',
@@ -2776,6 +2787,32 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: '#099237ff',
+  },
+  customCheckbox: {
+    width: 20,
+    height: 20,
+    fontSize: 14,
+    borderWidth: 2,
+    borderColor: '#181717ff',
+    borderRadius: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+
+  customCheckboxSelected: {
+    borderColor: '#099237ff',
+  },
+
+  customCheckboxCheck: {
+    color: '#099237ff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    lineHeight: 18,
+  },
+
+  disabledCustomCheckbox: {
+    opacity: 0.3,
   },
 
 });

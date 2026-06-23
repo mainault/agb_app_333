@@ -10,7 +10,7 @@
     "sdkVersion": "55.0.0",
     "ios": {
       "supportsTablet": false,
-      "buildNumber": "23"
+      "buildNumber": "24"
     },
     "android": {
       "predictiveBackGestureEnabled": false,

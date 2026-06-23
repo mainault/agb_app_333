@@ -672,25 +672,24 @@ const getPeriodeFromGlobal = (): string | null => {
 
     setTranches(prevTranches =>
       prevTranches.map(tranche => {
-        if (tranche.id === trancheId) {
+        if (Number(tranche.id) === Number(trancheId)) {
           return {
             ...tranche,
             selectedOption: optionId
-            
           };
         }
+
         return {
           ...tranche,
           selectedOption: undefined
         };
       })
     );
+
     const periode = findPeriodeById(optionId);
     if (periode) {
       setGlobalProperty('numTranche', trancheId);
       setGlobalProperty('labelPeriode', periode.label);
-    } else {
-      console.warn(`Période avec ID ${optionId} non trouvée`);
     }
   };
 
@@ -2260,35 +2259,42 @@ const getPeriodeFromGlobal = (): string | null => {
                     ]}>
                       {tranche.title}
                     </Text>
-
                     <View style={styles.optionsContainer}>
-                      {tranche.options.map((option) => (
-                        <View key={option.id} style={styles.optionItem}>
+                      {tranche.options.map((option) => {
+                        const disabled =
+                          !tranche.isActive ||
+                          !option.isActive ||
+                          getGlobalProperties().shotgun;
+
+                        const selected = Number(tranche.selectedOption) === Number(option.id);
+                        return (
                           <TouchableOpacity
-                            style={[
-                              styles.customCheckbox,
-                              tranche.selectedOption === option.id && styles.customCheckboxSelected,
-                              (!tranche.isActive || !option.isActive || getGlobalProperties().shotgun) && styles.disabledCustomCheckbox,
-                            ]}
+                            key={option.id}
+                            style={styles.optionItem}
                             onPress={() => {
-                              if (!getGlobalProperties().shotgun && tranche.isActive && option.isActive) {
+                              if (!disabled) {
                                 setTranchePeriode(tranche.id, option.id);
                               }
                             }}
-                            disabled={!tranche.isActive || !option.isActive || getGlobalProperties().shotgun}
+                            disabled={disabled}
                           >
-                            {tranche.selectedOption === option.id && (
-                              <Text style={styles.customCheckboxCheck}>✓</Text>
-                            )}
+                            <Text style={[
+                              styles.optionLabel,
+                              disabled && styles.disabledOptionLabel
+                            ]}>
+                              {option.label}
+                            </Text>
+
+                            <View style={[
+                              styles.customRadioButton,
+                              selected && styles.customRadioButtonSelected,
+                              disabled && styles.disabledCustomCheckbox,
+                            ]}>
+                              {selected && <View style={styles.customRadioButtonInner} />}
+                            </View>
                           </TouchableOpacity>
-                          <Text style={[
-                            styles.optionLabel,
-                            (!tranche.isActive || !option.isActive || getGlobalProperties().shotgun) && styles.disabledOptionLabel
-                          ]}>
-                            {option.label}
-                          </Text>
-                        </View>
-                      ))}
+                        );
+                      })}
                     </View>
                   </View>
                 ))}
@@ -2686,10 +2692,13 @@ const styles = StyleSheet.create({
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
+
   optionLabel: {
-    marginLeft: 8,
+    marginLeft: 6,
     fontSize: 14,
+    color: '#000',
   },
   disabledOptionLabel: {
     color: '#888',

@@ -2707,6 +2707,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 5,
+    paddingBottom: 16,
   },
   transitionOverlay: {
     position: 'absolute',

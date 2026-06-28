@@ -14,6 +14,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'android') {
       NavigationBar.setBackgroundColorAsync('#aacdeeff');
+      NavigationBar.setButtonStyleAsync('dark');
     }
   }, []);
   return (
@@ -22,6 +23,7 @@ export default function RootLayout() {
         <MenuProvider>
           <StatusBar
             style="dark"
+            backgroundColor="#aacdeeff"
           />
           <Stack
             screenOptions={{

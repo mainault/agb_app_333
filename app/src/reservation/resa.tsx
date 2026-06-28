@@ -1182,6 +1182,10 @@ const getPeriodeFromGlobal = (): string | null => {
     if(getGlobalReturnResaMember().isResaRepas === true && jsonObject.action !== "terminate"){
         setGlobalProperty('sendMailClosure', null);
     }else {
+      if (jsonObject.repere) {
+        setSelectedRepere(jsonObject.repere);
+        setGlobalProperty('repere', jsonObject.repere);
+      }
       const sendMailClosure = {
         operationType: jsonObject.nbrOfPlayers > 1 ? "sendTeamResaMail" : "sendResaMail",
         action: jsonObject.action,

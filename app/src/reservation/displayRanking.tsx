@@ -337,10 +337,21 @@ const DisplayRanking = () => {
         )}
 
         {/* Autres colonnes */}
-        <Text style={[styles.cellRS, { flex: 1 }]}>{item.brut}</Text>
-        <Text style={[styles.cellRS, { flex: 1 }]}>{item.net}</Text>
-        <Text style={[styles.cellRS, { flex: 1 }]}>{item.rank_brut}</Text>
-        <Text style={[styles.cellRS, { flex: 1 }]}>{item.rank_net}</Text>
+        {isBreakLine ? (
+          <>
+            <Text style={[styles.cellRS, { flex: 1 }]}></Text>
+            <Text style={[styles.cellRS, { flex: 1 }]}></Text>
+            <Text style={[styles.cellRS, { flex: 1 }]}></Text>
+            <Text style={[styles.cellRS, { flex: 1 }]}></Text>
+          </>
+        ) : (
+          <>
+            <Text style={[styles.cellRS, { flex: 1 }]}>{item.brut}</Text>
+            <Text style={[styles.cellRS, { flex: 1 }]}>{item.net}</Text>
+            <Text style={[styles.cellRS, { flex: 1 }]}>{item.rank_brut}</Text>
+            <Text style={[styles.cellRS, { flex: 1 }]}>{item.rank_net}</Text>
+          </>
+        )}
       </View>
     )
   };

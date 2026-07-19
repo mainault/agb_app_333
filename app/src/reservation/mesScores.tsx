@@ -109,6 +109,9 @@ const MesScores = () => {
     { label: 'Tour 4', value: '4' }
   ];
 
+// Les numéros de tour ne sont pas supposés consécutifs.
+// L'ordre des colonnes reflète les tours réellement disputés,
+// tels que fournis par le backend.
   const analyzeTours = () => {
     const numberedTours = data.usersArray.filter(t => t.tour !== 'S');
     const hasSynthesis = data.usersArray.some(t => t.tour === 'S');

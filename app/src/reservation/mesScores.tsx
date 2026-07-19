@@ -109,23 +109,37 @@ const MesScores = () => {
     { label: 'Tour 4', value: '4' }
   ];
 
-// Les numéros de tour ne sont pas supposés consécutifs.
-// L'ordre des colonnes reflète les tours réellement disputés,
-// tels que fournis par le backend.
   const analyzeTours = () => {
-    const numberedTours = data.usersArray.filter(t => t.tour !== 'S');
-    const hasSynthesis = data.usersArray.some(t => t.tour === 'S');
-    const synthesisData = hasSynthesis ? data.usersArray.find(t => t.tour === 'S') : null;
-    const maxTourNumber = numberedTours.length > 0 ? Math.max(...numberedTours.map(t => parseInt(t.tour))) : 0;
+    const numberedTours =
+      data.usersArray.filter(t => t.tour !== 'S');
 
-    let allTourNumbers = [];
+    const synthesisData =
+      data.usersArray.find(t => t.tour === 'S');
+
+    const hasSynthesis =
+      synthesisData !== undefined;
+
+    let allTourNumbers: string[] = [];
+
     if (globalJsonObject.isEclectic === 'isRingerScore') {
-      allTourNumbers = maxTourNumber > 0 ? Array.from({ length: maxTourNumber }, (_, i) => (i + 1).toString()) : [];
+      allTourNumbers = Array.from(
+        new Set(numberedTours.map(t => t.tour))
+      )
+        .filter(tour => /^\d+$/.test(tour))
+        .sort((a, b) => Number(a) - Number(b));
     } else {
-      allTourNumbers = Array.from({ length: 7 }, (_, i) => (i + 1).toString());
+      allTourNumbers = Array.from(
+        { length: 7 },
+        (_, i) => (i + 1).toString()
+      );
     }
 
-    return { allTourNumbers, hasSynthesis, synthesisData, numberedTours: numberedTours };
+    return {
+      allTourNumbers,
+      hasSynthesis,
+      synthesisData,
+      numberedTours
+    };
   };
 
   const { allTourNumbers, hasSynthesis, synthesisData } = analyzeTours();
@@ -205,12 +219,27 @@ const MesScores = () => {
 
   const renderHeader = () => (
     <View style={styles.headerRow}>
-      <Text style={[styles.headerCell, styles.trouHeader]}>Trou</Text>
-      {allTourNumbers.map((tourNum, index) => (
-        <Text key={`header-${tourNum}`} style={[styles.headerCell, { width: tourColumnWidth }]}>
-          {hasSynthesis && index === allTourNumbers.length - 1 ? 'S' : `T${tourNum}`}
+      <Text style={[styles.headerCell, styles.trouHeader]}>
+        Trou
+      </Text>
+
+      {allTourNumbers.map((tourNum) => (
+        <Text
+          key={`header-${tourNum}`}
+          style={[styles.headerCell, { width: tourColumnWidth }]}
+        >
+          {`T${tourNum}`}
         </Text>
       ))}
+
+      {hasSynthesis && (
+        <Text
+          key="header-synthesis"
+          style={[styles.headerCell, { width: tourColumnWidth }]}
+        >
+          S
+        </Text>
+      )}
     </View>
   );
 
@@ -219,18 +248,24 @@ const MesScores = () => {
       <Text style={[styles.scoreCell, styles.trouCell]}>
         {row.trou}
       </Text>
-      {allTourNumbers.map((tourNum, colIndex) => {
-        const isLastColumn = colIndex === allTourNumbers.length - 1;
-        const key = globalJsonObject.isEclectic !== 'isRingerScore' && isLastColumn && hasSynthesis ? 'synthese' : `tour${tourNum}`;
-        return (
-          <Text
-            key={`cell-${row.trou}-${key}`}
-            style={[styles.scoreCell, { width: tourColumnWidth }]}
-          >
-            {row[key] || "—"}
-          </Text>
-        );
-      })}
+
+      {allTourNumbers.map((tourNum) => (
+        <Text
+          key={`cell-${row.trou}-tour${tourNum}`}
+          style={[styles.scoreCell, { width: tourColumnWidth }]}
+        >
+          {row[`tour${tourNum}`] || "—"}
+        </Text>
+      ))}
+
+      {hasSynthesis && (
+        <Text
+          key={`cell-${row.trou}-synthese`}
+          style={[styles.scoreCell, { width: tourColumnWidth }]}
+        >
+          {row.synthese || "—"}
+        </Text>
+      )}
     </View>
   );
 
@@ -244,44 +279,69 @@ const MesScores = () => {
     </View>
   );
 
-  const prepareScoreData = (): { trouRows: ScoreRow[], brutRow: ScoreRow, netRow: ScoreRow } => {
+  const prepareScoreData = (): {
+    trouRows: ScoreRow[];
+    brutRow: ScoreRow;
+    netRow: ScoreRow;
+  } => {
     const trouRows: ScoreRow[] = [];
-    let brutRow: ScoreRow = { trou: "BRUT" };
-    let netRow: ScoreRow = { trou: "NET" };
+    const brutRow: ScoreRow = { trou: "BRUT" };
+    const netRow: ScoreRow = { trou: "NET" };
 
     for (let i = 1; i <= 18; i++) {
       const trouKey = `T${i}` as keyof PlayerTour;
       const row: ScoreRow = { trou: `${i}` };
-      allTourNumbers.forEach((tourNum, index) => {
-        const isLastColumn = index === allTourNumbers.length - 1;
-        const tourData = data.usersArray.find(t => t.tour === tourNum);
-        if (globalJsonObject.isEclectic !== 'isRingerScore' && isLastColumn && hasSynthesis) {
-          row.synthese = synthesisData?.[trouKey] || "—";
-        } else {
-          row[`tour${tourNum}`] = tourData?.[trouKey] || "—";
-        }
+
+      allTourNumbers.forEach((tourNum) => {
+        const tourData = data.usersArray.find(
+          item => item.tour === tourNum
+        );
+
+        row[`tour${tourNum}`] =
+          tourData?.[trouKey] || "—";
       });
+
+      if (hasSynthesis) {
+        row.synthese =
+          synthesisData?.[trouKey] || "—";
+      }
+
       trouRows.push(row);
     }
 
-    allTourNumbers.forEach((tourNum, index) => {
-      const isLastColumn = index === allTourNumbers.length - 1;
-      const tourData = data.usersArray.find(t => t.tour === tourNum);
-      if (globalJsonObject.isEclectic !== 'isRingerScore' && isLastColumn && hasSynthesis) {
-        brutRow.synthese = synthesisData?.brut || "—";
-        netRow.synthese = synthesisData?.net || "—";
-      } else {
-        brutRow[`tour${tourNum}`] = tourData?.brut || "—";
-        netRow[`tour${tourNum}`] = tourData?.net || "—";
-      }
+    allTourNumbers.forEach((tourNum) => {
+      const tourData = data.usersArray.find(
+        item => item.tour === tourNum
+      );
+
+      brutRow[`tour${tourNum}`] =
+        tourData?.brut || "—";
+
+      netRow[`tour${tourNum}`] =
+        tourData?.net || "—";
     });
 
-    return { trouRows, brutRow, netRow };
+    if (hasSynthesis) {
+      brutRow.synthese =
+        synthesisData?.brut || "—";
+
+      netRow.synthese =
+        synthesisData?.net || "—";
+    }
+
+    return {
+      trouRows,
+      brutRow,
+      netRow
+    };
   };
 
   const { trouRows, brutRow, netRow } = prepareScoreData();
   const tourColumnWidth = 45;
-  const tableMinWidth = 40 + allTourNumbers.length * tourColumnWidth;
+
+  const synthesisColumnCount = globalJsonObject.isEclectic === 'isRingerScore' && hasSynthesis ? 1 : 0;
+
+  const tableMinWidth = 40 + (allTourNumbers.length + synthesisColumnCount) * tourColumnWidth;
 
   const getTableMaxHeight = () => {
     return windowHeight * 0.7;

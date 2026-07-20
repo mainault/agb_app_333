@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions, Modal } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,33 @@ interface ScoreRow {
   [key: string]: string;
 }
 
+interface ScoreHole {
+  hole: number;
+  par: number | null;
+  score: number | null;
+  brut: number | null;
+  net: number | null;
+}
+
+interface ScoreCard {
+  annee: string;
+  trimestre: string | null;
+  tour: string;
+  licence: string;
+  nom_prenom: string;
+  code_club: string | null;
+  nom_parcours: string | null;
+  repere: string | null;
+  whs_index: string;
+  handicap: string;
+  totals: {
+    score: number | null;
+    brut: number | null;
+    net: number | null;
+  };
+  holes: ScoreHole[];
+}
+
 const MesScores = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +72,8 @@ const MesScores = () => {
   const params = useLocalSearchParams();
   const globalJsonObject = useRef(params.globalJsonObject ? JSON.parse(params.globalJsonObject as string) : getGlobalJsonObject()).current;
   const [codeClub, setCodeClub] = useState("");
+  const [scoreCards, setScoreCards] = useState<ScoreCard[]>([]);
+  const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);
   const { height: windowHeight } = Dimensions.get('window');
 
   // Initialisation des tableaux vides avec toutes les colonnes
@@ -170,13 +199,16 @@ const MesScores = () => {
           cumuls: jsonObject.cumuls || [],
           usersArray: jsonObject.usersArray || []
         });
+        setScoreCards(jsonObject.scoreCards || []);
         setGlobalProperty('nbrPlayersForRanking', jsonObject.nbrPlayers);
         setGlobalProperty('scoreForScores', jsonObject.score[0]);
         setGlobalProperty('rankNet', jsonObject.score[0]);
         setGlobalProperty('scoresBrut', jsonObject.brut);
         setGlobalProperty('scoresNet', jsonObject.net);
         setGlobalProperty('rankBrut', jsonObject.rang[0]);
-        if (jsonObject.usersArray.length > 0) {
+        if ((jsonObject.scoreCards || []).length > 0) {
+          setCodeClub(jsonObject.scoreCards[0].code_club || "");
+        } else if (jsonObject.usersArray.length > 0) {
           setCodeClub(jsonObject.usersArray[0].code_club);
         }
         break;
@@ -217,6 +249,85 @@ const MesScores = () => {
     router.replace('/');
   };
 
+  const openScoreCard = (tour: string) => {
+    const card = scoreCards.find(item => item.tour === tour);
+
+    if (card) {
+      setSelectedScoreCard(card);
+    }
+  };
+
+  const renderScoreCardModal = () => (
+    <Modal
+      visible={selectedScoreCard !== null}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setSelectedScoreCard(null)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>
+            {selectedScoreCard?.tour === 'S'
+              ? 'Synthèse'
+              : `Tour ${selectedScoreCard?.tour}`}
+          </Text>
+
+          <Text style={styles.modalSubtitle}>
+            {selectedScoreCard?.nom_parcours || ''}
+            {selectedScoreCard?.repere
+              ? ` - Repère ${selectedScoreCard.repere}`
+              : ''}
+          </Text>
+
+          <View style={styles.cardHeaderRow}>
+            <Text style={[styles.cardHeaderCell, styles.cardHoleCell]}>Trou</Text>
+            <Text style={styles.cardHeaderCell}>Par</Text>
+            <Text style={styles.cardHeaderCell}>Score</Text>
+            <Text style={styles.cardHeaderCell}>Brut</Text>
+            <Text style={styles.cardHeaderCell}>Net</Text>
+          </View>
+
+          <ScrollView style={styles.cardScrollView}>
+            {selectedScoreCard?.holes.map((hole) => (
+              <View key={`card-hole-${hole.hole}`} style={styles.cardRow}>
+                <Text style={[styles.cardCell, styles.cardHoleCell]}>
+                  {hole.hole}
+                </Text>
+                <Text style={styles.cardCell}>{hole.par ?? '—'}</Text>
+                <Text style={styles.cardCell}>{hole.score ?? '—'}</Text>
+                <Text style={styles.cardCell}>{hole.brut ?? '—'}</Text>
+                <Text style={styles.cardCell}>{hole.net ?? '—'}</Text>
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.cardTotalsRow}>
+            <Text style={[styles.cardTotalsLabel, styles.cardHoleCell]}>
+              Total
+            </Text>
+            <Text style={styles.cardTotalsCell}>—</Text>
+            <Text style={styles.cardTotalsCell}>
+              {selectedScoreCard?.totals.score ?? '—'}
+            </Text>
+            <Text style={styles.cardTotalsCell}>
+              {selectedScoreCard?.totals.brut ?? '—'}
+            </Text>
+            <Text style={styles.cardTotalsCell}>
+              {selectedScoreCard?.totals.net ?? '—'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={() => setSelectedScoreCard(null)}
+          >
+            <Text style={styles.finishButtonText}>Fermer</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   const renderHeader = () => (
     <View style={styles.headerRow}>
       <Text style={[styles.headerCell, styles.trouHeader]}>
@@ -224,21 +335,27 @@ const MesScores = () => {
       </Text>
 
       {allTourNumbers.map((tourNum) => (
-        <Text
+        <TouchableOpacity
           key={`header-${tourNum}`}
-          style={[styles.headerCell, { width: tourColumnWidth }]}
+          style={[styles.headerTouchable, { width: tourColumnWidth }]}
+          onPress={() => openScoreCard(tourNum)}
+          disabled={!scoreCards.some(card => card.tour === tourNum)}
         >
-          {`T${tourNum}`}
-        </Text>
+          <Text style={styles.headerCell}>
+            {`T${tourNum}`}
+          </Text>
+        </TouchableOpacity>
       ))}
 
       {hasSynthesis && (
-        <Text
+        <TouchableOpacity
           key="header-synthesis"
-          style={[styles.headerCell, { width: tourColumnWidth }]}
+          style={[styles.headerTouchable, { width: tourColumnWidth }]}
+          onPress={() => openScoreCard('S')}
+          disabled={!scoreCards.some(card => card.tour === 'S')}
         >
-          S
-        </Text>
+          <Text style={styles.headerCell}>S</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -250,21 +367,29 @@ const MesScores = () => {
       </Text>
 
       {allTourNumbers.map((tourNum) => (
-        <Text
+        <TouchableOpacity
           key={`cell-${row.trou}-tour${tourNum}`}
-          style={[styles.scoreCell, { width: tourColumnWidth }]}
+          style={[styles.scoreTouchable, { width: tourColumnWidth }]}
+          onPress={() => openScoreCard(tourNum)}
+          disabled={!scoreCards.some(card => card.tour === tourNum)}
         >
-          {row[`tour${tourNum}`] || "—"}
-        </Text>
+          <Text style={styles.scoreCell}>
+            {row[`tour${tourNum}`] || "—"}
+          </Text>
+        </TouchableOpacity>
       ))}
 
       {hasSynthesis && (
-        <Text
+        <TouchableOpacity
           key={`cell-${row.trou}-synthese`}
-          style={[styles.scoreCell, { width: tourColumnWidth }]}
+          style={[styles.scoreTouchable, { width: tourColumnWidth }]}
+          onPress={() => openScoreCard('S')}
+          disabled={!scoreCards.some(card => card.tour === 'S')}
         >
-          {row.synthese || "—"}
-        </Text>
+          <Text style={styles.scoreCell}>
+            {row.synthese || "—"}
+          </Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -428,6 +553,8 @@ const MesScores = () => {
           </View>
         )}
 
+        {renderScoreCardModal()}
+
         <View style={styles.footer}>
           <TouchableOpacity style={styles.finishButton} onPress={handleEmailScores}>
             <Text style={styles.finishButtonText}>Email scores</Text>
@@ -539,6 +666,101 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
     fontSize: 13,
+  },
+  headerTouchable: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scoreTouchable: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 30,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 520,
+    maxHeight: '90%',
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    textAlign: 'center',
+    color: '#555',
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  cardScrollView: {
+    maxHeight: 500,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#b9d6ee',
+    borderBottomWidth: 1,
+    borderBottomColor: '#999',
+  },
+  cardHeaderCell: {
+    flex: 1,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    paddingVertical: 7,
+    color: '#333',
+  },
+  cardRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#d5e3f5',
+  },
+  cardCell: {
+    flex: 1,
+    textAlign: 'center',
+    paddingVertical: 6,
+    color: '#333',
+  },
+  cardHoleCell: {
+    flex: 0.8,
+    fontWeight: 'bold',
+  },
+  cardTotalsRow: {
+    flexDirection: 'row',
+    borderTopWidth: 2,
+    borderTopColor: '#999',
+    backgroundColor: '#f3ecec',
+  },
+  cardTotalsLabel: {
+    textAlign: 'center',
+    paddingVertical: 8,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  cardTotalsCell: {
+    flex: 1,
+    textAlign: 'center',
+    paddingVertical: 8,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeModalButton: {
+    alignSelf: 'center',
+    backgroundColor: '#3498db',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 5,
+    marginTop: 12,
   },
   loader: {
     flex: 1,

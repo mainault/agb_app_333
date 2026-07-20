@@ -11,6 +11,34 @@ import { sendRequest } from '../utils/api';
 import { showAlert } from '../utils/utilities';
 import Dropdown from '../components/dropDown';
 
+
+interface ScoreCardHole {
+  hole: number;
+  par: number;
+  score: number;
+  brut: number;
+  net: number;
+}
+
+interface ScoreCard {
+  annee: string;
+  trimestre: string | null;
+  tour: string;
+  licence: string;
+  nom_prenom: string;
+  code_club: string | null;
+  nom_parcours: string | null;
+  repere: string | null;
+  whs_index: string;
+  handicap: string;
+  totals: {
+    score: number;
+    brut: number;
+    net: number;
+  };
+  holes: ScoreCardHole[];
+}
+
 const DisplayRanking = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +50,9 @@ const DisplayRanking = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<GlobalPlayerRanking | GlobalPlayerRankingRS | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);
   const flatListRef = useRef<FlatList<any>>(null);
+  const pendingPlayerRef = useRef<GlobalPlayerRanking | GlobalPlayerRankingRS | null>(null);
   const isRingerScore = getGlobalJsonObjectForRanking().isEclectic === "isRingerScore";
   const isEclectic = getGlobalJsonObjectForRanking().isEclectic === "isEclectic" ||
                    getGlobalJsonObjectForRanking().isEclectic === "isEclectic-IS";
@@ -48,15 +78,63 @@ const DisplayRanking = () => {
 
   const getServerResponse = (jsonObject: any) => {
     setIsLoading(false);
+
+    const operationType = jsonObject.operationType;
+
     if (jsonObject.status === "KO") {
-      // Réinitialisation complète des données
+      if (operationType === "getUserCurrentQuarterEclecticScores") {
+        pendingPlayerRef.current = null;
+        setSelectedScoreCard(null);
+        showAlert("Gestion des Erreurs", jsonObject.error);
+        return;
+      }
+
+      // Réinitialisation complète des données du classement
       setPlayersData([]);
       setPlayersDataRS([]);
       setTrimestres([]);
       setParcoursPars([]);
+      setSelectedPlayer(null);
+      setSelectedScoreCard(null);
+      pendingPlayerRef.current = null;
       showAlert("Gestion des Erreurs", jsonObject.error);
-      // Arrêt immédiat du traitement
       return;
+    }
+
+    switch (operationType) {
+      case "getUserCurrentQuarterEclecticScores": {
+        const pendingPlayer = pendingPlayerRef.current;
+
+        if (!pendingPlayer) {
+          return;
+        }
+
+        const scoreCard = (jsonObject.scoreCards ?? []).find(
+          (card: ScoreCard) =>
+            card.licence === pendingPlayer.licence &&
+            card.tour === pendingPlayer.tour
+        );
+
+        if (!scoreCard) {
+          pendingPlayerRef.current = null;
+          setSelectedScoreCard(null);
+          showAlert(
+            "Carte de score",
+            "La carte de score de ce joueur n’est pas disponible."
+          );
+          return;
+        }
+
+        setSelectedPlayer(pendingPlayer);
+        setSelectedScoreCard(scoreCard);
+        setModalVisible(true);
+        pendingPlayerRef.current = null;
+        return;
+      }
+
+      case "getRanking":
+      default:
+        break;
     }
 
     if (jsonObject.nbrPlayers) {
@@ -64,11 +142,17 @@ const DisplayRanking = () => {
     }
 
     if (jsonObject.nbrTrimestres) {
-      const formattedTrimestres = jsonObject.nbrTrimestres.map((item: { trimestre: string }) => ({
-        label: item.trimestre,
-        value: item.trimestre,
-      }));
-      setTrimestres([{ label: "Tous", value: "tous" }, ...formattedTrimestres]);
+      const formattedTrimestres = jsonObject.nbrTrimestres.map(
+        (item: { trimestre: string }) => ({
+          label: item.trimestre,
+          value: item.trimestre,
+        })
+      );
+
+      setTrimestres([
+        { label: "Tous", value: "tous" },
+        ...formattedTrimestres,
+      ]);
     }
 
     if (jsonObject.parcoursPars) {
@@ -77,9 +161,9 @@ const DisplayRanking = () => {
     }
 
     if (isRingerScore) {
-      setPlayersDataRS([...jsonObject.mergedRanking]);
+      setPlayersDataRS([...(jsonObject.mergedRanking ?? [])]);
     } else {
-      setPlayersData([...jsonObject.mergedRanking]);
+      setPlayersData([...(jsonObject.mergedRanking ?? [])]);
     }
   };
 
@@ -243,6 +327,26 @@ const DisplayRanking = () => {
     );
   };
 
+  const handlePlayerInfoPress = (
+    item: GlobalPlayerRanking | GlobalPlayerRankingRS
+  ) => {
+    pendingPlayerRef.current = item;
+    setSelectedPlayer(null);
+    setSelectedScoreCard(null);
+
+    const donnees = {
+      operationType: "getUserCurrentQuarterEclecticScores",
+      CRUD: "list",
+      isEclectic: getGlobalJsonObjectForRanking().isEclectic,
+      licence: item.licence,
+      trimestre: selectedTrimestre === "tous" ? "" : selectedTrimestre,
+      tour: item.tour,
+      isAppMobile: true,
+    };
+
+    fetchDataFromServer(donnees);
+  };
+
   const renderNormalPlayerRow = ({ item }: { item: GlobalPlayerRanking }) => {
     const isBreakLine = checkIfBreakLine(item);
 
@@ -260,13 +364,10 @@ const DisplayRanking = () => {
           </View>
         ) : (
           <TouchableOpacity
-            style={[styles.cell, styles.infoCell]}
-            onPress={() => {
-              setSelectedPlayer(item);
-              setModalVisible(true);
-            }}
+              style={[styles.cell, styles.infoCell]}
+              onPress={() => handlePlayerInfoPress(item)}
           >
-            <Text style={styles.infoButton}>ℹ️</Text>
+              <Text style={styles.infoButton}>ℹ️</Text>
           </TouchableOpacity>
         )}
 
@@ -326,13 +427,10 @@ const DisplayRanking = () => {
           </View>
         ) : (
           <TouchableOpacity
-            style={[styles.cellRS, styles.infoCellRS]}
-            onPress={() => {
-              setSelectedPlayer(item);
-              setModalVisible(true);
-            }}
+              style={[styles.cellRS, styles.infoCellRS]}
+              onPress={() => handlePlayerInfoPress(item)}
           >
-            <Text style={styles.infoButton}>ℹ️</Text>
+              <Text style={styles.infoButton}>ℹ️</Text>
           </TouchableOpacity>
         )}
 
@@ -405,34 +503,26 @@ const DisplayRanking = () => {
     };
 
   const renderHoleScoresModal = () => {
-    if (!selectedPlayer || !modalVisible) return null;
+    if (!selectedPlayer || !selectedScoreCard || !modalVisible) return null;
 
-    // Type guard pour vérifier si c'est un joueur RingerScore
-    const isRingerScorePlayer = (player: GlobalPlayerRanking | GlobalPlayerRankingRS): player is GlobalPlayerRankingRS => {
+    const isRingerScorePlayer = (
+      player: GlobalPlayerRanking | GlobalPlayerRankingRS
+    ): player is GlobalPlayerRankingRS => {
       return 'rank_brut' in player;
     };
 
-    // Fonctions utilitaires pour les scores
-    const getHoleScores = (item: GlobalPlayerRanking | GlobalPlayerRankingRS): number[] => {
-      if (!item) return Array(18).fill(0);
-      return item.score ? item.score.split(',').map(score => parseInt(score, 10) || 0) : Array(18).fill(0);
+    const closeModal = () => {
+      setModalVisible(false);
+      setSelectedPlayer(null);
+      setSelectedScoreCard(null);
     };
-
-    const getNetHoleScores = (item: GlobalPlayerRanking | GlobalPlayerRankingRS): number[] => {
-      if (!item) return Array(18).fill(0);
-      return item.score_net ? item.score_net.split(',').map(score => parseInt(score, 10) || 0) : Array(18).fill(0);
-    };
-
-    const holeScores = getHoleScores(selectedPlayer);
-    const netHoleScores = getNetHoleScores(selectedPlayer);
-    const totalScore = holeScores.reduce((sum, score) => sum + score, 0);
 
     return (
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -446,61 +536,91 @@ const DisplayRanking = () => {
               ) : (
                 selectedPlayer.nom_prenom
               )}
-              {selectedPlayer && 'serie' in selectedPlayer && selectedPlayer.serie && isHtmlContent(selectedPlayer.serie) && (
-                <RenderHTML
-                  contentWidth={200}
-                  source={{ html: selectedPlayer.serie }}
-                  baseStyle={styles.modalSerieText}
-                />
-              )}
+
+              {selectedPlayer &&
+                'serie' in selectedPlayer &&
+                selectedPlayer.serie &&
+                isHtmlContent(selectedPlayer.serie) && (
+                  <RenderHTML
+                    contentWidth={200}
+                    source={{ html: selectedPlayer.serie }}
+                    baseStyle={styles.modalSerieText}
+                  />
+                )}
             </Text>
 
             <View style={styles.modalResultsRow}>
-              <Text style={styles.modalResultText}>BRUT: {selectedPlayer.brut}</Text>
-              <Text style={styles.modalResultText}>NET: {selectedPlayer.net}</Text>
+              <Text style={styles.modalResultText}>
+                BRUT: {selectedScoreCard.totals.brut}
+              </Text>
+
+              <Text style={styles.modalResultText}>
+                NET: {selectedScoreCard.totals.net}
+              </Text>
 
               {isRingerScore ? (
                 <Text style={styles.modalResultText}>
-                  RANG: {isRingerScorePlayer(selectedPlayer) ?
-                    `${selectedPlayer.rank_brut} / ${selectedPlayer.rank_net}` :
-                    (selectedPlayer as GlobalPlayerRanking)["1"]}
+                  RANG:{' '}
+                  {isRingerScorePlayer(selectedPlayer)
+                    ? `${selectedPlayer.rank_brut} / ${selectedPlayer.rank_net}`
+                    : (selectedPlayer as GlobalPlayerRanking)['1']}
                 </Text>
               ) : (
                 <>
-                  <Text style={styles.modalResultText}>BN: {(selectedPlayer as GlobalPlayerRanking).bn}</Text>
-                  <Text style={styles.modalResultText}>RANG: {(selectedPlayer as GlobalPlayerRanking)["1"]}</Text>
+                  <Text style={styles.modalResultText}>
+                    BN: {(selectedPlayer as GlobalPlayerRanking).bn}
+                  </Text>
+                  <Text style={styles.modalResultText}>
+                    RANG: {(selectedPlayer as GlobalPlayerRanking)['1']}
+                  </Text>
                 </>
               )}
             </View>
 
-            <Text style={styles.modalSubtitle}>Score: ({totalScore} coups joués)</Text>
+            <Text style={styles.modalSubtitle}>
+              Score : ({selectedScoreCard.totals.score} coups joués)
+            </Text>
 
             <View style={styles.modalHolesHeaderFixed}>
-              <Text style={[styles.modalHoleHeaderText, { flex: 1.5 }]}>Trou</Text>
+              <Text style={[styles.modalHoleHeaderText, { flex: 1.2 }]}>Trou</Text>
               <Text style={[styles.modalHoleHeaderText, { flex: 1 }]}>Par</Text>
               <Text style={[styles.modalHoleHeaderText, { flex: 1 }]}>Score</Text>
+              <Text style={[styles.modalHoleHeaderText, { flex: 1 }]}>Brut</Text>
               <Text style={[styles.modalHoleHeaderText, { flex: 1 }]}>Net</Text>
             </View>
 
-            <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={true}>
-              {holeScores.map((score: number, index: number) => {
-                const par = Array.isArray(parcoursPars) && parcoursPars.length > index ?
-                  parseInt(parcoursPars[index], 10) || 0 : 0;
-                const isOverPar = score > par;
+            <ScrollView
+              style={styles.modalScrollView}
+              showsVerticalScrollIndicator={true}
+            >
+              {selectedScoreCard.holes.map((hole) => {
+                const isOverPar = hole.score > hole.par;
+
                 return (
-                  <View key={`modal-hole-${index}`} style={styles.modalHoleRow}>
-                    <Text style={[styles.modalHoleCell, { flex: 1.5 }]}>{index + 1}</Text>
-                    <Text style={[styles.modalHoleCell, { flex: 1 }]}>
-                      {Array.isArray(parcoursPars) && parcoursPars.length > index ?
-                        parcoursPars[index] : 'N/A'}
+                  <View
+                    key={`modal-hole-${hole.hole}`}
+                    style={styles.modalHoleRow}
+                  >
+                    <Text style={[styles.modalHoleCell, { flex: 1.2 }]}>
+                      {hole.hole}
                     </Text>
-                    <Text style={[styles.modalHoleCell, { flex: 1 }]}>{score}</Text>
-                    <Text style={[
-                      styles.modalHoleCell,
-                      { flex: 1 },
-                      isOverPar && styles.overParNetScore
-                    ]}>
-                      {netHoleScores[index]}
+                    <Text style={[styles.modalHoleCell, { flex: 1 }]}>
+                      {hole.par}
+                    </Text>
+                    <Text style={[styles.modalHoleCell, { flex: 1 }]}>
+                      {hole.score}
+                    </Text>
+                    <Text style={[styles.modalHoleCell, { flex: 1 }]}>
+                      {hole.brut}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.modalHoleCell,
+                        { flex: 1 },
+                        isOverPar && styles.overParNetScore,
+                      ]}
+                    >
+                      {hole.net}
                     </Text>
                   </View>
                 );
@@ -509,7 +629,7 @@ const DisplayRanking = () => {
 
             <TouchableOpacity
               style={styles.modalCloseButton}
-              onPress={() => setModalVisible(false)}
+              onPress={closeModal}
             >
               <Text style={styles.modalCloseButtonText}>Fermer</Text>
             </TouchableOpacity>

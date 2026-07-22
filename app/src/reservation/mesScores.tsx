@@ -257,6 +257,39 @@ const MesScores = () => {
     }
   };
 
+  const getRepereColor = (repere?: string | null): string => {
+
+    switch ((repere || '').toLowerCase()) {
+
+        case 'blanc':
+            return '#FFFFFF';
+
+        case 'jaune':
+            return '#FFD400';
+
+        case 'bleu':
+            return '#0066CC';
+
+        case 'rouge':
+            return '#D80000';
+
+        case 'orange':
+            return '#F28C00';
+
+        case 'violet':
+            return '#7A3DB8';
+
+        case 'vert':
+            return '#008000';
+
+        case 'noir':
+            return '#000000';
+
+        default:
+            return '#B0B0B0';
+    }
+  };
+
   const renderScoreCardModal = () => (
     <Modal
       visible={selectedScoreCard !== null}
@@ -272,12 +305,35 @@ const MesScores = () => {
               : `Tour ${selectedScoreCard?.tour}`}
           </Text>
 
-          <Text style={styles.modalSubtitle}>
-            {selectedScoreCard?.nom_parcours || ''}
-            {selectedScoreCard?.repere
-              ? ` - Repère ${selectedScoreCard.repere}`
-              : ''}
-          </Text>
+          <View
+              style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginTop: 4,
+                  marginBottom: 10,
+              }}
+          >
+              <Text style={{ color: '#555', fontSize: 13 }}>
+                  {selectedScoreCard?.nom_parcours}
+              </Text>
+
+              <View
+                  style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: getRepereColor(selectedScoreCard?.repere),
+                      borderWidth: 1,
+                      borderColor: '#666',
+                      marginHorizontal: 6,
+                  }}
+              />
+
+              <Text style={{ color: '#555', fontSize: 13 }}>
+                  {selectedScoreCard?.repere}
+              </Text>
+          </View>
 
           <View style={styles.cardHeaderRow}>
             <Text style={[styles.cardHeaderCell, styles.cardHoleCell]}>Trou</Text>
@@ -531,7 +587,9 @@ const MesScores = () => {
             </Text>
           )}
         </View>
-
+        <Text style={styles.helpText}>
+            Touchez l'en-tête d'un tour pour afficher la carte détaillée.
+        </Text>
         {data.cumuls.length > 0 && renderCumuls()}
 
         {isLoading ? (
@@ -810,7 +868,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 12,
-  }
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#080808',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: 8,
+},
 });
 
 export default MesScores;

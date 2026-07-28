@@ -151,6 +151,19 @@ export const initialGlobalProperties: GlobalProperties = {
     rankNet: "0",
 };
 
+
+export interface MenuRepas {
+    id: string | null;
+    nom_competition: string | null;
+    competition_key: string | null;
+    menu_A_E: string | null;
+    menu_A_P: string | null;
+    menu_A_D: string | null;
+    menu_B_E: string | null;
+    menu_B_P: string | null;
+    menu_B_D: string | null;
+    prix_repas: string | null;
+}
 export interface GlobalJsonObject {
     operationType: string | null,
     status: string | null,
@@ -220,7 +233,9 @@ export interface GlobalJsonObject {
         boolean,
         boolean
     ],
-    resa_menu: string | null,
+    isResaMenu: null,
+    resa_menu: null,
+    menu_repas: [],
     indexMin_H: string | null,
     indexMin_F: string | null,
     civilite: string | null,
@@ -350,7 +365,9 @@ export const initialGlobalJsonObject: GlobalJsonObject = {
         false,
         false
     ],
+    isResaMenu: null,
     resa_menu: null,
+    menu_repas: [],
     indexMin_H: null,
     indexMin_F: null,
     civilite: null,
@@ -567,6 +584,7 @@ export const initialGlobalResaMember: GlobalResaMember = {
     mail_result: null,
     admin_commentaire: null,
   },
+
   numTranche: null,
   title: null,
   tranche_duree: null,
@@ -808,21 +826,13 @@ export const initialGlobalPaymentsList: GlobalPaymentsList= {
   ]
 }
 export interface GlobalTeamLeader {
-  teamLeader:
-  [
-    {
-      globalTeamLeaderObject: any,
-    }
-  ]
+  globalTeamLeaderObject: any;
 }
-export const initialGlobalTeamLeader: GlobalTeamLeader = {
-  teamLeader:
-  [
-    {
-      globalTeamLeaderObject: null,
-    }
-  ]
-}
+
+export const initialGlobalTeamLeader:
+  GlobalTeamLeader = {
+    globalTeamLeaderObject: null,
+};
 
 export interface User {
   civilite: string;

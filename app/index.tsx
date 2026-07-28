@@ -57,76 +57,80 @@ const UPDATE_DISMISSED_KEY = 'update_dismissed_version';
 const menus: MenuItemType[] = [
   {
     name: "Compétitions",
-    subMenus: [
-      {
-        name: "Standard",
-        subMenus: [
-          { name: "Inscription / Désinscription", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "inscription" } },
-          //{ name: "Désinscription", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "desinscription" } },
-          { name: "Compléter équipe", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "completer_equipe" } },
-          { name: "Liste des inscrits", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "liste_inscrits" } },
-        ],
-      },
-      {
-        name: "Eclectic",
-        subMenus: [
-          { name: "Inscription / Désinscription", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_inscription" } },
-          //{ name: "Désinscription", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_desinscription" } },
-          { name: "Mes scores", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_mes_scores" } },
-          { name: "Liste des inscrits", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_liste_inscrits" } },
-          { name: "Classement", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_classement" } },
-        ],
-      },
-      {
-        name: "Challenge - hiver",
-        subMenus: [
-          { name: "Inscription / Désinscription", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_inscription" } },
-          //{ name: "Désinscription", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_desinscription" } },
-          { name: "Mes scores", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_mes_scores" } },
-          { name: "Liste des inscrits", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_liste_inscrits" } },
-          { name: "Classement", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_classement" } },
-        ],
-      },
-      {
-        name: "Ringer score",
-        subMenus: [
-          { name: "Inscription / Désinscription", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_inscription" } },
-          //{ name: "Désinscription", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_desinscription" } },
-          { name: "Mes scores", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_mes_scores" } },
-          { name: "Liste des inscrits", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_liste_inscrits" } },
-          { name: "Classement", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_classement" } },
-        ],
-      },
-      {
-        name: "BACATTSS",
-        subMenus: [
-          { name: "Inscription / Désinscription", parentName: "BACATTSS", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "inscription" } },
-          //{ name: "Désinscription", parentName: "BACATTSS", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "desinscription" } },
-          { name: "Liste des inscrits", parentName: "BACATTSS", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "liste_inscrits" } },
-        ],
-      },
-      {
-        name: "Covoiturage",
-        subMenus: [
-          { name: "Inscription covoiturage", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_inscription" } },
-          {name: "Liste des covoiturages", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_liste" } }
-          ]
-      },
-      {
-        name: "Payer droit de jeu en ligne", parentName: "Paiement droit de jeu en ligne", competitionType: "OLP", screen: "subMenu", params: { subMenuTitle: "OLP" },
-      },
-    ],
-  },
+      subMenus: [
+        {
+          name: "Calendrier des compétitions",
+          screen: "src/reservation/competition",
+        },
+        {
+          name: "Standard",
+          subMenus: [
+            { name: "Inscription / Désinscription", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "inscription" } },
+            //{ name: "Désinscription", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "desinscription" } },
+            { name: "Compléter équipe", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "completer_equipe" } },
+            { name: "Liste des inscrits", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "liste_inscrits" } },
+          ],
+        },
+        {
+          name: "Eclectic",
+          subMenus: [
+            { name: "Inscription / Désinscription", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_inscription" } },
+            //{ name: "Désinscription", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_desinscription" } },
+            { name: "Mes scores", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_mes_scores" } },
+            { name: "Liste des inscrits", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_liste_inscrits" } },
+            { name: "Classement", parentName: "Eclectic", competitionType: "isEclectic", screen: "subMenu", params: { subMenuTitle: "eclectic_classement" } },
+          ],
+        },
+        {
+          name: "Challenge - hiver",
+          subMenus: [
+            { name: "Inscription / Désinscription", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_inscription" } },
+            //{ name: "Désinscription", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_desinscription" } },
+            { name: "Mes scores", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_mes_scores" } },
+            { name: "Liste des inscrits", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_liste_inscrits" } },
+            { name: "Classement", parentName: "Challenge - hiver", competitionType: "isEclectic-IS", screen: "subMenu", params: { subMenuTitle: "is_classement" } },
+          ],
+        },
+        {
+          name: "Ringer score",
+          subMenus: [
+            { name: "Inscription / Désinscription", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_inscription" } },
+            //{ name: "Désinscription", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_desinscription" } },
+            { name: "Mes scores", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_mes_scores" } },
+            { name: "Liste des inscrits", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_liste_inscrits" } },
+            { name: "Classement", parentName: "Ringer score", competitionType: "isRingerScore", screen: "subMenu", params: { subMenuTitle: "rs_classement" } },
+          ],
+        },
+        {
+          name: "BACATTSS",
+          subMenus: [
+            { name: "Inscription / Désinscription", parentName: "BACATTSS", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "inscription" } },
+            //{ name: "Désinscription", parentName: "BACATTSS", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "desinscription" } },
+            { name: "Liste des inscrits", parentName: "BACATTSS", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "liste_inscrits" } },
+          ],
+        },
+        {
+          name: "Covoiturage",
+          subMenus: [
+            { name: "Inscription covoiturage", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_inscription" } },
+            {name: "Liste des covoiturages", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_liste" } }
+            ]
+        },
+        {
+          name: "Payer droit de jeu en ligne", parentName: "Paiement droit de jeu en ligne", competitionType: "OLP", screen: "subMenu", params: { subMenuTitle: "OLP" },
+        },
+      ],
+    },
 
-  {
-    name: "Informations légales",
-    subMenus: [
-      {
-        name: "Mentions légales",
-        screen: "legal"
-      }
-    ]
-  }
+    {
+      name: "Informations légales",
+      subMenus: [
+        {
+          name: "Mentions légales",
+          screen: "legal"
+        }
+      ]
+    }
 ];
 
 export default function Index() {

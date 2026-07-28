@@ -7,7 +7,6 @@ import {
   FlatList,
   Keyboard,
   Modal,
-  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -15,17 +14,18 @@ import {
   TouchableWithoutFeedback,
   View
 } from 'react-native';
-
+import { Checkbox, RadioButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import CarouselModal from '../components/CarouselModal';
 import CustomAlert from '../components/CustomAlert';
 import CustomButton from '../components/CustomButton';
-import RepasModal from '../components/RepasModal';
+import RepasModal, { JoueurRepas } from '../components/RepasModal';
 import ScreenContainer from '../components/ScreenContainer';
 
 import { WebViewNavigation } from 'react-native-webview';
 import {
+  getGlobalCurrentCompetition,
   getGlobalJsonObject,
   getGlobalOrphanList,
   getGlobalPaymentsList,
@@ -33,6 +33,7 @@ import {
   getGlobalProperties,
   getGlobalResaMember,
   getGlobalReturnResaMember,
+  getGlobalTeamLeader,
   getGlobalUsersList,
   resetGlobalOrphanList,
   resetGlobalResaMember,
@@ -148,6 +149,7 @@ const ResaScreen = () => {
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const dataReceived = useRef(false);
   const [modalRepasVisible, setModalRepasVisible] = useState(false);
+  const [repasDataState, setRepasDataState] = useState<JoueurRepas[]>([]);
   const [isCarouselModalVisible, setIsCarouselModalVisible] = useState(false);
   const [nbrDaysCancelRefunded, setNbrDaysCancelRefunded] = useState<string | null>(null);
   const [buttonStates, setButtonStates] = useState<Record<string, boolean>>({
@@ -169,6 +171,40 @@ const ResaScreen = () => {
   const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
   const [searchText, setSearchText] = useState('');
   const [filteredItems, setFilteredItems] = useState<DropdownItem[]>([]);
+  const menusRepasChoiceResolverRef = useRef<((response: any | null) => void) | null>(null);
+  const repasDataRef = useRef<JoueurRepas[]>([]);
+
+  /**
+   * Construit les informations de menu attendues par le backend à partir
+   * de l'objet repas validé dans RepasModal.
+   *
+   * La licence provient de JoueurRepas.id. Le record menu_repas du
+   * GlobalJsonObject sert uniquement à déterminer si la compétition
+   * propose un menu.
+   */
+  const buildMenuPayload = (repasData: JoueurRepas[] = repasDataState, ) => {
+    const menuRepas = getGlobalJsonObject().menu_repas;
+    const hasMenuRepas = !Array.isArray(menuRepas) && menuRepas != null && Object.keys(menuRepas).length > 0;
+    /*
+    * Les deux tableaux doivent rester parallèles :
+    *
+    * resaMenuLicences[index]
+    *          ↕
+    * resaMenu[index]
+    *
+    * Un joueur sans repas ou sans choix de menu
+    * reste présent, avec une chaîne vide.
+    */
+    const resaMenuLicences = hasMenuRepas ? repasData.map(joueur => joueur.id,) : [];
+    const resaMenu = hasMenuRepas ? repasData.map(joueur => joueur.dejeune ? joueur.choixMenu ?? '' : '', ) : [];
+    const isResaMenu = resaMenu.some(choixMenu => choixMenu !== '',);
+    return {
+      menu_choice: isResaMenu ? resaMenu[0] ?? '' : '',
+      isResaMenu: isResaMenu ? '1' : '0',
+      resaMenuLicences, resaMenu,
+    };
+  };
+
   const initialRender = useRef(true);
   const [disabledDropdowns, setDisabledDropdowns] = useState<DropdownsState>(() => {
     const formule = getGlobalJsonObject().formule;
@@ -277,22 +313,15 @@ const ResaScreen = () => {
 
   // Fonction pour vérifier si c'est une nouvelle équipe
   const isNewTeam = () => {
-    return !getGlobalProperties().members ||
-      getGlobalProperties().members.length === 0 ||
-      getGlobalProperties().newTeamResa === true;
+    return !getGlobalProperties().members || getGlobalProperties().members.length === 0 || getGlobalProperties().newTeamResa === true;
   };
 
   // Fonction pour obtenir la période depuis getGlobalJsonObject()
-const getPeriodeFromGlobal = (): string | null => {
-  const periodeHtml =
-    getGlobalJsonObject().periode?.title ||
-    getGlobalJsonObject().periode?.title ||
-    getGlobalResaMember()?.position?.title;
-
-  if (!periodeHtml) return null;
-
-  return extractPeriodeFromHtml(periodeHtml);
-};
+  const getPeriodeFromGlobal = (): string | null => {
+    const periodeHtml = getGlobalJsonObject().periode?.title;
+    if (!periodeHtml) return null;
+    return extractPeriodeFromHtml(periodeHtml);
+  };
 
   // Fonction pour convertir le texte de période en ID
   const getPeriodeIdFromText = (periodeText: string | null): number | null => {
@@ -308,11 +337,7 @@ const getPeriodeFromGlobal = (): string | null => {
 
   // Fonction pour trouver une période par ID
   const findPeriodeById = (periodeId: number): { id: number; label: string } | undefined => {
-    const options = [
-      { id: 1, label: "Début" },
-      { id: 2, label: "Milieu" },
-      { id: 3, label: "Fin" }
-    ];
+    const options = [{ id: 1, label: "Début" }, { id: 2, label: "Milieu" }, { id: 3, label: "Fin" }];
     return options.find(p => p.id === periodeId);
   };
 
@@ -355,13 +380,7 @@ const getPeriodeFromGlobal = (): string | null => {
     const isNewTeam = !getGlobalProperties().members || getGlobalProperties().members.length === 0;
 
     // Item vide par défaut
-    const emptyItem: DropdownItem = {
-      label: index === 0 ? "Sélectionnez un joueur" : " ",
-      value: "",
-      repere: "blanc",
-      licence: "",
-      civilite: ""
-    };
+    const emptyItem: DropdownItem = { label: index === 0 ? "Sélectionnez un joueur" : " ", value: "", repere: "blanc", licence: "", civilite: "" };
 
     // Cas pour la première dropdown (index 0)
     if (index === 0) {
@@ -635,34 +654,70 @@ const getPeriodeFromGlobal = (): string | null => {
   // Fonction displayResaManagement
   const displayResaManagement = (jsonObject: any) => {
     setGlobalProperty('repere', getPlayerRepere(getGlobalJsonObject().licence));
+
     setGlobalProperty('isPEL', getGlobalJsonObject().isPEL_enabled);
+
     setGlobalProperty('newTeamManagement', true);
+
     setSelectedRepere(getGlobalProperties().repere || 'blanc');
-    const formule = getGlobalJsonObject().formule;
-    const isScramble = formule.includes("Scramble");
-    // Mettre à jour selectedValues avec la licence du capitaine
-    if (jsonObject.identMember && jsonObject.identMember.licence) {
-      const newSelectedValues = [...selectedValues];
-      newSelectedValues[0] = jsonObject.identMember.licence; // Mettre à jour avec la licence du capitaine
-      setSelectedJoueurs(newSelectedValues);
+
+    /*
+    * Les membres retournés par validateTeamLeader()
+    * représentent l'équipe actuellement enregistrée.
+    */
+    const existingMembers = Array.isArray(jsonObject.identMember) ? jsonObject.identMember : [];
+
+    /*
+    * Le joueur connecté rejoint cette équipe.
+    * Il doit apparaître dans la première position libre,
+    * sans être ajouté à globalProperties.members avant
+    * la validation.
+    */
+    const connectedUserLicence = String(getGlobalJsonObject().licence ?? '');
+
+    const newSelectedValues: Array<string> = [
+      '',
+      '',
+      '',
+      '',
+    ];
+
+    existingMembers
+      .slice(0, 4)
+      .forEach((member: any, index: number) => {
+        newSelectedValues[index] =
+          String(member.licence ?? '');
+      });
+
+    if (
+      connectedUserLicence !== '' &&
+      !newSelectedValues.includes(connectedUserLicence)
+    ) {
+      const firstEmptyPosition = newSelectedValues.findIndex(licence => licence === '');
+
+      if (firstEmptyPosition !== -1) {
+        newSelectedValues[firstEmptyPosition] =
+          connectedUserLicence;
+      }
     }
 
-    // Initialiser les dropdowns avec les joueurs déjà inscrits
-    initializeTeamMembers();
+    setSelectedJoueurs(newSelectedValues);
 
-    // Configurer les dropdowns
     configureDropdownsBasedOnFormule();
-    // Récupération des données de période et tranche
-    const periodeText = getPeriodeFromGlobal();
-    const trancheId = getGlobalJsonObject().tranche?.id;
-    const trancheTitle = getGlobalJsonObject().tranche?.title;
+
     const donnees = {
-      operationType: "getTranches",
-      competitionClass: getGlobalJsonObject().competitionClass,
-      nom_competition: getGlobalJsonObject().nom_competition,
-      isMassResaAccess: getGlobalProperties().isMassResaAccess,
-      isActionForCompetitionTerminated: getGlobalProperties().isActionForCompetitionTerminated
+      operationType: 'getTranches',
+      isEclectic:
+        getGlobalJsonObject().isEclectic,
+      nom_competition:
+        getGlobalJsonObject().nom_competition,
+      isMassResaAccess:
+        getGlobalProperties().isMassResaAccess,
+      isActionForCompetitionTerminated:
+        getGlobalProperties()
+          .isActionForCompetitionTerminated,
     };
+
     fetchDataFromServer(donnees);
   };
 
@@ -672,24 +727,25 @@ const getPeriodeFromGlobal = (): string | null => {
 
     setTranches(prevTranches =>
       prevTranches.map(tranche => {
-        if (Number(tranche.id) === Number(trancheId)) {
+        if (tranche.id === trancheId) {
           return {
             ...tranche,
             selectedOption: optionId
+            
           };
         }
-
         return {
           ...tranche,
           selectedOption: undefined
         };
       })
     );
-
     const periode = findPeriodeById(optionId);
     if (periode) {
       setGlobalProperty('numTranche', trancheId);
       setGlobalProperty('labelPeriode', periode.label);
+    } else {
+      console.warn(`Période avec ID ${optionId} non trouvée`);
     }
   };
 
@@ -726,11 +782,7 @@ const getPeriodeFromGlobal = (): string | null => {
     if (text.trim() === '') {
       setFilteredItems(dropdownItems);
     } else {
-      setFilteredItems(
-        dropdownItems.filter(item =>
-          item.label.toLowerCase().includes(text.toLowerCase())
-        )
-      );
+      setFilteredItems(dropdownItems.filter(item => item.label.toLowerCase().includes(text.toLowerCase())));
     }
   };
 
@@ -855,18 +907,53 @@ const getPeriodeFromGlobal = (): string | null => {
 
 
   // Fonction fetchDataFromServer
-  const fetchDataFromServer = async (donnees: any) => {
+  const fetchDataFromServer = async (donnees: any, useGlobalLoader: boolean = true, ) => {
     try {
-      setIsLoading(true);
+      if (useGlobalLoader) {
+        setIsLoading(true);
+      }
+
       const response = await sendRequest(donnees);
+
       getServerResponse(response);
     } catch (error) {
-      console.error("Erreur dans fetchDataFromServer:", error);
-      await showAlert("Erreur", "Problème de connexion.");
-      throw error;
+      console.error('Erreur dans fetchDataFromServer :', error);
+
+      await showAlert('Gestion des erreurs', 'Une erreur est survenue lors de la communication avec le serveur.');
     } finally {
-      setIsLoading(false);
+      if (useGlobalLoader) {
+        setIsLoading(false);
+      }
     }
+  };
+
+
+  /**
+   * Charge, au clic sur le bouton Menu, la définition du menu et le choix
+   * déjà enregistré pour le joueur. Ce flux reproduit le client Web.
+   */
+  const requestMenusRepasChoice = (
+    licence: string,
+  ): Promise<any | null> => {
+    return new Promise(resolve => {
+      menusRepasChoiceResolverRef.current = resolve;
+
+      const donnees = {
+        operationType: 'menusRepasChoice',
+        action: 'get',
+        nom_competition:
+          getGlobalJsonObject().nom_competition,
+        licence,
+        isEclectic:
+          getGlobalJsonObject().isEclectic,
+        source: 'massTeamResa',
+        competition_key:
+          getGlobalCurrentCompetition()?.competition_key,
+        isMobile: '1',
+      };
+
+      fetchDataFromServer(donnees, false);
+    });
   };
 
   // Fonction getServerResponse
@@ -936,47 +1023,60 @@ const getPeriodeFromGlobal = (): string | null => {
           showAlert(jsonObject.error, "OK");
           break;
         }
-        if (getGlobalProperties().sous_menu === "desinscription") {
+        if(getGlobalProperties().sous_menu === "desinscription"){
           router.replace("/");
           break;
-        }
-        const isPelFacultatif = getGlobalJsonObject().pel_facultatif === "1";
-        const isPelObligatoire = getGlobalJsonObject().pel_obligatoire === "1";
-        const isPaymentAllowedForCompetition = isPelFacultatif || isPelObligatoire;
-        if (
-          getGlobalJsonObject().isAlreadyPaid === true ||
-          getGlobalProperties().isPEL === false ||
-          !isPaymentAllowedForCompetition
-        ) {
-          const dataForPlayersList = {
-            operationType: 'getCompetitionPlayers',
-            competitionClass: getGlobalJsonObject().competitionClass,
-            nom_competition: getGlobalJsonObject().nom_competition,
-            action: 'displayList',
-            isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
-            accessType: 'resa',
-          };
-
-          fetchDataFromServer(dataForPlayersList);
-        } else {
-          setIsAlertVisible(true);
-        }
-
+        } 
+        const dataForPlayersList = {
+          operationType: 'getCompetitionPlayers',
+          isEclectic: getGlobalJsonObject().isEclectic,
+          nom_competition: getGlobalJsonObject().nom_competition,
+          action: 'displayList',
+          isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
+          accessType: 'resa',
+        };
+        fetchDataFromServer(dataForPlayersList);
         break;
 
         case "sendTeamResaMailRemoveMember":
           if (jsonObject.status === "KO") {
             showAlert(jsonObject.error, "OK");
+          }
+          break;
+        case 'menusRepasChoice': {
+            const resolveMenusRepasChoice = menusRepasChoiceResolverRef.current;
+
+            /*
+            * La référence est immédiatement libérée.
+            * La réponse ne pourra ainsi résoudre qu'une seule demande.
+            */
+            menusRepasChoiceResolverRef.current = null;
+
+            if (jsonObject.status === 'KO') {
+              showAlert('Gestion des erreurs', jsonObject.error || 'Impossible de récupérer le menu.');
+
+              resolveMenusRepasChoice?.(null);
+              break;
+            }
+
+            /*
+            * La réponse complète est renvoyée à RepasModal.
+            *
+            * Elle contient notamment :
+            *
+            *     - menu_repas ;
+            *     - userResa.choix_menu.
+            */
+            resolveMenusRepasChoice?.(jsonObject);
+
             break;
           }
-          router.replace("/");
-          break;
-
         default:
         break;
     }
   };
 
+  
   // Fonction getResaMember
   const getResaMember = (jsonObject: any) => {
     setGlobalProperty('shotgun', jsonObject.duree_trou == '0');
@@ -992,6 +1092,7 @@ const getPeriodeFromGlobal = (): string | null => {
     }
     resetGlobalResaMember();
     setGlobalResaMember(jsonObject);
+
     if(params.menuTitle === "desinscription") {
       showConfirmAlert({
         title: "Suppression",
@@ -1016,6 +1117,7 @@ const getPeriodeFromGlobal = (): string | null => {
   // Fonction pour récupérer la liste des parties incomplètes
   const getOrphanList = (jsonObject: any) => {
     const orphanList = jsonObject.orphanList || [];
+
     resetGlobalOrphanList();
     setGlobalOrphanList(orphanList);
     setGlobalUserOrphanList(jsonObject.user);
@@ -1024,8 +1126,32 @@ const getPeriodeFromGlobal = (): string | null => {
     const dropdownItems = getDropdownData(0);
     setFilteredItems(dropdownItems);
 
-    // Reconfigurer les dropdowns pour s'assurer que la première est activée en mode incomplet
+    // Reconfigurer les dropdowns pour s'assurer
+    // que la première est activée en mode incomplet
     configureDropdownsBasedOnFormule();
+
+    /*
+    * Le joueur connecté existe indépendamment
+    * de l'équipe qu'il choisira.
+    *
+    * La première dropdown reste réservée
+    * à la sélection de l'équipe.
+    */
+    const connectedUserLicence = String(getGlobalJsonObject().licence ?? '');
+
+    setSelectedJoueurs([
+      '',
+      connectedUserLicence,
+      '',
+      '',
+    ]);
+
+    setDisabledDropdowns({
+      dropdown_1: false,
+      dropdown_2: true,
+      dropdown_3: true,
+      dropdown_4: true,
+    });
   };
 
 
@@ -1047,7 +1173,7 @@ const getPeriodeFromGlobal = (): string | null => {
           licence: value,
           nom_competition: getGlobalJsonObject().nom_competition,
           isMobile: "1",
-          competitionClass: getGlobalJsonObject().competitionClass,
+          isEclectic: getGlobalJsonObject().isEclectic,
         };
         fetchDataFromServer(donnees);
       } else {
@@ -1059,17 +1185,15 @@ const getPeriodeFromGlobal = (): string | null => {
   // Fonction validateTeamLeader
   const validateTeamLeader = async (jsonObject: any) => {
     if (jsonObject.status === "KO") {
-      await showAlert("Gestion des erreurs", jsonObject.error);
-      return;
+      await showAlert("Gestion des erreurs", jsonObject.error); return;
     }
     if (jsonObject.newTeamMember === "NO" && jsonObject.newTeamLeader === "YES") {
-      await showAlert("Gestion des erreurs", jsonObject.teamLeaderNomPrenom + " \nest déjà dans une équipe");
-      return;
+      await showAlert("Gestion des erreurs", jsonObject.teamLeaderNomPrenom + " \nest déjà dans une équipe"); return;
     }
 
     // Mettre à jour les propriétés globales
     setGlobalProperty('newTeamResa', jsonObject.newTeamLeader === "YES");
-    setGlobalTeamLeader(jsonObject);
+    setGlobalTeamLeader({ globalTeamLeaderObject: jsonObject,});
 
     const isIncompleteMode = getGlobalProperties().menuEquipeIncomplete;
 
@@ -1097,11 +1221,15 @@ const getPeriodeFromGlobal = (): string | null => {
             });
           }
         }
-        setGlobalProperty('members', updatedMembers);
-      } else {
-        setGlobalProperty('members', jsonObject.identMember);
       }
-
+      /*
+      * Conserver dans members uniquement les joueurs
+      * déjà enregistrés dans l'équipe.
+      *
+      * Le joueur connecté apparaît dans l'IHM, mais
+      * reste un nouveau membre jusqu'à la validation.
+      */
+      setGlobalProperty('members', jsonObject.identMember);
     }
 
     if (isIncompleteMode) {
@@ -1182,10 +1310,6 @@ const getPeriodeFromGlobal = (): string | null => {
     if(getGlobalReturnResaMember().isResaRepas === true && jsonObject.action !== "terminate"){
         setGlobalProperty('sendMailClosure', null);
     }else {
-      if (jsonObject.repere) {
-        setSelectedRepere(jsonObject.repere);
-        setGlobalProperty('repere', jsonObject.repere);
-      }
       const sendMailClosure = {
         operationType: jsonObject.nbrOfPlayers > 1 ? "sendTeamResaMail" : "sendResaMail",
         action: jsonObject.action,
@@ -1202,13 +1326,11 @@ const getPeriodeFromGlobal = (): string | null => {
         duree_trou: getGlobalProperties().duree_trou,
         isResaRepas: jsonObject.isResaRepas,
         resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-        resaMenuLicences: [],
-        resaMenu: [],
-        isResaMenu: '0',
+        ...buildMenuPayload(),
         licence: jsonObject.licence,
         isMobile: '1',
         isComplete: getGlobalProperties().isComplete,
-        competitionClass: getGlobalJsonObject().competitionClass,
+        isEclectic: getGlobalJsonObject().isEclectic,
         repere: selectedRepere,
       };
       fetchDataFromServer(sendMailClosure);
@@ -1225,84 +1347,219 @@ const getPeriodeFromGlobal = (): string | null => {
   };
 
   // Fonction setTranchesManagement
-    const setTranchesManagement = (jsonObject: any) => {
+  const setTranchesManagement = (jsonObject: any) => {
     if (jsonObject.status === "KO") {
       showAlert("Erreur", jsonObject.error);
       return;
     }
 
+    // Mettre à jour les propriétés globales
     setGlobalProperty('trancheId', jsonObject.id);
+
     setGlobalProperty('tranche_duree', parseInt(jsonObject.tranche_duree));
+
     setGlobalProperty('duree_trou', parseInt(jsonObject.duree_trou));
+
     setGlobalProperty('nbre_joueurs', parseInt(jsonObject.nbre_joueurs));
+
     calculateJauge();
 
+    // Identifiants des tranches disponibles
     const globalTrancheIds = getGlobalProperties().trancheId || [];
+
+    /*
+    * Période proposée par le contexte général.
+    *
+    * Cette valeur est notamment utilisée lors
+    * d'une nouvelle réservation.
+    */
     const periodeText = getPeriodeFromGlobal();
+
     const periodeId = periodeText ? getPeriodeIdFromText(periodeText) : null;
+
     const nbTranches = jsonObject.tranches?.length || 0;
 
-    const currentTrancheId =
-      Number(getGlobalJsonObject().tranche?.id) ||
-      Number(getGlobalResaMember()?.tranche?.id) ||
-      null;
+    /*
+    * Réservation personnelle existante.
+    */
+    const hasExistingResa = getGlobalJsonObject().asAlreadyRESA === '1';
 
-    const updatedTranches: any = tranches.map((tranche, index) => {
-      const rawTitle = jsonObject.tranches?.[index];
-      const cleanTitle = rawTitle ? cleanHtml(rawTitle) : `Tranche ${index + 1}`;
+    /*
+    * Contexte d'une réservation d'équipe.
+    *
+    * Lors du parcours « Compléter équipe »,
+    * isComplete est positionné à "complete"
+    * après la sélection du capitaine.
+    *
+    * À partir de cet instant, le traitement est
+    * identique à celui d'une équipe normale.
+    */
+    const isTeamContext = getGlobalProperties().isComplete === "complete";
 
-      const trancheId = globalTrancheIds[index] || tranche.id;
+    /*
+    * validateTeamLeader fournit le contexte complet
+    * de l'équipe, notamment sa tranche et sa position.
+    */
+    const teamLeaderObject = getGlobalTeamLeader().globalTeamLeaderObject;
 
-      const isCurrentTranche =
-        currentTrancheId !== null && Number(trancheId) === currentTrancheId;
+    const hasExistingTeamResa = Boolean(teamLeaderObject?.tranche?.id && teamLeaderObject?.position?.title);
 
-      const options = tranche.options.map(option => ({
-        ...option,
-        isActive: index < nbTranches && !(getGlobalProperties().shotgun && option.id !== 1),
-      }));
+    const existingTeamTrancheId = hasExistingTeamResa ? String(teamLeaderObject.tranche.id) : null;
 
-      let selectedOption = tranche.selectedOption;
+    const existingTeamPeriodeId = hasExistingTeamResa ? getPeriodeIdFromText(teamLeaderObject.position.title) : null;
+    /*
+    * Pour une réservation personnelle mono-tranche,
+    * la position enregistrée est retournée par
+    * getResaMember().
+    */
+    const resaMember = getGlobalResaMember();
 
-      if (getGlobalProperties().shotgun && index === 0) {
-        selectedOption = 1;
-      } else if (periodeId && isCurrentTranche) {
-        selectedOption = periodeId;
-      } else if (!isCurrentTranche) {
-        selectedOption = undefined;
-      }
+    const existingMemberTrancheId = hasExistingResa && resaMember?.tranche?.id ? String(resaMember.tranche.id) : null;
 
-      return {
-        ...tranche,
-        id: trancheId,
-        title: cleanTitle,
-        isActive: index < nbTranches && (index === 0 || !getGlobalProperties().shotgun),
-        options,
-        selectedOption,
-      };
-    });
+    const existingMemberPeriodeId = hasExistingResa ? getPeriodeIdFromText(resaMember?.position?.title ?? '') : null;
+
+    // Mettre à jour les tranches
+    const updatedTranches: any =
+      tranches.map((tranche, index) => {
+        const rawTitle = jsonObject.tranches?.[index];
+
+        const cleanTitle = rawTitle ? cleanHtml(rawTitle) : `Tranche ${index + 1}`;
+
+        const trancheId = globalTrancheIds[index] || tranche.id;
+     const options = tranche.options.map(option => ({
+            ...option,
+            isActive: index < nbTranches && !(getGlobalProperties().shotgun &&  option.id !== 1 ), 
+          }));
+        let selectedOption: number | undefined;
+
+        /*
+        * Équipe existante :
+        *
+        * validateTeamLeader fournit la tranche
+        * et la position de l'équipe.
+        *
+        * Cette règle couvre également le parcours
+        * « Compléter équipe » après sélection du
+        * capitaine.
+        */
+        if (
+          hasExistingTeamResa &&
+          String(trancheId) === existingTeamTrancheId
+        ) {
+          selectedOption =
+            existingTeamPeriodeId ?? undefined;
+
+        /*
+        * Réservation personnelle mono-tranche :
+        *
+        * seule la position enregistrée doit être
+        * restaurée.
+        */
+        } else if (
+          hasExistingResa &&
+          existingMemberTrancheId &&
+          String(trancheId) ===
+            existingMemberTrancheId
+        ) {
+          /*
+          * Réservation personnelle existante :
+          *
+          * restaurer la position sur la tranche
+          * réellement enregistrée.
+          *
+          * Cette règle couvre les contextes
+          * mono-tranche et multi-tranches.
+          */
+          selectedOption = existingMemberPeriodeId ?? undefined;
+
+        /*
+        * Mode shotgun :
+        *
+        * seule la position Début est disponible.
+        */
+        } else if (
+          getGlobalProperties().shotgun &&
+          index === 0
+        ) {
+          selectedOption = 1;
+
+        /*
+        * Nouvelle réservation :
+        *
+        * appliquer la période proposée par le
+        * contexte général à la première tranche.
+        */
+        } else if (
+          !hasExistingResa &&
+          !hasExistingTeamResa &&
+          periodeId &&
+          index === 0
+        ) {
+          selectedOption = periodeId;
+
+        } else {
+          selectedOption = undefined;
+        }
+
+        return {
+          ...tranche,
+
+          id: trancheId,
+          title: cleanTitle,
+
+          isActive:
+            index < nbTranches &&
+            (
+              index === 0 ||
+              !getGlobalProperties().shotgun
+            ),
+
+          options,
+          selectedOption,
+        };
+      });
 
     setTranches(updatedTranches);
 
-    if (getGlobalJsonObject().asAlreadyRESA === '1') {
-      const resaTrancheId = getGlobalResaMember()?.tranche?.id;
-      const resaPositionTitle = getGlobalResaMember()?.position?.title;
-      const resaPeriodeId = getPeriodeIdFromText(
-      extractPeriodeFromHtml(
-        getGlobalResaMember()?.position?.title ?? ""
-      ) || ""
-    );
-
-      if (resaTrancheId && resaPeriodeId) {
-        setTranchePeriode(Number(resaTrancheId), resaPeriodeId);
-      }
-    }
-
+    /*
+    * Mettre à jour la tranche et la période
+    * utilisées lors de l'enregistrement.
+    */
     if (getGlobalProperties().shotgun) {
       const firstTrancheId = globalTrancheIds[0] || 1;
+
       setGlobalProperty('numTranche', firstTrancheId);
+
       setGlobalProperty('labelPeriode', "Début");
-    } else if (periodeId && currentTrancheId) {
-      setGlobalProperty('numTranche', currentTrancheId);
+
+    } else if (
+      hasExistingTeamResa &&
+      existingTeamTrancheId &&
+      existingTeamPeriodeId
+    ) {
+      /*
+      * Réservation d'équipe :
+      *
+      * conserver la tranche et la position
+      * retournées par validateTeamLeader.
+      */
+      setGlobalProperty('numTranche', existingTeamTrancheId);
+
+      setGlobalProperty('labelPeriode', cleanHtml(String(teamLeaderObject.position.title)));
+
+    } else if (hasExistingResa && existingMemberTrancheId && existingMemberPeriodeId) {
+      /*
+      * Réservation personnelle existante :
+      *
+      * conserver la tranche et la position
+      * réellement enregistrées.
+      */
+      setGlobalProperty('numTranche',  existingMemberTrancheId);
+      setGlobalProperty('labelPeriode', cleanHtml( String(resaMember?.position?.title ?? "Début")));
+      setGlobalProperty('labelPeriode', cleanHtml( String(resaMember?.position?.title ?? "Début")));
+    } else if (periodeId) {
+      const firstTrancheId = globalTrancheIds[0] || 1;
+      setGlobalProperty('numTranche', firstTrancheId);
       setGlobalProperty('labelPeriode', periodeText || "Début");
     }
   };
@@ -1316,32 +1573,21 @@ const getPeriodeFromGlobal = (): string | null => {
 
     const teamNumber = getGlobalProperties().teamNumber;
     if (teamNumber === 2 && selectedValues[1] === null) {
-      await showAlert("Attention", "Vous devez sélectionner le 2ème joueur pour un scramble à 2.");
-      return;
+      await showAlert("Attention", "Vous devez sélectionner le 2ème joueur pour un scramble à 2."); return;
     } else if (teamNumber === 4 && (selectedValues[1] === null || selectedValues[2] === null || selectedValues[3] === null)) {
-      await showAlert("Attention", "Vous devez sélectionner les 3 autres joueurs pour un scramble à 4.");
-      return;
+      await showAlert("Attention", "Vous devez sélectionner les 3 autres joueurs pour un scramble à 4."); return;
     }
 
     let menu = null;
-    switch (getGlobalJsonObject().competitionClass) {
-      case "ECLECTIC":
-        menu = "Eclectic";
-        break;
-      case "RINGER_SCORE":
-        menu = "RingerScore";
-        break;
-      case "CHALLENGE_HIVER":
-        menu = "Eclectic-IS";
-        break;
-      default:
-        menu = "Standard";
-        break;
+    switch (getGlobalJsonObject().isEclectic) {
+      case "isEclectic": menu = "Eclectic"; break;
+      case "isRingerScore": menu = "RingerScore"; break;
+      case "isEclectic-IS": menu = "Eclectic-IS"; break;
+      default: menu = "Standard"; break;
     }
 
     if(getGlobalProperties().labelPeriode === null) {
-      await showAlert("Attention", 'Vous devez sélectionner une tranche et une période');
-      return;
+      await showAlert("Attention", 'Vous devez sélectionner une tranche et une période'); return;
     }
 
     const hasChanged = JSON.stringify(getGlobalProperties().allResaRepas) !== JSON.stringify(getGlobalProperties().allResaRepasSave);
@@ -1357,12 +1603,9 @@ const getPeriodeFromGlobal = (): string | null => {
       licence: getGlobalJsonObject().licence,
       civilite: getGlobalJsonObject().civilite,
       resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-      competitionClass: getGlobalJsonObject().competitionClass,
+      isEclectic: getGlobalJsonObject().isEclectic,
       isResaRepas: getGlobalJsonObject().isResaRepas == '1' ? true : false,
-      menu_choice: '',
-      isResaMenu: false,
-      resaMenuLicences: selectedValues.filter(val => val !== null),
-      resaMenu: ['0'],
+      ...buildMenuPayload(),
       resaRepasUpdate: hasChanged,
       menu: menu,
       sous_menu: "Inscription - User",
@@ -1400,7 +1643,7 @@ const getPeriodeFromGlobal = (): string | null => {
       if (jsonObject.massResa == "NO") {
           dataForPlayersList = {
               operationType: 'getCompetitionPlayers',
-              competitionClass: getGlobalJsonObject().competitionClass,
+              isEclectic: getGlobalJsonObject().isEclectic,
               nom_competition: getGlobalJsonObject().nom_competition,
               action: 'displayList',
               isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
@@ -1480,8 +1723,7 @@ const getPeriodeFromGlobal = (): string | null => {
   // Fonction getRemoveResaUser
   const getRemoveResaUser = async (jsonObject: any) => {
     if (jsonObject.status === "KO") {
-      await showAlert("Erreur", jsonObject.error);
-      return;
+      await showAlert("Erreur", jsonObject.error); return;
     }
     let _tranche = null;
     if(getGlobalResaMember().duree_trou == '0'){
@@ -1505,13 +1747,11 @@ const getPeriodeFromGlobal = (): string | null => {
         duree_trou: getGlobalProperties().duree_trou,
         isResaRepas: jsonObject.isResaRepas,
         resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-        resaMenuLicences: [],
-        resaMenu: [],
-        isResaMenu: '0',
+        ...buildMenuPayload(),
         licence: jsonObject.licence,
         isMobile: '1',
         isComplete: getGlobalProperties().isComplete,
-        competitionClass: getGlobalJsonObject().competitionClass,
+        isEclectic: getGlobalJsonObject().isEclectic,
         repere: selectedRepere,
       };
       fetchDataFromServer(donnees);
@@ -1553,7 +1793,7 @@ const getPeriodeFromGlobal = (): string | null => {
         metadata: {
           licence: getGlobalJsonObject().licence,
           nom_competition: getGlobalJsonObject().nom_competition,
-          competitionClass: getGlobalJsonObject().competitionClass,
+          isEclectic: getGlobalJsonObject().isEclectic,
           isOlpTransaction: false,
           isMobile: "1",
           targetSite: getGlobalProperties().site,
@@ -1582,14 +1822,21 @@ const getPeriodeFromGlobal = (): string | null => {
   };
 
   // Fonction pour récupérer la tranche et la période sélectionnées
-  const getSelectedTrancheAndPeriode = (): { trancheId: number | null; periodeLabel: string } => {
+  const getSelectedTrancheAndPeriode = (): {
+    trancheId: string | number | null;
+    periodeLabel: string;
+  } => {
     for (const tranche of tranches) {
-      if (tranche.selectedOption !== undefined) {
-        const selectedOption = tranche.options.find(option => option.id === tranche.selectedOption);
+      if (
+        tranche.isActive &&
+        tranche.selectedOption !== undefined
+      ) {
+        const selectedOption = tranche.options.find(option => option.id === tranche.selectedOption && option.isActive);
+
         if (selectedOption) {
           return {
-            trancheId: Number(tranche.id),
-            periodeLabel: selectedOption.label
+            trancheId: tranche.id,
+            periodeLabel: selectedOption.label,
           };
         }
       }
@@ -1598,21 +1845,26 @@ const getPeriodeFromGlobal = (): string | null => {
     const periodeText = getPeriodeFromGlobal();
 
     if (periodeText) {
-      const globalTranche = getGlobalJsonObject().tranche;
+      const activeTranche = tranches.find(tranche => tranche.isActive);
 
-      return {
-        trancheId: globalTranche?.id ? Number(globalTranche.id) : null,
-        periodeLabel: periodeText,
-      };
+      if (activeTranche) {
+        return {
+          trancheId: activeTranche.id,
+          periodeLabel: periodeText,
+        };
+      }
     }
 
-    return { trancheId: null, periodeLabel: 'Aucune période sélectionnée' };
+    return {
+      trancheId: null,
+      periodeLabel:
+        'Aucune période sélectionnée',
+    };
   };
 
   const setMassResaTeam = async (jsonObject: any) => {
     if (jsonObject.status === "KO") {
-      await showAlert("Erreur", jsonObject.error);
-      return;
+      await showAlert("Erreur", jsonObject.error); return;
     }
     let mailAction = null;
     if (jsonObject.action === "removeTeam") {
@@ -1624,13 +1876,12 @@ const getPeriodeFromGlobal = (): string | null => {
       mailAction = "Confirmation inscription compétition";
     }
     let _tranche = jsonObject.tranche.substring(jsonObject.tranche.indexOf(">") + 1, jsonObject.tranche.indexOf("</"));
-    const removedMembers = jsonObject.removedMembers || jsonObject.identMember || [];
-    if (removedMembers.length > 0) {
+    if (jsonObject.removedMembers.length > 0) {
       const removedMembersRemoveData = {
           operationType: "sendTeamResaMailRemoveMember",
           action: "removeUser",
           subject: "Confirmation désinscription compétition",
-          competitionClass: getGlobalJsonObject().competitionClass,
+          isEclectic: getGlobalJsonObject().isEclectic,
           identMember: jsonObject.identMember,
           removedMembers: jsonObject.removedMembers || [],
           competition: jsonObject.nom_competition,
@@ -1658,13 +1909,10 @@ const getPeriodeFromGlobal = (): string | null => {
       duree_trou: getGlobalProperties().duree_trou,
       isResaRepas: jsonObject.isResaRepas === "1" ? true : false,
       resa_repas: getGlobalProperties().allResaRepas.length == 4 ? getGlobalProperties().allResaRepas : (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-      menu_choice: [],
-      isResaMenu: false,
-      resaMenuLicences: [],
+      ...buildMenuPayload(),
       nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
       isComplete: getGlobalProperties().isComplete,
-      resaMenu: [],
-      competitionClass: getGlobalJsonObject().competitionClass,
+      isEclectic: getGlobalJsonObject().isEclectic,
       removedMembers: jsonObject.removedMembers || [],
     };
 
@@ -1694,8 +1942,7 @@ const getPeriodeFromGlobal = (): string | null => {
     const removedLicences = currentMemberLicences.filter(licence => !newSelectedLicences.includes(licence));
 
     // Récupérer les membres complets depuis getGlobalProperties().members
-    const removedMembers = getGlobalProperties().members
-      .filter((member: any) => removedLicences.includes(member.licence));
+    const removedMembers = getGlobalProperties().members .filter((member: any) => removedLicences.includes(member.licence));
 
     // Identifier les nouveaux membres
     const addedMembers = newSelectedLicences.filter(licence => !currentMemberLicences.includes(licence));
@@ -1764,41 +2011,91 @@ const getPeriodeFromGlobal = (): string | null => {
       }
     }
     setJoueursSelectionnes(joueursSelectionnes);
-    if (formule.includes("Scramble")) {
+    const currentRepasData = repasDataRef.current.length > 0 ? repasDataRef.current : repasDataState;
+    if (formule.includes('Scramble')) {
+      const currentRepasData = repasDataRef.current.length > 0 ? repasDataRef.current : repasDataState;
+
       const setResaTeamData = {
         operationType: 'setMassResaTeam',
-        createTeam: getGlobalProperties().newTeamResa === false ? 'NO' : 'YES',
+        createTeam:
+          getGlobalProperties().newTeamResa === false
+            ? 'NO'
+            : 'YES',
         teamResa: 'YES',
         action: 'addUser',
         nbrOfPlayers: joueursSelectionnes.length,
         isMobile: '1',
         updateTeam: 'OK',
-        nom_competition: getGlobalJsonObject().nom_competition,
-        teamLeader: getGlobalProperties().teamLeaderNomPrenom,
-        teamLeaderLicence: joueursSelectionnes[0]?.licence || '',
+
+        nom_competition:
+          getGlobalJsonObject().nom_competition,
+
+        teamLeader:
+          getGlobalProperties().teamLeaderNomPrenom,
+
+        teamLeaderLicence:
+          joueursSelectionnes[0]?.licence || '',
+
         tranche: trancheId,
         periode: periodeLabel,
         jauge: getGlobalProperties().jauge,
-        licence_1: joueursSelectionnes[0]?.licence || '',
-        licence_2: joueursSelectionnes[1]?.licence || '',
-        licence_3: joueursSelectionnes[2]?.licence || '',
-        licence_4: joueursSelectionnes[3]?.licence || '',
-        civilite_1: joueursSelectionnes[0]?.civilite || '',
-        civilite_2: joueursSelectionnes[1]?.civilite || '',
-        civilite_3: joueursSelectionnes[2]?.civilite || '',
-        civilite_4: joueursSelectionnes[3]?.civilite || '',
-        resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-        isResaRepas: getGlobalJsonObject().isResaRepas,
-        isResaMenu: false,
-        resaMenuLicences: [],
-        resaMenu: [],
-        initialNbrPlayers: getGlobalProperties().initialNbrPlayers,
-        nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
-        competitionClass: getGlobalJsonObject().competitionClass,
-        menu: getGlobalProperties().menu,
-        sous_menu: getGlobalProperties().sous_menu,
-        removedMembers: removedMembers,
+
+        licence_1:
+          joueursSelectionnes[0]?.licence || '',
+        licence_2:
+          joueursSelectionnes[1]?.licence || '',
+        licence_3:
+          joueursSelectionnes[2]?.licence || '',
+        licence_4:
+          joueursSelectionnes[3]?.licence || '',
+
+        civilite_1:
+          joueursSelectionnes[0]?.civilite || '',
+        civilite_2:
+          joueursSelectionnes[1]?.civilite || '',
+        civilite_3:
+          joueursSelectionnes[2]?.civilite || '',
+        civilite_4:
+          joueursSelectionnes[3]?.civilite || '',
+
+        /*
+        * Le backend historique attend un tableau,
+        * comme celui envoyé par le client Web.
+        */
+        resa_repas: (
+          getGlobalProperties().allResaRepas ||
+          [false, false, false, false]
+        ).map((item: unknown) =>
+          item === true ||
+          item === 1 ||
+          item === '1'
+            ? 1
+            : 0,
+        ),
+
+        isResaRepas:
+          getGlobalJsonObject().isResaRepas,
+
+        ...buildMenuPayload(currentRepasData),
+
+        initialNbrPlayers:
+          getGlobalProperties().initialNbrPlayers,
+
+        nbrScramblePlayers:
+          getGlobalProperties().nbrScramblePlayers,
+
+        isEclectic:
+          getGlobalJsonObject().isEclectic,
+
+        menu:
+          getGlobalProperties().menu,
+
+        sous_menu:
+          getGlobalProperties().sous_menu,
+
+        removedMembers,
       };
+
       setResaTeamDataState(setResaTeamData);
       setResaRecord(setResaTeamData);
     } else {
@@ -1814,12 +2111,9 @@ const getPeriodeFromGlobal = (): string | null => {
         licence: getGlobalJsonObject().licence,
         civilite: getGlobalJsonObject().civilite,
         resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
-        competitionClass: getGlobalJsonObject().competitionClass,
+        isEclectic: getGlobalJsonObject().isEclectic,
         isResaRepas: getGlobalJsonObject().isResaRepas == '1' ? true : false,
-        menu_choice: '',
-        isResaMenu: false,
-        resaMenuLicences: selectedValues.filter(val => val !== null),
-        resaMenu: ['0'],
+        ...buildMenuPayload(),
         resaRepasUpdate: false,
         menu: getGlobalProperties().menu,
         sous_menu: "Inscription - User",
@@ -1844,7 +2138,7 @@ const getPeriodeFromGlobal = (): string | null => {
       configureDropdownsBasedOnFormule();
 
       setGlobalProperty('source', 'userResa');
-      setGlobalProperty('nbrRepas', getNumberOfUsedDropdowns());
+      setGlobalProperty('nbrRepas', selectedPlayersCount);
       setGlobalProperty('repere', selectedRepere);
       setGlobalProperty('tranche', trancheId);
       setGlobalProperty('periode', periodeLabel);
@@ -1859,77 +2153,55 @@ const getPeriodeFromGlobal = (): string | null => {
     }
   } , [resaRecord]);
   
-  // Utilisez un useEffect pour gérer la validation des repas après la fermeture de la modal
   useEffect(() => {
-    // Ignorer le premier rendu et si la modal est encore visible
-    if (initialRender.current || modalRepasVisible) {
+    if (
+      initialRender.current ||
+      modalRepasVisible
+    ) {
       initialRender.current = false;
       return;
     }
 
-    // Vérifier que nous avons bien des données à envoyer
-    const hasDataToSend = getGlobalJsonObject().formule.includes("Scramble") ? !!resaTeamData : !!resaData;
-    if (!hasDataToSend) {
+    if (!resaRecord) {
       return;
     }
 
-    // Préparer les données de repas
-    const repasArray = Array(4).fill(0).map((_, index) =>
-      index < getNumberOfUsedDropdowns() ? (getGlobalProperties().allResaRepas?.[index] ? 1 : 0) : 0
-    );
+    const repasArray = Array(4)
+      .fill(0)
+      .map((_, index) =>
+        index < getNumberOfUsedDropdowns() &&
+        getGlobalProperties()
+          .allResaRepas?.[index]
+          ? 1
+          : 0,
+      );
 
-    // Mettre à jour allResaRepas uniquement si nécessaire
-    const currentRepasArray = getGlobalProperties().allResaRepas || [];
-    const repasArrayString = repasArray.join(',');
-    const currentRepasArrayString = currentRepasArray.join(',');
+    const dataToSend = {
+      ...resaRecord,
 
-    if (repasArrayString === currentRepasArrayString) {
-      return; // Éviter de refaire la même requête
-    }
+      // Le backend attend désormais un tableau.
+      resa_repas: repasArray,
 
-    setGlobalProperty('allResaRepas', repasArray);
+      ...buildMenuPayload(
+        repasDataState,
+      ),
+    };
 
-    // Envoyer les données
-    if (getGlobalJsonObject().isResaRepas && getNumberOfUsedDropdowns() > 0) {
-      if (getGlobalJsonObject().formule.includes("Scramble") && resaTeamData) {
-        const dataToSend = {
-          ...resaTeamData,
-          resa_repas: repasArray.join(',')
-        };
-        fetchDataFromServer(dataToSend);
-        // Réinitialiser les données après envoi pour éviter les doubles envois
-        setResaTeamDataState(null);
-      } else if (resaData) {
-        const dataToSend = {
-          ...resaData,
-          resa_repas: repasArray.join(',')
-        };
-        fetchDataFromServer(dataToSend);
-        // Réinitialiser les données après envoi pour éviter les doubles envois
-        setResaDataState(null);
-      }
-    }
-  }, [modalRepasVisible]); 
+    fetchDataFromServer(dataToSend);
+    setResaRecord(null);
+  }, [
+    modalRepasVisible,
+    repasDataState,
+  ]);
 
   // Gestion de la désinscription d'une RESA
   const handleRemove = async () => {
     let menu;
-    switch (getGlobalJsonObject().competitionClass) {
-      case "ECLECTIC":
-        menu = "Eclectic";
-        break;
-
-      case "RINGER_SCORE":
-        menu = "RingerScore";
-        break;
-
-      case "CHALLENGE_HIVER":
-        menu = "Eclectic-IS";
-        break;
-
-      default:
-        menu = "Standard";
-        break;
+    switch (getGlobalJsonObject().isEclectic) {
+      case "isEclectic": menu = "Eclectic"; break;
+      case "isRingerScore": menu = "RingerScore"; break;
+      case "isEclectic-IS": menu = "Eclectic-IS"; break;
+      default: menu = "Standard"; break;
     }
 
     const confirmed = await showAlert("Confirmation", "Êtes-vous sûr de vouloir vous désinscrire ?", {
@@ -1939,35 +2211,13 @@ const getPeriodeFromGlobal = (): string | null => {
       ],
       }).then((choice) => {
         if(choice){
-          if (getGlobalJsonObject().formule.includes("Scramble")) {
-            const data = {
-              operationType: 'setMassResaTeam',
-              createTeam: 'NO',
-              teamResa: 'YES',
-              action: 'removeTeam',
-              nbrOfPlayers: getGlobalProperties().members?.length || 1,
-              isMobile: '1',
-              updateTeam: 'OK',
-              nom_competition: getGlobalJsonObject().nom_competition,
-              teamLeader: getGlobalProperties().teamLeaderNomPrenom,
-              teamLeaderLicence: getGlobalJsonObject().licence,
-              tranche: getGlobalResaMember()?.tranche?.id,
-              periode: extractPeriodeFromHtml(getGlobalResaMember()?.position?.title || '')?.toLowerCase(),
-              jauge: getGlobalProperties().jauge,
-              initialNbrPlayers: getGlobalProperties().initialNbrPlayers,
-              nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
-              competitionClass: getGlobalJsonObject().competitionClass,
-            };
-            fetchDataFromServer(data);
-            return;
-          }
           const data = {
             operationType: 'removeResaUser',
             action: "removeUser",
             nom_competition: getGlobalJsonObject().nom_competition,
             licence: getGlobalJsonObject().licence,
             sendMail: true,
-            competitionClass: getGlobalJsonObject().competitionClass,
+            isEclectic: getGlobalJsonObject().isEclectic,
             isMobile: '1',
             menu: menu,
             sous_menu: "Désinscription - User",
@@ -1986,9 +2236,20 @@ const getPeriodeFromGlobal = (): string | null => {
     setModalRepasVisible(false);
   };
 
-  const handleRepasValidation = (data: {id: string; nom: string; dejeune: boolean}[]) => {
-    const repasArray = Array(4).fill(false).map((_, i) => data[i]?.dejeune ?? false);
-    setGlobalProperty('allResaRepas', repasArray);
+  const normalizeRepasValue = (value: unknown): boolean => value === true || value === 1 || value === '1';
+
+  const handleRepasValidation = (data: JoueurRepas[], repasArray: boolean[]) => {
+
+    const normalizedData = data.map(joueur => ({ ...joueur, dejeune: normalizeRepasValue(joueur.dejeune), }));
+
+    const normalizedRepasArray = Array(4) .fill(false) .map((_, index) => normalizeRepasValue(repasArray[index]));
+
+    repasDataRef.current = normalizedData;
+
+    setRepasDataState(normalizedData);
+
+    setGlobalProperty('allResaRepas', normalizedRepasArray);
+
     setModalRepasVisible(false);
   };
 
@@ -2002,7 +2263,7 @@ const getPeriodeFromGlobal = (): string | null => {
     setIsAlertVisible(false);
     dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
-      competitionClass: getGlobalJsonObject().competitionClass,
+      isEclectic: getGlobalJsonObject().isEclectic,
       nom_competition: getGlobalJsonObject().nom_competition,
       action: 'displayList',
       isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
@@ -2046,11 +2307,11 @@ const getPeriodeFromGlobal = (): string | null => {
   setGlobalProperty('site', env === 'development' ? 'dev' : 'production');
 
   // Construction des données initiales à envoyer au serveur en fonction du type de menu choisi
-  let donnees: any = null;
+   let donnees: any = null;
   if(params.competitionKey === "OLP"){
       donnees = {
       operationType: "getCurrentCompetition",
-      competitionClass: getGlobalJsonObject().competitionClass,
+      isEclectic: params.competitionType,
       action: "olpTransaction",
       list: "no",
       isMultiCompetition: 1,
@@ -2060,7 +2321,7 @@ const getPeriodeFromGlobal = (): string | null => {
     if(params.menuTitle === 'Liste des inscrits') {
       donnees = {
         operationType: "getCompetitionPlayers",
-        competitionClass: getGlobalJsonObject().competitionClass,
+        isEclectic: getGlobalJsonObject().isEclectic,
         nom_competition: getGlobalJsonObject().nom_competition,
         action: 'displayList',
         isFromCBReturn: false,
@@ -2072,7 +2333,7 @@ const getPeriodeFromGlobal = (): string | null => {
             operationType: "getOrphanList",
             nom_competition: getGlobalJsonObject().nom_competition,
             isMobile: "1",
-            formule: getGlobalJsonObject().competitionClass,
+            formule: getGlobalJsonObject().isEclectic,
             teamNumber: getGlobalProperties().nbrScramblePlayers,
             licence: getGlobalJsonObject().licence,
             isScramble: getGlobalProperties().isScramble
@@ -2083,7 +2344,7 @@ const getPeriodeFromGlobal = (): string | null => {
           operationType: "validateTeamLeader",
           licence: getGlobalJsonObject().licence,
           nom_competition: getGlobalJsonObject().nom_competition,
-          competitionClass: getGlobalJsonObject().competitionClass,
+          isEclectic: getGlobalJsonObject().isEclectic,
           isMobile: "1",
         };
       } else {
@@ -2091,7 +2352,7 @@ const getPeriodeFromGlobal = (): string | null => {
           operationType: "getResaMember",
           licence: getGlobalJsonObject().licence,
           nom_competition: getGlobalJsonObject().nom_competition,
-          competitionClass: getGlobalJsonObject().competitionClass,
+          isEclectic: getGlobalJsonObject().isEclectic,
           isMobile: "1",
         };
       };
@@ -2133,7 +2394,7 @@ const getPeriodeFromGlobal = (): string | null => {
   const fetchCompetitionPlayersAndPrepareData = async () => {
     const dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
-      competitionClass: getGlobalJsonObject().competitionClass,
+      isEclectic: getGlobalJsonObject().isEclectic,
       nom_competition: getGlobalJsonObject().nom_competition,
       action: 'displayList',
       isFromCBReturn: !!getGlobalJsonObject().isPEL_enabled,
@@ -2189,22 +2450,7 @@ const getPeriodeFromGlobal = (): string | null => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.globalContainer}>
           <View style={styles.competitionTitleContainer}>
-            <TouchableOpacity
-              onPress={() =>
-                Alert.alert(
-                  "Compétition",
-                  `${params.competitionName} - ${getGlobalJsonObject().date_competition}`
-                )
-              }
-            >
-              <Text
-                style={styles.competitionTitle}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {params.competitionName} - {getGlobalJsonObject().date_competition}
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.competitionTitle}>{params.competitionName} - {getGlobalJsonObject().date_competition}</Text>
           </View>
 
           {isLoading ? (
@@ -2263,42 +2509,25 @@ const getPeriodeFromGlobal = (): string | null => {
                     ]}>
                       {tranche.title}
                     </Text>
+
                     <View style={styles.optionsContainer}>
-                      {tranche.options.map((option) => {
-                        const disabled =
-                          !tranche.isActive ||
-                          !option.isActive ||
-                          getGlobalProperties().shotgun;
-
-                        const selected = Number(tranche.selectedOption) === Number(option.id);
-                        return (
-                          <TouchableOpacity
-                            key={option.id}
-                            style={styles.optionItem}
-                            onPress={() => {
-                              if (!disabled) {
-                                setTranchePeriode(tranche.id, option.id);
-                              }
-                            }}
-                            disabled={disabled}
-                          >
-                            <Text style={[
-                              styles.optionLabel,
-                              disabled && styles.disabledOptionLabel
-                            ]}>
-                              {option.label}
-                            </Text>
-
-                            <View style={[
-                              styles.customRadioButton,
-                              selected && styles.customRadioButtonSelected,
-                              disabled && styles.disabledCustomCheckbox,
-                            ]}>
-                              {selected && <View style={styles.customRadioButtonInner} />}
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      })}
+                      {tranche.options.map((option) => (
+                        <View key={option.id} style={styles.optionItem}>
+                          <Checkbox
+                            status={tranche.selectedOption === option.id ? 'checked' : 'unchecked'}
+                            onPress={() => !getGlobalProperties().shotgun && setTranchePeriode(tranche.id, option.id)}
+                            disabled={!tranche.isActive || !option.isActive || getGlobalProperties().shotgun}
+                            color="#099237ff"
+                            uncheckedColor="#181717ff"
+                          />
+                          <Text style={[
+                            styles.optionLabel,
+                            (!tranche.isActive || !option.isActive || getGlobalProperties().shotgun) && styles.disabledOptionLabel
+                          ]}>
+                            {option.label}
+                          </Text>
+                        </View>
+                      ))}
                     </View>
                   </View>
                 ))}
@@ -2307,28 +2536,27 @@ const getPeriodeFromGlobal = (): string | null => {
               {(
                 <View style={styles.radioButtonContainer}>
                   <Text style={styles.radioTitre}>Vous pouvez changer le repère (Joueur 1)</Text>
+                  <RadioButton.Group
+                    onValueChange={(value) => {
+                      setSelectedRepere(value);
+                    }}
+                    value={selectedRepere}
+                  >
                     <View style={styles.radioContainer}>
                       {RADIO_OPTIONS.map((option) => (
-                        <TouchableOpacity
-                          key={option.id}
-                          style={styles.customRadioItem}
-                          onPress={() => setSelectedRepere(option.id)}
-                        >
-                          <Text style={styles.radioLabel}>{option.label}</Text>
-
-                          <View
-                            style={[
-                              styles.customRadioButton,
-                              selectedRepere === option.id && styles.customRadioButtonSelected,
-                            ]}
-                          >
-                            {selectedRepere === option.id && (
-                              <View style={styles.customRadioButtonInner} />
-                            )}
-                          </View>
-                        </TouchableOpacity>
+                        <View key={option.id} style={styles.radioItem}>
+                          <RadioButton.Item
+                            value={option.id}
+                            label={option.label}
+                            style={{ paddingHorizontal: 0 }}
+                            labelStyle={styles.radioLabel}
+                            color="#099237ff"
+                            uncheckedColor="#181717ff"
+                          />
+                        </View>
                       ))}
                     </View>
+                  </RadioButton.Group>
                 </View>
               )}
 
@@ -2341,7 +2569,7 @@ const getPeriodeFromGlobal = (): string | null => {
                   nom: j.nom
                 }))}
                 nbJoueursMax={getGlobalProperties().teamNumber || 1}
-                selectedValues= {selectedValues as any} // Passe les valeurs sélectionnées
+                selectedValues={selectedValues as any}
               />
 
               <CustomAlert
@@ -2389,20 +2617,14 @@ const getPeriodeFromGlobal = (): string | null => {
           )}
         </View>
       </SafeAreaView>
+      {/* WebView pour le paiement (superposé) */}
       <Modal
         visible={!!paymentUrl && !showConfirmation}
         animationType="slide"
         transparent={false}
-        presentationStyle="fullScreen"
       >
-        <SafeAreaView
-          style={{ flex: 1, backgroundColor: "#fff" }}
-          edges={["top", "bottom"]}
-        >
-            {Platform.OS === "ios" && (
-              <View style={{ height: 50 }} />
-            )}
-            {paymentUrl && (
+        <SafeAreaView style={{ flex: 1 }}>
+          {paymentUrl && (
             <WebView
               style={{ flex: 1 }}
               source={{ uri: paymentUrl }}
@@ -2419,6 +2641,7 @@ const getPeriodeFromGlobal = (): string | null => {
                   [{ text: "OK", onPress: () => router.replace("/") }]
                 );
               }}
+
               renderLoading={() => (
                 <ActivityIndicator
                   size="large"
@@ -2485,20 +2708,18 @@ const styles = StyleSheet.create({
   },
   globalContainer: {
     flex: 1,
-    paddingHorizontal: 10,
-    paddingTop: 0,
-    paddingBottom: 5,
+    padding: 10,
     justifyContent: 'space-between',
-    marginBottom: 0,
-    marginTop: -0,
+    marginBottom: 10,
+    marginTop: 0,
   },
   competitionTitleContainer: {
     marginBottom: 10,
-    marginTop: -20,
+    marginTop: -10,
     alignItems: 'center',
   },
   competitionTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 'bold',
     color: '#1232e2ff',
   },
@@ -2593,11 +2814,11 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedTextStyle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
   },
   placeholderStyle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
     
   },
@@ -2643,14 +2864,16 @@ const styles = StyleSheet.create({
   },
   radioContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'nowrap',
+    marginHorizontal: -10,
+    marginBottom: 0,
   },
   radioTitre: {
-    fontSize: 15,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
+    marginTop: 5,
+    marginBottom: 0,
+    fontSize: 16,
   },
   radioItem: {
     flexDirection: 'row',
@@ -2688,21 +2911,17 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   optionsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginTop: 10,
-      marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -5,
   },
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
-
   optionLabel: {
-    marginLeft: 6,
+    marginLeft: 8,
     fontSize: 14,
-    color: '#000',
   },
   disabledOptionLabel: {
     color: '#888',
@@ -2710,8 +2929,7 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
-    paddingBottom: 16,
+    marginTop: 0,
   },
   transitionOverlay: {
     position: 'absolute',
@@ -2776,58 +2994,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  customRadioItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginHorizontal: 8,
-  },
-  customRadioButton: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#181717ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  customRadioButtonSelected: {
-    borderColor: '#099237ff',
-  },
-
-  customRadioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#099237ff',
-  },
-  customCheckbox: {
-    width: 20,
-    height: 20,
-    fontSize: 14,
-    borderWidth: 2,
-    borderColor: '#181717ff',
-    borderRadius: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-
-  customCheckboxSelected: {
-    borderColor: '#099237ff',
-  },
-
-  customCheckboxCheck: {
-    color: '#099237ff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    lineHeight: 18,
-  },
-
-  disabledCustomCheckbox: {
-    opacity: 0.3,
-  },
 
 });
 

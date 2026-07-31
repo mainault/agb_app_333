@@ -17,6 +17,7 @@ import { router } from "expo-router";
 
 import { sendRequest } from "../utils/api";
 import { showAlert } from "../utils/utilities";
+import CustomHeader from "../components/CustomHeader";
 
 /**
  * Représentation d'une compétition retournée par le backend.
@@ -233,6 +234,8 @@ export default function CompetitionScreen() {
 
     return (
         <View style={styles.container}>
+            <CustomHeader showMainMenuButton={true} />
+
             <View style={styles.competitionHeader}>
                 <Text style={styles.competitionTitreTitle}>
                     Compétitions
@@ -307,9 +310,8 @@ const styles = StyleSheet.create({
      * fourni par le layout général de l'application.
      */
     container: {
-        marginTop: 40,
-        flex: 0.93,
-        backgroundColor: "#dee2e6",
+    flex: 0.95,
+    backgroundColor: "#dee2e6",
     },
 
     competitionHeader: {

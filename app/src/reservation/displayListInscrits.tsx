@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'reac
 import { getGlobalJsonObject, getGlobalPlayersList, setGlobalPlayersListAll, setGlobalProperty } from '../store/GlobalPropertiesManager';
 import { showAlert } from '../utils/utilities';
 import { sendRequest } from '../utils/api';
+import CustomHeader from '../components/CustomHeader';
 
 interface Player {
   title: string;
@@ -163,8 +164,12 @@ const PlayerSeriesList = () => {
 
   return (
     <View style={styles.container}>
+      <CustomHeader showMainMenuButton={true} />
+
       <View style={styles.competitionHeader}>
-        <Text style={styles.competitionTitreTitle}>Liste des inscrits</Text>
+        <Text style={styles.competitionTitreTitle}>
+          Liste des inscrits
+        </Text>
       </View>
       <View style={styles.competitionHeaderTitle}>
         <Text style={styles.competitionTitle}>{globalJsonObject?.nom_competition}
@@ -200,8 +205,8 @@ const PlayerSeriesList = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
-    flex: .93,
+    marginTop: 0,
+    flex: .95,
     backgroundColor: '#dee2e6',
   },
   competitionHeader: {

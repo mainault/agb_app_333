@@ -7,6 +7,7 @@ import {
   FlatList,
   Keyboard,
   Modal,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -2503,36 +2504,69 @@ const ResaScreen = () => {
                       !tranche.isActive && styles.disabledTrancheContainer
                     ]}
                   >
-                    <Text style={[
-                      styles.trancheTitle,
-                      !tranche.isActive && styles.disabledTrancheTitle
-                    ]}>
+                    <Text
+                      style={[
+                        styles.trancheTitle,
+                        !tranche.isActive && styles.disabledTrancheTitle
+                      ]}
+                    >
                       {tranche.title}
                     </Text>
 
                     <View style={styles.optionsContainer}>
-                      {tranche.options.map((option) => (
-                        <View key={option.id} style={styles.optionItem}>
-                          <Checkbox
-                            status={tranche.selectedOption === option.id ? 'checked' : 'unchecked'}
-                            onPress={() => !getGlobalProperties().shotgun && setTranchePeriode(tranche.id, option.id)}
-                            disabled={!tranche.isActive || !option.isActive || getGlobalProperties().shotgun}
-                            color="#099237ff"
-                            uncheckedColor="#181717ff"
-                          />
-                          <Text style={[
-                            styles.optionLabel,
-                            (!tranche.isActive || !option.isActive || getGlobalProperties().shotgun) && styles.disabledOptionLabel
-                          ]}>
-                            {option.label}
-                          </Text>
-                        </View>
-                      ))}
+                      {tranche.options.map((option) => {
+                        const isDisabled =
+                          !tranche.isActive ||
+                          !option.isActive ||
+                          getGlobalProperties().shotgun;
+
+                        const selectOption = () => {
+                          if (isDisabled) {
+                            return;
+                          }
+
+                          setTranchePeriode(tranche.id, option.id);
+                        };
+
+                        return (
+                          <Pressable
+                            key={option.id}
+                            style={styles.optionItem}
+                            onPress={selectOption}
+                            disabled={isDisabled}
+                            accessibilityRole="radio"
+                            accessibilityState={{
+                              checked: tranche.selectedOption === option.id,
+                              disabled: isDisabled
+                            }}
+                          >
+                            <Checkbox
+                              status={
+                                tranche.selectedOption === option.id
+                                  ? "checked"
+                                  : "unchecked"
+                              }
+                              onPress={selectOption}
+                              disabled={isDisabled}
+                              color="#099237ff"
+                              uncheckedColor="#181717ff"
+                            />
+
+                            <Text
+                              style={[
+                                styles.optionLabel,
+                                isDisabled && styles.disabledOptionLabel
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
                     </View>
                   </View>
                 ))}
               </View>
-
               {(
                 <View style={styles.radioButtonContainer}>
                   <Text style={styles.radioTitre}>Vous pouvez changer le repère (Joueur 1)</Text>

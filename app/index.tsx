@@ -34,7 +34,7 @@ import {
 
 import { MenuItemType } from './src/types/menuTypes';
 import Constants from 'expo-constants';
-import { appConfig } from './src/config';
+
 import { showAlert } from './src/utils/utilities';
 import { GlobalAppVersionObject } from './src/store/GlobalStore';
 import * as Application from "expo-application";
@@ -52,7 +52,7 @@ const getAppVersion = () => {
   );
 };
 
-const { width, height } = Dimensions.get('window');
+
 const UPDATE_DISMISSED_KEY = 'update_dismissed_version';
 const menus: MenuItemType[] = [
   {

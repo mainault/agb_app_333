@@ -255,20 +255,28 @@ const DisplayListPlayers = () => {
 
   return (
     <View style={styles.container}>
-      <CustomHeader />
+      <CustomHeader showMainMenuButton={true} />
+
       <View style={styles.moduleHeader}>
-        <Text style={styles.moduleTitle}>{`${competitionName} - ${competitionDate}`}</Text>
+        <Text style={styles.moduleTitle}>
+          {`${competitionName} - ${competitionDate}`}
+        </Text>
       </View>
+
       <HeaderRow />
+
       <FlatList
         data={players}
         renderItem={renderItem}
         keyExtractor={(_, index) => `player-${index}`}
         contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => (
+          <View style={styles.separator} />
+        )}
         extraData={checkedItems}
         style={styles.flatListContainer}
       />
+
       <PaymentResultModal />
     </View>
   );
@@ -276,7 +284,7 @@ const DisplayListPlayers = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 0.94,
+    flex: 0.95,
     backgroundColor: '#eaeef7ff',
   },
   moduleHeader: {

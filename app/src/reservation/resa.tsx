@@ -7,6 +7,7 @@ import {
   FlatList,
   Keyboard,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -136,6 +137,7 @@ const RADIO_OPTIONS = [
 ];
 
 const ResaScreen = () => {
+  const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
   const params = useLocalSearchParams<{
     menuTitle: string;
     parentMenuName: string;
@@ -942,15 +944,13 @@ const ResaScreen = () => {
       const donnees = {
         operationType: 'menusRepasChoice',
         action: 'get',
-        nom_competition:
-          getGlobalJsonObject().nom_competition,
+        nom_competition: getGlobalJsonObject().nom_competition,
         licence,
-        isEclectic:
-          getGlobalJsonObject().isEclectic,
+        isEclectic: getGlobalJsonObject().isEclectic,
         source: 'massTeamResa',
-        competition_key:
-          getGlobalCurrentCompetition()?.competition_key,
+        competition_key: getGlobalCurrentCompetition()?.competition_key,
         isMobile: '1',
+        support,
       };
 
       fetchDataFromServer(donnees, false);
@@ -1174,6 +1174,7 @@ const ResaScreen = () => {
           licence: value,
           nom_competition: getGlobalJsonObject().nom_competition,
           isMobile: "1",
+          support,
           isEclectic: getGlobalJsonObject().isEclectic,
         };
         fetchDataFromServer(donnees);
@@ -1330,6 +1331,7 @@ const ResaScreen = () => {
         ...buildMenuPayload(),
         licence: jsonObject.licence,
         isMobile: '1',
+        support,
         isComplete: getGlobalProperties().isComplete,
         isEclectic: getGlobalJsonObject().isEclectic,
         repere: selectedRepere,
@@ -1596,6 +1598,7 @@ const ResaScreen = () => {
       operationType: 'setResaMember',
       action: "terminate",
       isMobile: "1",
+      support,
       nom_competition: getGlobalJsonObject().nom_competition,
       memberName: getGlobalProperties().teamLeaderNomPrenom,
       tranche: getGlobalProperties().trancheId ? getGlobalProperties().trancheId[0] : null,
@@ -1751,6 +1754,7 @@ const ResaScreen = () => {
         ...buildMenuPayload(),
         licence: jsonObject.licence,
         isMobile: '1',
+        support,
         isComplete: getGlobalProperties().isComplete,
         isEclectic: getGlobalJsonObject().isEclectic,
         repere: selectedRepere,
@@ -1797,6 +1801,7 @@ const ResaScreen = () => {
           isEclectic: getGlobalJsonObject().isEclectic,
           isOlpTransaction: false,
           isMobile: "1",
+          support,
           targetSite: getGlobalProperties().site,
           tarif: getGlobalJsonObject().tarif_label,
           isAppMobile: "1",
@@ -1891,6 +1896,7 @@ const ResaScreen = () => {
           periode: jsonObject.periode.substring(jsonObject.periode.indexOf('>--') + 2, jsonObject.periode.indexOf('-<')),
           duree_trou: getGlobalProperties().duree_trou,
           isMobile: "1",
+          support,
       };
       setTeamMembersRemoveData(removedMembersRemoveData);
     }
@@ -2026,6 +2032,7 @@ const ResaScreen = () => {
         action: 'addUser',
         nbrOfPlayers: joueursSelectionnes.length,
         isMobile: '1',
+        support,
         updateTeam: 'OK',
 
         nom_competition:
@@ -2104,6 +2111,7 @@ const ResaScreen = () => {
         operationType: 'setResaMember',
         action: "terminate",
         isMobile: "1",
+        support,
         nom_competition: getGlobalJsonObject().nom_competition,
         memberName: getGlobalProperties().teamLeaderNomPrenom,
         tranche: trancheId,
@@ -2220,6 +2228,7 @@ const ResaScreen = () => {
             sendMail: true,
             isEclectic: getGlobalJsonObject().isEclectic,
             isMobile: '1',
+            support,
             menu: menu,
             sous_menu: "Désinscription - User",
             repere: selectedRepere
@@ -2334,6 +2343,7 @@ const ResaScreen = () => {
             operationType: "getOrphanList",
             nom_competition: getGlobalJsonObject().nom_competition,
             isMobile: "1",
+            support,
             formule: getGlobalJsonObject().isEclectic,
             teamNumber: getGlobalProperties().nbrScramblePlayers,
             licence: getGlobalJsonObject().licence,
@@ -2347,6 +2357,7 @@ const ResaScreen = () => {
           nom_competition: getGlobalJsonObject().nom_competition,
           isEclectic: getGlobalJsonObject().isEclectic,
           isMobile: "1",
+          support,
         };
       } else {
         donnees = {
@@ -2355,6 +2366,7 @@ const ResaScreen = () => {
           nom_competition: getGlobalJsonObject().nom_competition,
           isEclectic: getGlobalJsonObject().isEclectic,
           isMobile: "1",
+          support,
         };
       };
     }

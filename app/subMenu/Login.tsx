@@ -2,7 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getGlobalJsonObject, getGlobalJsonObjectForRanking, getGlobalOrphanList, getGlobalProperties, getGlobalUserOrphanList, resetGlobalJsonObject, resetGlobalJsonObjectForRanking, resetGlobalOrphanList, setGlobalIdentMember, setGlobalJsonObject, setGlobalJsonObjectForRanking, setGlobalOrphanList, setGlobalProperty, setGlobalUserOrphanList, setGlobalUsersList } from '../src//store/GlobalPropertiesManager';
 import CustomButton from '../src/components/CustomButton';
@@ -19,6 +19,7 @@ const isValidEmail = (email: string): boolean => {
 };
 
 const LoginScreen = () => {
+  const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
   const navigation = useNavigation();
   const [menuVisible, setMenuVisible] = useState(false);
   const { subMenuTitle, parentName, competitionType, selectedCompetitionKey, selectedCompetitionName } = useLocalSearchParams<{
@@ -127,6 +128,7 @@ const LoginScreen = () => {
       competitionClass: getCompetitionClassForRequest(competitionType),
       isEclectic: competitionType,
       isMobile: "1",
+      support,
       list: "",
       menu: parentName,
       nbrAttempt: 1,
@@ -411,6 +413,7 @@ const LoginScreen = () => {
         const donnees = {
           operationType: "getAllUsers",
           isMobile: "1",
+          support,
           nom_competition: getGlobalJsonObject().nom_competition,
           isScramble: getGlobalProperties().isScramble
         };
@@ -501,6 +504,7 @@ const LoginScreen = () => {
                     const donnees = {
                       operationType: "getAllUsers",
                       isMobile: "1",
+                      support,
                       nom_competition: getGlobalJsonObject().nom_competition,
                       isScramble: getGlobalProperties().isScramble
                     };
@@ -544,6 +548,7 @@ const LoginScreen = () => {
                         nom_competition: getGlobalJsonObject().nom_competition,
                         isEclectic: getGlobalJsonObject().isEclectic,
                         isMobile: "1",
+                        support,
                         createTeam: "NO",
                         teamResa: "YES",
                     };
@@ -587,6 +592,7 @@ const LoginScreen = () => {
                       const donnees = {
                         operationType: "getAllUsers",
                         isMobile: "1",
+                        support,
                         nom_competition: getGlobalJsonObject().nom_competition,
                         isScramble: getGlobalProperties().isScramble
                       };

@@ -36,7 +36,6 @@ export default function CovoiturageScreen() {
     competitionType?: string;
     competitionName?: string;
   }>();
-
   const [data, setData] = useState<Conducteur[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
@@ -60,7 +59,6 @@ export default function CovoiturageScreen() {
       setIsLoading(true);
       const donnees = {
         operationType: "getListeCovoiturage",
-        isMobile: "1",
         currentCompetition: params.competitionName ?? getGlobalJsonObject()?.nom_competition,
       };
       const response = await sendRequest(donnees);

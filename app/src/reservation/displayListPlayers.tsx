@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, FlatList, StyleSheet, Modal, Text, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import CustomHeader from '../components/CustomHeader';

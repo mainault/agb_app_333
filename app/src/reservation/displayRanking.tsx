@@ -77,7 +77,7 @@ const DisplayRanking = () => {
     }
   };
 
-  const getServerResponse = (jsonObject: any) => {
+  const getServerResponse = async (jsonObject: any) => {
     setIsLoading(false);
 
     const operationType = jsonObject.operationType;
@@ -98,8 +98,9 @@ const DisplayRanking = () => {
       setSelectedPlayer(null);
       setSelectedScoreCard(null);
       pendingPlayerRef.current = null;
-      showAlert("Gestion des Erreurs", jsonObject.error);
-      return;
+      await showAlert("Gestion des Erreurs", jsonObject.error);
+        router.replace('/');
+        return;
     }
 
     switch (operationType) {
@@ -109,13 +110,11 @@ const DisplayRanking = () => {
         if (!pendingPlayer) {
           return;
         }
-
         const scoreCard = (jsonObject.scoreCards ?? []).find(
           (card: ScoreCard) =>
             card.licence === pendingPlayer.licence &&
             card.tour === pendingPlayer.tour
         );
-
         if (!scoreCard) {
           pendingPlayerRef.current = null;
           setSelectedScoreCard(null);
@@ -125,14 +124,12 @@ const DisplayRanking = () => {
           );
           return;
         }
-
         setSelectedPlayer(pendingPlayer);
         setSelectedScoreCard(scoreCard);
         setModalVisible(true);
         pendingPlayerRef.current = null;
         return;
       }
-
       case "getRanking":
       default:
         break;
@@ -179,7 +176,6 @@ const DisplayRanking = () => {
       support: support,
       isMobile: 0,
     };
-    console.log("getRanking - donnees:", donnees);
     fetchDataFromServer(donnees);
   }, [sortBy, selectedTrimestre]);
 

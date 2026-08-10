@@ -2,7 +2,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RenderHTML from 'react-native-render-html';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getGlobalJsonObjectForRanking, getGlobalProperties, setGlobalProperty } from '../store/GlobalPropertiesManager';
@@ -56,6 +56,7 @@ const DisplayRanking = () => {
   const isRingerScore = getGlobalJsonObjectForRanking().isEclectic === "isRingerScore";
   const isEclectic = getGlobalJsonObjectForRanking().isEclectic === "isEclectic" ||
                    getGlobalJsonObjectForRanking().isEclectic === "isEclectic-IS";
+  const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
 
   // Initialisation correcte de sortBy en fonction du mode
   const [sortBy, setSortBy] = useState<string>(() => {
@@ -175,7 +176,10 @@ const DisplayRanking = () => {
       sortOrder: sortBy,
       trimestre: selectedTrimestre === "tous" ? "" : selectedTrimestre,
       isAppMobile: true,
+      support: support,
+      isMobile: 0,
     };
+    console.log("getRanking - donnees:", donnees);
     fetchDataFromServer(donnees);
   }, [sortBy, selectedTrimestre]);
 
@@ -342,8 +346,9 @@ const DisplayRanking = () => {
       trimestre: selectedTrimestre === "tous" ? "" : selectedTrimestre,
       tour: item.tour,
       isAppMobile: true,
+      support: support,
+      isMobile: 0,
     };
-
     fetchDataFromServer(donnees);
   };
 
@@ -595,6 +600,7 @@ const DisplayRanking = () => {
             >
               {selectedScoreCard.holes.map((hole) => {
                 const isOverPar = hole.score > hole.par;
+                const isUnderPar = hole.score < hole.par;
 
                 return (
                   <View
@@ -604,24 +610,30 @@ const DisplayRanking = () => {
                     <Text style={[styles.modalHoleCell, { flex: 1.2 }]}>
                       {hole.hole}
                     </Text>
+
                     <Text style={[styles.modalHoleCell, { flex: 1 }]}>
                       {hole.par}
                     </Text>
+
                     <Text style={[styles.modalHoleCell, { flex: 1 }]}>
                       {hole.score}
                     </Text>
+
                     <Text style={[styles.modalHoleCell, { flex: 1 }]}>
                       {hole.brut}
                     </Text>
-                    <Text
-                      style={[
-                        styles.modalHoleCell,
-                        { flex: 1 },
-                        isOverPar && styles.overParNetScore,
-                      ]}
-                    >
-                      {hole.net}
-                    </Text>
+
+                    <View style={[styles.modalHoleNetCell, { flex: 1 }]}>
+                      <Text
+                        style={[
+                          styles.modalHoleNetText,
+                          isOverPar && styles.overParNetScore,
+                          isUnderPar && styles.underParNetScore,
+                        ]}
+                      >
+                        {hole.net}
+                      </Text>
+                    </View>
                   </View>
                 );
               })}
@@ -1058,7 +1070,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalHoleNetCell: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
+  modalHoleNetText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#2c3e50',
+  },
+
+  underParNetScore: {
+    color: 'green',
+    fontWeight: 'bold',
+    borderWidth: 2,
+    borderColor: 'green',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+  },
 });
 
 export default DisplayRanking;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions, Modal, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -75,6 +75,7 @@ const MesScores = () => {
   const [scoreCards, setScoreCards] = useState<ScoreCard[]>([]);
   const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);
   const { height: windowHeight } = Dimensions.get('window');
+  const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
 
   // Initialisation des tableaux vides avec toutes les colonnes
   useEffect(() => {
@@ -87,6 +88,9 @@ const MesScores = () => {
         tour:  selectedTour === '0' ? '' : selectedTour, 
         isEclectic: globalJsonObject.isEclectic,
         licence: globalJsonObject.licence,
+        isAppMobile: true,
+        support: support,
+        isMobile: 0,
       };
       setShowSynthesis(true);
       fetchDataFromServer(donnees);
@@ -223,6 +227,9 @@ const MesScores = () => {
       tour:  selectedTour === '0' ? '' : selectedTour, 
       isEclectic: globalJsonObject.isEclectic,
       licence: globalJsonObject.licence,
+      isAppMobile: true,
+      support: support,
+      isMobile: 0,
     };
     setShowSynthesis(true);
     fetchDataFromServer(donnees);
@@ -349,10 +356,36 @@ const MesScores = () => {
                 <Text style={[styles.cardCell, styles.cardHoleCell]}>
                   {hole.hole}
                 </Text>
-                <Text style={styles.cardCell}>{hole.par ?? '—'}</Text>
-                <Text style={styles.cardCell}>{hole.score ?? '—'}</Text>
-                <Text style={styles.cardCell}>{hole.brut ?? '—'}</Text>
-                <Text style={styles.cardCell}>{hole.net ?? '—'}</Text>
+
+                <Text style={styles.cardCell}>
+                  {hole.par ?? '—'}
+                </Text>
+
+                <Text style={styles.cardCell}>
+                  {hole.score ?? '—'}
+                </Text>
+
+                <Text style={styles.cardCell}>
+                  {hole.brut ?? '—'}
+                </Text>
+
+                <View style={styles.cardNetCell}>
+                  <Text
+                    style={[
+                      styles.cardNetText,
+                      hole.score !== null &&
+                      hole.par !== null &&
+                      hole.score > hole.par &&
+                      styles.cardNetOverPar,
+                      hole.score !== null &&
+                      hole.par !== null &&
+                      hole.score < hole.par &&
+                      styles.cardNetUnderPar
+                    ]}
+                  >
+                    {hole.net ?? '—'}
+                  </Text>
+                </View>
               </View>
             ))}
           </ScrollView>
@@ -875,7 +908,36 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: 8,
-},
+  },
+  cardNetCell: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  },
+
+  cardNetText: {
+    textAlign: 'center',
+    color: '#333',
+    paddingVertical: 4,
+  },
+
+  cardNetOverPar: {
+    color: '#e71313',
+    fontWeight: 'bold',
+  },
+
+  cardNetUnderPar: {
+    color: 'green',
+    fontWeight: 'bold',
+    borderWidth: 2,
+    borderColor: 'green',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    paddingVertical: 1,
+  },
 });
 
 export default MesScores;

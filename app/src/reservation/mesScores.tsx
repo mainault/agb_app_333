@@ -78,52 +78,69 @@ const MesScores = () => {
   const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
 
   // Initialisation des tableaux vides avec toutes les colonnes
-useEffect(() => {
-  if (globalJsonObject.isEclectic === "isEclectic") {
-    const donnees = {
-      operationType: "getUserCurrentQuarterEclecticScores",
-      CRUD: "list",
-      trimestre: "",
-      tour: "",
-      isEclectic: globalJsonObject.isEclectic,
-      licence: globalJsonObject.licence,
-      action: "manage",
-      isAppMobile: true,
-      support: support,
-      isMobile: 0,
-    };
-    setShowSynthesis(true);
-    fetchDataFromServer(donnees);
+  useEffect(() => {
 
-  } else {
-    const emptyCumuls = [
-      { label: 'Cumul Brut', value: '' },
-      { label: 'Cumul Net', value: '' },
-      { label: 'Moyenne', value: '' }
-    ];
-    const emptyUsersArray = Array(18).fill(0).map((_, i) => {
-      const emptyTour: PlayerTour = {
-        T1: '', T2: '', T3: '', T4: '', T5: '',
-        T6: '', T7: '', T8: '', T9: '', T10: '',
-        T11: '', T12: '', T13: '', T14: '', T15: '',
-        T16: '', T17: '', T18: '',
-        score: '',
-        tour: (i + 1).toString(),
-        brut: '',
-        net: ''
+    if (
+      globalJsonObject.isEclectic === "isEclectic" ||
+      globalJsonObject.isEclectic === "isRingerScore"
+    ) {
+
+      const donnees = {
+        operationType:
+          globalJsonObject.isEclectic === "isEclectic"
+            ? "getUserCurrentQuarterEclecticScores"
+            : "getUserSearchEclecticScores",
+
+        CRUD: "list",
+        trimestre: "",
+        tour: "",
+        isEclectic: globalJsonObject.isEclectic,
+        licence: globalJsonObject.licence,
+        action: "manage",
+        isAppMobile: true,
+        support: support,
+        isMobile: 0,
       };
-      return emptyTour;
-    });
-    setData({
-      title: 'Mes Scores',
-      cumuls: emptyCumuls,
-      usersArray: emptyUsersArray
-    });
 
-    setIsLoading(false);
-  }
+      setShowSynthesis(true);
+      fetchDataFromServer(donnees);
 
-}, []);
+    } else {
+
+      // Challenge Hiver :
+      // attente du choix du tour.
+
+      const emptyCumuls = [
+        { label: 'Cumul Brut', value: '' },
+        { label: 'Cumul Net', value: '' },
+        { label: 'Moyenne', value: '' }
+      ];
+
+      const emptyUsersArray = Array(18).fill(0).map((_, i) => {
+        const emptyTour: PlayerTour = {
+          T1: '', T2: '', T3: '', T4: '', T5: '',
+          T6: '', T7: '', T8: '', T9: '', T10: '',
+          T11: '', T12: '', T13: '', T14: '', T15: '',
+          T16: '', T17: '', T18: '',
+          score: '',
+          tour: (i + 1).toString(),
+          brut: '',
+          net: ''
+        };
+
+        return emptyTour;
+      });
+
+      setData({
+        title: 'Mes Scores',
+        cumuls: emptyCumuls,
+        usersArray: emptyUsersArray
+      });
+
+      setIsLoading(false);
+    }
+
+  }, []);
 
   const trimestreOptions = [
     { label: '', value: '0' },

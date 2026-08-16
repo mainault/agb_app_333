@@ -12,7 +12,8 @@ interface MenuItemType {
   competitionType?: string;
   screen?: string;
   params?: any;
-  subMenuTitle?: string,
+  subMenuTitle?: string;
+  directRoute?: boolean;
 }
 
 interface MenuModalProps {
@@ -29,20 +30,42 @@ export default function MenuModal({ visible, onClose, menus }: MenuModalProps) {
 
     if (item.subMenus) {
       // Sous-menu
-      setMenuStack([...menuStack, { name: item.name, items: currentMenu }]);
+      setMenuStack([
+        ...menuStack,
+        {
+          name: item.name,
+          items: currentMenu,
+        },
+      ]);
+
       setCurrentMenu(item.subMenus);
-    } 
-    
-    // ✅ CAS 1 : écran dynamique (système actuel)
+    }
+
+    // ✅ CAS 1 : écran direct avec paramètres
+    else if (item.screen && item.params && item.directRoute) {
+      router.push({
+        pathname: `/${item.screen}` as any,
+        params: {
+          subMenuTitle: item.subMenuTitle,
+          parentName: item.parentName,
+          competitionType: item.competitionType,
+        },
+      });
+
+      onClose();
+    }
+
+    // ✅ CAS 2 : écran dynamique
     else if (item.screen && item.params) {
       router.push({
         pathname: `/${item.screen}/[subMenuTitle]` as any,
-        params: item as any
+        params: item as any,
       });
+
       onClose();
-    } 
-    
-    // ✅ CAS 2 : écran simple (NOUVEAU → legal, etc.)
+    }
+
+    // ✅ CAS 3 : écran simple
     else if (item.screen) {
       router.push(`/${item.screen}` as any);
       onClose();

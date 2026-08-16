@@ -8,6 +8,7 @@ export type MenuItemType = {
   parentName?: string;
   competitionType?: string;
   subMenuTitle?: string;
+  directRoute?: boolean;
 };
 
 

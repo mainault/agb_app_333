@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   ImageBackground,
-  Dimensions,
   Alert,
   Linking,
   Platform,
@@ -61,6 +60,15 @@ const menus: MenuItemType[] = [
         {
           name: "Calendrier des compétitions",
           screen: "src/reservation/competition",
+        },
+        {
+          name: "Mes résultats",
+          subMenuTitle: "Mes résultats",
+          parentName: "Compétitions",
+          competitionType: "isAllTypes",
+          screen: "subMenu/Login",
+          directRoute: true,
+          params: {},
         },
         {
           name: "Standard",

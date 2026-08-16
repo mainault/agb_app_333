@@ -30,6 +30,7 @@ const LoginScreen = () => {
     selectedCompetitionName: string;
   }>();
 
+  
   const normalizedSubMenuTitle =
   subMenuTitle === "Inscription covoiturage"
     ? "covoiturage"
@@ -117,11 +118,20 @@ const LoginScreen = () => {
     await SecureStore.setItemAsync('agb_email', email);
     await SecureStore.setItemAsync('agb_password', password);
 
-    let action = subMenuTitle.includes("Classement") ? "classement" : "";
-    action = subMenuTitle.includes("Mes scores") ? "scoreManagement" : action;
-    action = subMenuTitle.includes("Liste des inscrits") ? "list" : action;
-    action = subMenuTitle.includes("Liste des covoiturages") ? "listeCovoiturage" : action;
-
+    let action = subMenuTitle.includes("Classement")
+      ? "classement"
+      : "";
+    action =
+      subMenuTitle.includes("Mes scores") ||
+      subMenuTitle.includes("Mes résultats")
+        ? "scoreManagement"
+        : action;
+    action = subMenuTitle.includes("Liste des inscrits")
+      ? "list"
+      : action;
+    action = subMenuTitle.includes("Liste des covoiturages")
+      ? "listeCovoiturage"
+      : action;
     const donnees = {
       action: action,
       isCookieAccept: false,
@@ -133,7 +143,12 @@ const LoginScreen = () => {
       menu: parentName,
       nbrAttempt: 1,
       newUserPassword: showChangePassword ? newPassword : "",
-      nom_competition: subMenuTitle.includes("Classement") || subMenuTitle.includes("Mes scores") ? "" : selectedCompetitionName,
+      nom_competition:
+        action === "classement" ||
+        action === "scoreManagement" ||
+        action === "myResults"
+          ? ""
+          : selectedCompetitionName,
       operationType: "validateUserLogin",
       sous_menu: "",
       userLogin: email,
@@ -207,6 +222,15 @@ const LoginScreen = () => {
 
         // Gestion du dispatch en fonction du sous-menu  ou présence covoiturage
         switch (normalizedSubMenuTitle) {
+          case "Mes résultats":
+            router.push({
+              pathname: `/src/reservation/mesResultats`,
+              params: {
+                menuTitle: subMenuTitle,
+                parentMenuName: parentName,
+              },
+            });
+            break;
           case "Mes scores":
             router.push({
               pathname: `/src/reservation/mesScores`,
@@ -269,6 +293,17 @@ const LoginScreen = () => {
               },
             });
             break;
+
+            case "Mes résultats":
+              router.push({
+                pathname: "/src/reservation/mesResultats",
+                params: {
+                  menuTitle: subMenuTitle,
+                  parentMenuName: parentName,
+                },
+              });
+              break;
+
             default:
               router.push({
                 pathname: `/src/reservation/resa`,

@@ -108,10 +108,36 @@ export default function ChoixCompetition() {
 
   // Appel initial du serveur
   useEffect(() => {
-    setGlobalProperty('menuEquipeIncomplete', subMenuTitle == "Compléter équipe" ? true : false);
-    if (subMenuTitle === "Mes scores" && competitionType !== "isNotEclectic") {
+    setGlobalProperty(
+      'menuEquipeIncomplete',
+      subMenuTitle == "Compléter équipe" ? true : false
+    );
+
+    if (subMenuTitle === "Mes résultats") {
       setGlobalProperty('sous_menu', subMenuTitle as string);
       setGlobalProperty('menu', parentName as string);
+
+      router.push({
+        pathname: `/subMenu/Login`,
+        params: {
+          subMenuTitle,
+          parentName,
+          competitionType,
+          selectedCompetitionKey: "",
+          selectedCompetitionName: "",
+        },
+      });
+
+      return;
+    }
+
+    if (
+      subMenuTitle === "Mes scores" &&
+      competitionType !== "isNotEclectic"
+    ) {
+      setGlobalProperty('sous_menu', subMenuTitle as string);
+      setGlobalProperty('menu', parentName as string);
+
       router.push({
         pathname: `/subMenu/Login`,
         params: {
@@ -122,10 +148,12 @@ export default function ChoixCompetition() {
           selectedCompetitionName: selectedCompetitionName,
         },
       });
+
       return;
     }
 
     let donnees = null;
+
     if (competitionType === "OLP") {
       donnees = {
         operationType: "getASTarifs",
@@ -134,14 +162,20 @@ export default function ChoixCompetition() {
     } else {
       donnees = {
         operationType: "getCurrentCompetitions",
-        competitionClass: isCovoiturage ? CompetitionClass.ALL_TYPES : getCompetitionClassForRequest(competitionType),
+        competitionClass: isCovoiturage
+          ? CompetitionClass.ALL_TYPES
+          : getCompetitionClassForRequest(competitionType),
         action: "displayLogin",
         list: subMenuTitle === "Liste des inscrits" ? "yes" : "no",
         isMassResaAccess: false,
-        isComplete: getGlobalProperties().menuEquipeIncomplete ? "incomplete" : "normal",
+        isComplete:
+          getGlobalProperties().menuEquipeIncomplete
+            ? "incomplete"
+            : "normal",
         isBacattss: parentName === "BACATTSS" ? true : false,
       };
     }
+
     requestServer(donnees);
   }, []);
 

@@ -457,6 +457,8 @@ export default function MesResultats() {
             </View>
           )}
         />
+        <View style={styles.footer}>
+        </View>
       </View>
     </View>
   );
@@ -548,7 +550,7 @@ borderColor: '#909090',
   resultCard: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#d0d0d0',
+    borderBottomColor: '#86888a',
   },
 
   competitionHeader: {
@@ -674,6 +676,14 @@ borderColor: '#909090',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+
+  footer: {
+    height: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#7db9ea',
+    marginHorizontal: -12,
   },
 
 });

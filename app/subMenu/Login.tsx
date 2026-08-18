@@ -123,7 +123,8 @@ const LoginScreen = () => {
       : "";
     action =
       subMenuTitle.includes("Mes scores") ||
-      subMenuTitle.includes("Mes résultats")
+      subMenuTitle.includes("Mes résultats") ||
+      subMenuTitle.includes("Mes réservations")
         ? "scoreManagement"
         : action;
     action = subMenuTitle.includes("Liste des inscrits")
@@ -222,6 +223,15 @@ const LoginScreen = () => {
 
         // Gestion du dispatch en fonction du sous-menu  ou présence covoiturage
         switch (normalizedSubMenuTitle) {
+          case "Mes réservations":
+            router.push({
+              pathname: `/src/reservation/mesReservations`,
+              params: {
+                menuTitle: subMenuTitle,
+                parentMenuName: parentName,
+              },
+            });
+            break;
           case "Mes résultats":
             router.push({
               pathname: `/src/reservation/mesResultats`,
@@ -294,17 +304,7 @@ const LoginScreen = () => {
             });
             break;
 
-            case "Mes résultats":
-              router.push({
-                pathname: "/src/reservation/mesResultats",
-                params: {
-                  menuTitle: subMenuTitle,
-                  parentMenuName: parentName,
-                },
-              });
-              break;
-
-            default:
+          default:
               router.push({
                 pathname: `/src/reservation/resa`,
                 params: {

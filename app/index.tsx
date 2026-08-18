@@ -62,6 +62,15 @@ const menus: MenuItemType[] = [
           screen: "src/reservation/competition",
         },
         {
+          name: "Mes réservations",
+          subMenuTitle: "Mes réservations",
+          parentName: "Compétitions",
+          competitionType: "isAllTypes",
+          screen: "subMenu/Login",
+          directRoute: true,
+          params: {},
+        },
+        {
           name: "Mes résultats",
           subMenuTitle: "Mes résultats",
           parentName: "Compétitions",

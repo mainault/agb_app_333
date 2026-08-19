@@ -49,31 +49,124 @@ const CarouselModal: React.FC<CarouselModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <View style={styles.carouselContent}>
-          {currentView === 0 && (
-            <View style={styles.textView}>
-              <Text style={{ color: 'red', fontSize: 16, fontWeight: 'bold', textAlign: 'center' }}>Attention !!!</Text>
-              <Text style={{ fontSize: 15, fontWeight: 'bold', textAlign: 'center' }}>
-                Dans la phase initiale du paiement
-              </Text>
-              <Text style={{ textAlign: 'center' }}>
-                vous devrez activer le bouton
-                <Text style={{ fontSize: 15, color: 'blue', fontWeight: 'bold' }}> MODIFIER </Text>
-              </Text>
-              <Text style={{ textAlign: 'center' }}>
-                de la ligne
-                <Text style={{ fontWeight: 'bold', fontSize: 15, fontStyle: 'italic' }}> Modifier la contribution volontaire </Text>
-              </Text>
-              <Text style={{ textAlign: 'center' }}>
-                si vous ne souhaitez pas faire un don au prestataire
-              </Text>
-              <Text style={{ textAlign: 'center', marginTop: 10 }}>
-                Toute annulation de réservation (hors contrainte personnelle)
-              </Text>
-              <Text style={{ textAlign: 'center' }}>
-                à moins de {nbrDaysCancelRefunded} jour(s) de la compétition ne sera pas remboursée
-              </Text>
-            </View>
-          )}
+            {currentView === 0 && (
+              <View style={styles.textView}>
+                <Text
+                  style={{
+                    color: 'red',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  }}
+                >
+                  Attention !!!
+                </Text>
+
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    marginTop: 10,
+                  }}
+                >
+                  Lors du paiement, HelloAsso ajoute automatiquement
+                  une contribution facultative à son fonctionnement.
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 15,
+                  }}
+                >
+                  Si vous ne souhaitez pas verser cette contribution :
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 10,
+                  }}
+                >
+                  1 - Appuyez sur
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: 'blue',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {' '}MODIFIER
+                  </Text>
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 5,
+                  }}
+                >
+                  2 - Sélectionnez
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {' '}Autre montant
+                  </Text>
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 5,
+                  }}
+                >
+                  3 - Saisissez
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: 'blue',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {' '}0 €
+                  </Text>
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 20,
+                  }}
+                >
+                  Toute annulation de réservation
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: 'center',
+
+                  }}
+                >
+                  (hors contrainte personnelle)
+                </Text>
+
+                <Text style={{ textAlign: 'center', marginTop: 5, }}>
+                  à moins de {nbrDaysCancelRefunded} {nbrDaysCancelRefunded === '1' ? 'jour' : 'jours'} avant la compétition
+                </Text>
+                
+                <Text
+                  style={{
+                    textAlign: 'center',
+                  }}
+                >
+                  ne sera pas remboursée.
+                </Text>
+              </View>
+            )}
             {currentView === 1 && (
               <View style={styles.imageView}>
                 <Image source={image1} style={styles.image} resizeMode="contain" />

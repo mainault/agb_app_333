@@ -143,6 +143,9 @@ export default function MesReservations() {
   }
 
   function getTranchePeriode(item: ReservationItem): string {
+    if( item.tranche.includes("SHOTGUN")) { // Si SHOTGUN pas de période et suppression des caractères '- ' en début du champ item.tranche
+      return item.tranche.substring(2);
+    }
     if (item.tranche !== "" && item.periode !== "") {
       return item.tranche + " - " + item.periode;
     }
@@ -315,8 +318,13 @@ export default function MesReservations() {
                   Payé en ligne
                 </Text>
 
-                <Text style={styles.detailValue}>
-                  {item.paidOnline ? "Oui" : "Non"}
+                <Text
+                  style={[
+                    styles.detailValue,
+                    item.paidOnline && { color: "green", fontWeight: "700" },
+                  ]}
+                >
+                  {item.paidOnline ? "OUI" : "NON"}
                 </Text>
               </View>
 

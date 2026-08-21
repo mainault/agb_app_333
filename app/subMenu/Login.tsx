@@ -234,7 +234,7 @@ const LoginScreen = () => {
             break;
           case "Mes résultats":
             router.push({
-              pathname: `/src/reservation/mesResultats`,
+              pathname: `/src/results/mesResultats`,
               params: {
                 menuTitle: subMenuTitle,
                 parentMenuName: parentName,
@@ -243,7 +243,7 @@ const LoginScreen = () => {
             break;
           case "Mes scores":
             router.push({
-              pathname: `/src/reservation/mesScores`,
+              pathname: `/src/results/mesScores`,
               params: {
                 menuTitle: subMenuTitle,
                 parentMenuName: parentName,
@@ -255,7 +255,7 @@ const LoginScreen = () => {
             break;
           case "Classement" :
             router.push({
-                pathname: `/src/reservation/displayRanking`,
+                pathname: `/src/results/displayRanking`,
                 params: {
                   menuTitle: subMenuTitle,
                   parentMenuName: parentName,

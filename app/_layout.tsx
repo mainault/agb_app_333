@@ -31,15 +31,19 @@ export default function RootLayout() {
               contentStyle: { backgroundColor: '#aacdeeff' },
             }}
           >
+
             <Stack.Screen name="index" />
             <Stack.Screen name="subMenu" />
+
             <Stack.Screen name="src/reservation/resa" />
             <Stack.Screen name="src/reservation/displayListPlayers" />
-            <Stack.Screen name="src/reservation/displayRanking" />
             <Stack.Screen name="src/reservation/displayListInscrits" />
-            <Stack.Screen name="src/reservation/mesScores" />
             <Stack.Screen name="src/reservation/covoiturage" />
             <Stack.Screen name="src/reservation/covoiturageList" />
+
+            <Stack.Screen name="src/results/displayRanking" />
+            <Stack.Screen name="src/results/mesScores" />
+            <Stack.Screen name="src/results/mesResultats" />
           </Stack>
         </MenuProvider>
       </PaperProvider>

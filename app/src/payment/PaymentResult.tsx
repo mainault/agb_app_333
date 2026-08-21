@@ -1,4 +1,3 @@
-// src/reservation/PaymentResultScreen.tsx
 import React, { useState } from 'react';
 import { View, Modal, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';

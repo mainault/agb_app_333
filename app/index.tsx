@@ -59,7 +59,7 @@ const menus: MenuItemType[] = [
       subMenus: [
         {
           name: "Calendrier des compétitions",
-          screen: "src/reservation/competition",
+          screen: "src/competition/competition",
         },
         {
           name: "Mes réservations",

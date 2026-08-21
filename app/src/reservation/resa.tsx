@@ -1711,7 +1711,7 @@ const ResaScreen = () => {
       setGlobalProperty('transformedData', transformedData);
       setGlobalProperty('transformedDataPayments', transformedDataPayments);
       router.replace({
-        pathname: '/src/reservation/displayListPlayers' as any,
+        pathname: '/src/competition/displayListPlayers' as any,
         params: {
           data: JSON.stringify(transformedData),
           paymentsData: JSON.stringify(transformedDataPayments)

@@ -267,7 +267,7 @@ const LoginScreen = () => {
 
           case "Liste des inscrits":
             router.push({
-              pathname: `/src/reservation/displayListInscrits`,
+              pathname: `/src/competition/displayListInscrits`,
               params: {
                 menuTitle: subMenuTitle,
                 parentMenuName: parentName,

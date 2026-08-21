@@ -1667,7 +1667,7 @@ const ResaScreen = () => {
       covoituragePromiseRef.current = { resolve };
       // Utilisez linkBuilder pour créer une URL typée
       const href = {
-        pathname: 'src/reservation/covoiturage',
+        pathname: 'src/covoiturage/covoiturage',
         params: {
           menuTitle: params.menuTitle,
           parentMenuName: params.parentMenuName,

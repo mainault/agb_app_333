@@ -38,8 +38,8 @@ export default function RootLayout() {
             <Stack.Screen name="src/reservation/resa" />
             <Stack.Screen name="src/reservation/displayListPlayers" />
             <Stack.Screen name="src/reservation/displayListInscrits" />
-            <Stack.Screen name="src/reservation/covoiturage" />
-            <Stack.Screen name="src/reservation/covoiturageList" />
+            <Stack.Screen name="src/covoiturage/covoiturage" />
+            <Stack.Screen name="src/covoiturage/covoiturageList" />
 
             <Stack.Screen name="src/results/displayRanking" />
             <Stack.Screen name="src/results/mesScores" />

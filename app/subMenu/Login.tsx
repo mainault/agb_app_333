@@ -280,7 +280,7 @@ const LoginScreen = () => {
 
           case "covoiturage":
             router.push({
-              pathname: `/src/reservation/covoiturage`,
+              pathname: `/src/covoiturage/covoiturage`,
               params: {
                 menuTitle: subMenuTitle,
                 parentMenuName: parentName,
@@ -293,7 +293,7 @@ const LoginScreen = () => {
 
           case "Liste des covoiturages":
             router.push({
-              pathname: `/src/reservation/covoiturageList`,
+              pathname: `/src/covoiturage/covoiturageList`,
               params: {
                 menuTitle: subMenuTitle,
                 parentMenuName: parentName,

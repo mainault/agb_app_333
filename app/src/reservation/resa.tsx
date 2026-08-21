@@ -2010,10 +2010,17 @@ const ResaScreen = () => {
       if (formule.includes("Scramble à 2") && selectedPlayersCount < 2) {
         setGlobalProperty('isIncomplete', true);
         setGlobalProperty('isComplete', "incomplete");
+
+      } else if (formule.includes("Scramble à 3") && selectedPlayersCount < 3) {
+        setGlobalProperty('isIncomplete', true);
+        setGlobalProperty('isComplete', "incomplete");
+
       } else if (formule.includes("Scramble à 4") && selectedPlayersCount < 4) {
         setGlobalProperty('isIncomplete', true);
         setGlobalProperty('isComplete', "incomplete");
+
       } else {
+        setGlobalProperty('isIncomplete', false);
         setGlobalProperty('isComplete', "complete");
       }
     }
@@ -2614,7 +2621,7 @@ const ResaScreen = () => {
                   id: j.id,
                   nom: j.nom
                 }))}
-                nbJoueursMax={getGlobalProperties().teamNumber || 1}
+                nbJoueursMax={getGlobalProperties().nbrScramblePlayers || 1}
                 selectedValues={selectedValues as any}
               />
 

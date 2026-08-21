@@ -405,28 +405,12 @@ const LoginScreen = () => {
   }
 
   const validateUserLogin = () => {
-    const index_H = getGlobalJsonObject().indexMin_H;
-    const index_F = getGlobalJsonObject().indexMin_F;
-    if (index_H === -1 as any && getGlobalJsonObject().civilite === "M.") {
-      showAlert("Gestion des erreurs", "Cette compétition est réservée aux Dames");
-      return false;
-    }
-    if (index_F === -1 as any && getGlobalJsonObject().civilite !== "M.") {
-      showAlert("Gestion des erreurs", "Cette compétition est réservée aux Hommes");
-      return false;
-    }
-    if ((index_H  as any !== -1 && index_H != null) && (getGlobalJsonObject().civilite === "M." && getGlobalJsonObject().whs_index as any > parseInt(index_H))) {
-      showAlert("Gestion des erreurs","Cette compétition est réservée aux index < à " + index_H);
-      return false;
-    }
-    if ((index_F as any !== -1 && index_F != null) && (getGlobalJsonObject().civilite !== "M." && getGlobalJsonObject().whs_index as any > parseInt(index_F))) {
-      showAlert("Gestion des erreurs","Cette compétition est réservée aux index < à " + index_F);
-      return false;
-    }
+    /*
     if (getGlobalProperties().isComplete === "incomplete" && (getGlobalJsonObject().teamLeader === "OK" || getGlobalJsonObject().teamMember === "OK")) {
       showAlert("Gestion des erreurs","Vous êtes déjà dans une équipe");
       return false;
     }
+    */
     if (subMenuTitle === "Liste des inscrits") {
       return true;
     }

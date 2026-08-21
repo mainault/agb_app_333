@@ -700,11 +700,13 @@ const RepasModal = ({
                       </Text>
                     </View>
 
-                    <TextInput
+                    <Text
                       style={styles.joueurNom}
-                      value={joueur.nom}
-                      editable={false}
-                    />
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {joueur.nom}
+                    </Text>
                   </View>
 
                   {hasMenus &&

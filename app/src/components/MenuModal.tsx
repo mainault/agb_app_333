@@ -107,23 +107,38 @@ export default function MenuModal({ visible, onClose, menus }: MenuModalProps) {
             </Text>
 
             <ScrollView style={styles.menuScroll}>
-              {currentMenu.map((item, index) => (
-                <React.Fragment key={index}>
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => handleMenuPress(item)}
-                  >
-                    <Text style={styles.menuItemText}>{item.name}</Text>
-                    {item.subMenus && (
-                      <Ionicons name="chevron-forward" size={20} color="#666" />
-                    )}
-                  </TouchableOpacity>
+              {currentMenu.map((item, index) => {
+                const startsSubMenuGroup =
+                  index > 0 &&
+                  item.subMenus &&
+                  !currentMenu[index - 1].subMenus;
 
-                  {item.subMenus && index < currentMenu.length - 1 && (
-                    <View style={styles.separator} />
-                  )}
-                </React.Fragment>
-              ))}
+                return (
+                  <React.Fragment key={index}>
+                    <TouchableOpacity
+                      style={[
+                        styles.menuItem,
+                        startsSubMenuGroup && styles.subMenuGroupStart,
+                      ]}
+                      onPress={() => handleMenuPress(item)}
+                    >
+                      <Text style={styles.menuItemText}>{item.name}</Text>
+
+                      {item.subMenus && (
+                        <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color="#666"
+                        />
+                      )}
+                    </TouchableOpacity>
+
+                    {item.subMenus && index < currentMenu.length - 1 && (
+                      <View style={styles.separator} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </ScrollView>
           </View>
         </View>
@@ -182,5 +197,8 @@ const styles = StyleSheet.create({
     height: 0,
     backgroundColor: '#eee',
     marginVertical: 0,
+  },
+  subMenuGroupStart: {
+    marginTop: 12,
   },
 });

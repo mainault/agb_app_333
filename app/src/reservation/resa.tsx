@@ -168,7 +168,8 @@ const ResaScreen = () => {
   const covoiturageResultRef = useRef<((value: boolean) => void) | null>(null);
   const [isPaymentSucceed, setPaymentSucceed] = useState<(Boolean)>(false);
   const [selectedRepere, setSelectedRepere] = useState<string>("blanc");
-  const [isAlertVisible, setIsAlertVisible] = useState(false);
+  const [isPaymentConfirmationVisible, setIsPaymentConfirmationVisible] =
+  useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dropdownModalVisible, setDropdownModalVisible] = useState(false);
   const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
@@ -657,8 +658,7 @@ const ResaScreen = () => {
   // Fonction displayResaManagement
   const displayResaManagement = (jsonObject: any) => {
     setGlobalProperty('repere', getPlayerRepere(getGlobalJsonObject().licence));
-
-    setGlobalProperty('isPEL', getGlobalJsonObject().isPEL_enabled);
+    setGlobalProperty('isPEL', getGlobalJsonObject().isPEL_enabled === '1');
 
     setGlobalProperty('newTeamManagement', true);
 
@@ -963,13 +963,19 @@ const ResaScreen = () => {
     switch(jsonObject.operationType) {
       case "getCurrentCompetition":
         if (jsonObject.status === "KO") {
-          showAlert("Gestion des erreurs",jsonObject.error);
+          showAlert("Gestion des erreurs", jsonObject.error);
           router.replace('/');
           break;
+        }
+        if (getGlobalProperties().isComplete === 'incomplete' && jsonObject.incompleteTeams.length === 0){
+            showAlert("Information", "Il n'y a aucune équipe incomplète pour cette compétition.");
+            router.replace('/');
+            break;
         }
         setGlobalCurrentCompetition(jsonObject);
         displayCBPayment();
         break;
+
       case "getOrphanList":
         if (jsonObject.status === "KO") {
           showAlert("Gestion des erreurs",jsonObject.error);
@@ -1024,27 +1030,42 @@ const ResaScreen = () => {
           showAlert(jsonObject.error, "OK");
           break;
         }
-        if(getGlobalProperties().sous_menu === "desinscription"){
+
+        if (getGlobalProperties().sous_menu === "desinscription") {
           router.replace("/");
           break;
-        } 
-        const dataForPlayersList = {
-          operationType: 'getCompetitionPlayers',
-          isEclectic: getGlobalJsonObject().isEclectic,
-          nom_competition: getGlobalJsonObject().nom_competition,
-          action: 'displayList',
-          isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
-          accessType: 'resa',
-        };
-        fetchDataFromServer(dataForPlayersList);
+        }
+
+        if (
+          jsonObject.action !== "removeUser" &&
+          (
+            getGlobalJsonObject().isAlreadyPaid === true ||
+            getGlobalProperties().isPEL == false
+          )
+        ) {
+          const dataForPlayersList = {
+            operationType: 'getCompetitionPlayers',
+            isEclectic: getGlobalJsonObject().isEclectic,
+            nom_competition: getGlobalJsonObject().nom_competition,
+            action: 'displayList',
+            isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
+            accessType: 'resa',
+          };
+
+          fetchDataFromServer(dataForPlayersList);
+
+        } else {
+          setIsPaymentConfirmationVisible(true);
+        }
+
         break;
 
-        case "sendTeamResaMailRemoveMember":
+      case "sendTeamResaMailRemoveMember":
           if (jsonObject.status === "KO") {
             showAlert(jsonObject.error, "OK");
           }
           break;
-        case 'menusRepasChoice': {
+      case 'menusRepasChoice': {
             const resolveMenusRepasChoice = menusRepasChoiceResolverRef.current;
 
             /*
@@ -1642,7 +1663,7 @@ const ResaScreen = () => {
       }
     }
     let dataForPlayersList = null;
-    if (jsonObject.action !== "removeUser" && (getGlobalJsonObject().isAlreadyPaid == true || getGlobalProperties().isPEL == false)) {
+    if (jsonObject.action !== "removeUser" && (getGlobalJsonObject().isAlreadyPaid === true || getGlobalProperties().isPEL === false)) {
       setGlobalProperty('repasChecked', jsonObject.resa_repas);
       if (jsonObject.massResa == "NO") {
           dataForPlayersList = {
@@ -1656,7 +1677,7 @@ const ResaScreen = () => {
           fetchDataFromServer(dataForPlayersList);
       }
     } else {
-      setIsAlertVisible(true);
+      setIsPaymentConfirmationVisible(true);
     }
   };
 
@@ -2271,13 +2292,13 @@ const ResaScreen = () => {
   };
 
   const confirmerPaiement = () => {
-    setIsAlertVisible(false);
+    setIsPaymentConfirmationVisible(false);
     displayCBPayment();
   };
 
   const annulerPaiement = () => {
     let dataForPlayersList = null;
-    setIsAlertVisible(false);
+    setIsPaymentConfirmationVisible(false);
     dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
       isEclectic: getGlobalJsonObject().isEclectic,
@@ -2290,7 +2311,7 @@ const ResaScreen = () => {
   };
 
   const displayCBPayment = () => {
-    setIsAlertVisible(false);
+    setIsPaymentConfirmationVisible(false);
     const days = getGlobalJsonObject().nbrDaysCancelRefunded ?? 'N/A';
     setNbrDaysCancelRefunded(days);
     setIsCarouselModalVisible(true);
@@ -2626,7 +2647,7 @@ const ResaScreen = () => {
               />
 
               <CustomAlert
-                visible={isAlertVisible}
+                visible={isPaymentConfirmationVisible}
                 onClose={annulerPaiement}
                 title="Paiement en ligne"
                 message="Payez en ligne votre droit de jeu"

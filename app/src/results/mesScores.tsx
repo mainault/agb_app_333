@@ -8,6 +8,7 @@ import { getGlobalJsonObject, getGlobalProperties, setGlobalProperty } from '../
 import { showAlert } from '../utils/utilities';
 import { sendRequest } from '../utils/api';
 
+
 interface PlayerTour {
   T1: string; T2: string; T3: string; T4: string; T5: string;
   T6: string; T7: string; T8: string; T9: string; T10: string;
@@ -67,14 +68,13 @@ const MesScores = () => {
     usersArray: []
   });
   const [selectedTrimestre, setSelectedTrimestre] = useState('0');
-  const [selectedTour, setSelectedTour] = useState('0');
   const [showSynthesis, setShowSynthesis] = useState(false);
   const params = useLocalSearchParams();
   const globalJsonObject = useRef(params.globalJsonObject ? JSON.parse(params.globalJsonObject as string) : getGlobalJsonObject()).current;
   const [codeClub, setCodeClub] = useState("");
   const [scoreCards, setScoreCards] = useState<ScoreCard[]>([]);
   const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);
-  const { height: windowHeight } = Dimensions.get('window');
+  const {width: windowWidth, height: windowHeight} = Dimensions.get('window');
   const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
 
   // Initialisation des tableaux vides avec toutes les colonnes
@@ -115,14 +115,6 @@ useEffect(() => {
     { label: 'Trimestre 2', value: '2' },
     { label: 'Trimestre 3', value: '3' },
     { label: 'Trimestre 4', value: '4' }
-  ];
-
-  const tourOptions = [
-    { label: '', value: '0' },
-    { label: 'Tour 1', value: '1' },
-    { label: 'Tour 2', value: '2' },
-    { label: 'Tour 3', value: '3' },
-    { label: 'Tour 4', value: '4' }
   ];
 
   const analyzeTours = () => {
@@ -201,37 +193,50 @@ useEffect(() => {
         break;
     }
   };
-
   const fetchSynthesisData = () => {
-      const donnees = {
-        operationType: globalJsonObject.isEclectic === "isEclectic" && selectedTrimestre === "0" ? "getUserCurrentQuarterEclecticScores" : "getUserSearchEclecticScores",
-        CRUD: "list",
-        trimestre: selectedTrimestre === '0' ? '' : selectedTrimestre,
-        tour:  selectedTour === '0' ? '' : selectedTour, 
-        isEclectic: globalJsonObject.isEclectic,
-        licence: globalJsonObject.licence,
-        isAppMobile: true,
-        support: support,
-        isMobile: 0,
+    const donnees = {
+      operationType:
+        globalJsonObject.isEclectic === "isEclectic" &&
+        selectedTrimestre === "0"
+          ? "getUserCurrentQuarterEclecticScores"
+          : "getUserSearchEclecticScores",
+
+      CRUD: "list",
+      trimestre: selectedTrimestre === '0' ? '' : selectedTrimestre,
+      tour: "",
+      isEclectic: globalJsonObject.isEclectic,
+      licence: globalJsonObject.licence,
+      isAppMobile: true,
+      support: support,
+      isMobile: 0,
     };
+
     setShowSynthesis(true);
     fetchDataFromServer(donnees);
   };
 
   const handleEmailScores = () => {
-    const annee = data.usersArray[0]?.annee || new Date().getFullYear().toString();
-    const trimestre = globalJsonObject.isEclectic === 'isEclectic' ? selectedTrimestre : '';
+    const annee =
+      data.usersArray[0]?.annee ||
+      new Date().getFullYear().toString();
+
+    const trimestre =
+      globalJsonObject.isEclectic === 'isEclectic'
+        ? selectedTrimestre
+        : '';
+
     const donnees = {
       operationType: "sendIndividualScores",
       annee: annee,
       licence: [globalJsonObject.licence],
       isEclectic: globalJsonObject.isEclectic,
       trimestre: trimestre,
-      tour: globalJsonObject.isEclectic === 'isEclecticIS' ? selectedTour : '',
+      tour: "",
       isSynthesis: hasSynthesis,
       action: "sendIndividualScores",
       code_club: codeClub,
     };
+
     fetchDataFromServer(donnees);
   };
 
@@ -534,14 +539,15 @@ useEffect(() => {
   };
 
   const { trouRows, brutRow, netRow } = prepareScoreData();
-  const tourColumnWidth = 45;
 
-  const synthesisColumnCount = globalJsonObject.isEclectic === 'isRingerScore' && hasSynthesis ? 1 : 0;
-
-  const tableMinWidth = 40 + (allTourNumbers.length + synthesisColumnCount) * tourColumnWidth;
+  const synthesisColumnCount = hasSynthesis ? 1 : 0;
+  const columnCount = allTourNumbers.length + synthesisColumnCount;
+  const trouColumnWidth = 40;
+  const tourColumnWidth = (windowWidth - trouColumnWidth) / columnCount;
+  const tableWidth = windowWidth;
 
   const getTableMaxHeight = () => {
-    return windowHeight * 0.7;
+   
   };
 
   return (
@@ -551,34 +557,27 @@ useEffect(() => {
           Compétitions : {globalJsonObject.isEclectic === 'isEclectic' ? 'ECLECTIC' : globalJsonObject.isEclectic === 'isEclectic-IS' ? 'CHALLENGE HIVER' : 'RINGER SCORE'}
         </Text>
 
-          {globalJsonObject.isEclectic === 'isEclectic' && (
-            <View style={styles.dropdownsContainer}>
-              <Dropdown
-                label="Trimestre"
-                selectedValue={selectedTrimestre}
-                onValueChange={setSelectedTrimestre}
-                options={trimestreOptions}
-                placeholder="Sélection..."
-                width="30%"
-              />
+        {globalJsonObject.isEclectic === 'isEclectic' && (
+          <View style={styles.dropdownsContainer}>
+            <Dropdown
+              label="Trimestre"
+              selectedValue={selectedTrimestre}
+              onValueChange={setSelectedTrimestre}
+              options={trimestreOptions}
+              placeholder="Sélection..."
+              width="45%"
+            />
 
-              <Dropdown
-                label="Tour"
-                selectedValue={selectedTour}
-                onValueChange={setSelectedTour}
-                options={tourOptions}
-                placeholder="Sélection..."
-                width="30%"
-              />
-
-              <TouchableOpacity
-                style={styles.synthesisButton}
-                onPress={fetchSynthesisData}
-              >
-                <Text style={styles.finishButtonText}>Afficher</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            <TouchableOpacity
+              style={styles.synthesisButton}
+              onPress={fetchSynthesisData}
+            >
+              <Text style={styles.finishButtonText}>
+                Afficher
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={styles.classementContainer}>
           {globalJsonObject.isEclectic === 'isRingerScore' && (
@@ -609,27 +608,42 @@ useEffect(() => {
         {data.cumuls.length > 0 && renderCumuls()}
 
         {isLoading ? (
-          <ActivityIndicator size="large" style={styles.loader} />
+          <ActivityIndicator
+            size="large"
+            style={styles.loader}
+          />
         ) : (
-          <View style={[styles.tableOuterContainer, { maxHeight: getTableMaxHeight() }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator>
-              <View style={{ minWidth: tableMinWidth }}>
-                {renderHeader()}
-                <ScrollView nestedScrollEnabled style={[styles.scrollView, { maxHeight: getTableMaxHeight() - 60 }]}>
-                  {trouRows.map((row, index) => renderScoreRow(row, index))}
-                </ScrollView>
-                <View style={styles.brutNetContainer}>
-                  {renderScoreRow(brutRow, 18)}
-                  {renderScoreRow(netRow, 19)}
-                </View>
+          <View style={styles.tableOuterContainer}>
+            <View
+              style={[
+                styles.tableContainer,
+                { width: tableWidth }
+              ]}
+            >
+              {renderHeader()}
+
+              <ScrollView
+                nestedScrollEnabled
+                style={styles.scrollView}
+                contentContainerStyle={styles.scoreRowsContainer}
+                showsVerticalScrollIndicator={true}
+              >
+                {trouRows.map((row, index) =>
+                  renderScoreRow(row, index)
+                )}
+              </ScrollView>
+
+              <View style={styles.brutNetContainer}>
+                {renderScoreRow(brutRow, 18)}
+                {renderScoreRow(netRow, 19)}
               </View>
-            </ScrollView>
+            </View>
           </View>
         )}
 
         {renderScoreCardModal()}
 
-        <View style={styles.footer}>
+        <View style={styles.buttons}>
           <TouchableOpacity style={styles.finishButton} onPress={handleEmailScores}>
             <Text style={styles.finishButtonText}>Email scores</Text>
           </TouchableOpacity>
@@ -650,7 +664,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#dee2e6',
-    padding: 5,
+    padding: 0,
   },
   title: {
     fontSize: 18,
@@ -661,9 +675,10 @@ const styles = StyleSheet.create({
   },
   dropdownsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    width: "100%",
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
   classementContainer: {
     marginBottom: 8,
@@ -690,13 +705,6 @@ const styles = StyleSheet.create({
     marginBottom: 3,
     color: '#333',
   },
-  tableOuterContainer: {
-    flex: 1,
-    marginBottom: 10,
-  },
-  scrollView: {
-    marginBottom: 10,
-  },
   headerRow: {
     flexDirection: 'row',
     backgroundColor: '#b9d6ee',
@@ -721,6 +729,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#98bef7',
     alignItems: 'center',
     minHeight: 30,
+    flexGrow: 1,
   },
   brutNetContainer: {
     borderTopWidth: 2,
@@ -841,13 +850,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  footer: {
+  buttons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: '#ccc',
-    backgroundColor: '#9bc5f8',
+    backgroundColor: '#dee2e6',
   },
   button: {
     backgroundColor: '#007bff',
@@ -870,15 +879,13 @@ const styles = StyleSheet.create({
   },
   synthesisButton: {
     backgroundColor: '#3498db',
-    marginTop: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 14,
     borderRadius: 5,
-    marginLeft: 5,
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 0.5,
-    height: 40,
+    height: 38,
+    flex: 1,
+    marginTop: 25,
   },
   synthesisButtonText: {
     color: 'white',
@@ -920,6 +927,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textAlignVertical: 'center',
     paddingVertical: 1,
+  },
+  tableOuterContainer: {
+  flex: 1,
+  },
+
+  tableContainer: {
+    flex: 1,
+  },
+
+  scrollView: {
+    flex: 1,
+  },
+  scoreRowsContainer: {
+    flexGrow: 1,
   },
 });
 

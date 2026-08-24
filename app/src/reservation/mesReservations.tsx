@@ -383,22 +383,21 @@ const styles = StyleSheet.create({
 
   competitionHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    width: '100%',
     marginBottom: 12,
   },
 
   date: {
-    width: 82,
-    fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
+    marginRight: 6,
+    flexShrink: 0,
   },
 
   competition: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    paddingLeft: 4,
-    paddingRight: 2,
+    fontWeight: '600',
+    flexShrink: 1,
   },
 
   detailRow: {

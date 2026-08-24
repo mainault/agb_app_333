@@ -1,15 +1,14 @@
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RenderHTML from 'react-native-render-html';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { getGlobalJsonObjectForRanking, getGlobalProperties, setGlobalProperty } from '../store/GlobalPropertiesManager';
 import { GlobalPlayerRanking, GlobalPlayerRankingRS } from '../store/GlobalStore';
 import { sendRequest } from '../utils/api';
 import { showAlert } from '../utils/utilities';
 import Dropdown from '../components/dropDown';
+import CustomHeader from '../components/CustomHeader';
+import CustomFooter from '../components/CustomFooter';
 
 
 interface ScoreCardHole {
@@ -178,11 +177,6 @@ const DisplayRanking = () => {
     };
     fetchDataFromServer(donnees);
   }, [sortBy, selectedTrimestre]);
-
-  const handleFinishPress = async () => {
-    await ScreenOrientation.unlockAsync();
-    router.replace('/');
-  };
 
   const getCompetitionTitle = () => {
     const nbrPlayers = Number(getGlobalProperties().nbrPlayersForRanking ?? 0);
@@ -469,8 +463,10 @@ const DisplayRanking = () => {
           { label: "Nom", value: "nom" },
           { label: "Score", value: "brut-net" }
         ];
+
     const screenWidth = Dimensions.get('window').width;
     const dropdownWidth = (screenWidth - 60) / 2;
+
     return (
       <View style={isRingerScore ? styles.pickersRowRS : styles.pickersRow}>
         {!isRingerScore && (
@@ -487,6 +483,7 @@ const DisplayRanking = () => {
             />
           </View>
         )}
+
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Classé par:</Text>
           <Dropdown
@@ -500,8 +497,8 @@ const DisplayRanking = () => {
           />
         </View>
       </View>
-      );
-    };
+    );
+  };
 
   const renderHoleScoresModal = () => {
     if (!selectedPlayer || !selectedScoreCard || !modalVisible) return null;
@@ -648,33 +645,25 @@ const DisplayRanking = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.root}>
+      <CustomHeader showMainMenuButton={true} />
+
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            isRingerScore && styles.headerRS
+          ]}
+        >
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>{getCompetitionTitle()}</Text>
+            <Text style={styles.title}>
+              {getCompetitionTitle()}
+            </Text>
           </View>
 
-          {/* Layout différent selon le mode */}
-          {isRingerScore ? (
-            <View style={styles.filtersAndButtonsContainerRS}>
-              {renderPickers()}
-              <TouchableOpacity
-                style={styles.finishButton}
-                onPress={handleFinishPress}
-                disabled={isLoading}
-              >
-                <Text style={styles.finishButtonText}>Terminer</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <View style={styles.filtersContainer}>
-                {renderPickers()}
-              </View>
-
-            </>
-          )}
+          <View style={styles.filtersContainer}>
+            {renderPickers()}
+          </View>
         </View>
 
         <View style={styles.tableContainer}>
@@ -715,16 +704,18 @@ const DisplayRanking = () => {
               />
             </>
           )}
+
           {renderHoleScoresModal()}
         </View>
       </View>
-    </SafeAreaView>
+      <CustomFooter />
+    </View>
   );
 };
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#aacdeeff',
   },
   container: {
     flex: 1,
@@ -732,12 +723,14 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#fff',
-    padding: 15,
+    paddingHorizontal: 15,
+    paddingTop: 15,
+    paddingBottom: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   titleContainer: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   title: {
     fontSize: 18,
@@ -746,12 +739,11 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   filtersContainer: {
-    marginBottom: 5,
+    marginBottom: 0,
   },
   pickersRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
     gap: 12,
   },
 
@@ -760,8 +752,6 @@ const styles = StyleSheet.create({
   },
   pickersRowRS: {
     flexDirection: 'row',
-    flex: 1,
-    marginRight: 10,
   },
   pickerLabel: {
     fontSize: 14,
@@ -781,36 +771,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
-  finishButton: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 5,
-    paddingHorizontal: 20,
-  },
-  finishButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  filtersAndButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-    // Layout pour isRingerScore (picker et bouton sur la même ligne)
-  filtersAndButtonsContainerRS: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
   tableContainer: {
     flex: 1,
     paddingHorizontal: 10,
   },
   flatListContent: {
-    paddingBottom: 20,
+    paddingBottom: 0,
   },
   loadingIndicator: {
     flex: 1,
@@ -1087,6 +1053,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     textAlign: 'center',
     textAlignVertical: 'center',
+  },
+  headerRS: {
+    paddingBottom: 5,
   },
 });
 

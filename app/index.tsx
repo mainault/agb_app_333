@@ -80,6 +80,9 @@ const menus: MenuItemType[] = [
           params: {},
         },
         {
+          name: "Payer droit de jeu en ligne", parentName: "Paiement droit de jeu en ligne", competitionType: "OLP", screen: "subMenu", params: { subMenuTitle: "OLP" },
+        },
+        {
           name: "Standard",
           subMenus: [
             { name: "Inscription / Désinscription", parentName: "Standard", competitionType: "isNotEclectic", screen: "subMenu", params: { subMenuTitle: "inscription" } },
@@ -132,9 +135,6 @@ const menus: MenuItemType[] = [
             { name: "Inscription covoiturage", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_inscription" } },
             {name: "Liste des covoiturages", parentName: "Covoiturage", competitionType: "covoiturage", screen: "subMenu", params: { subMenuTitle: "covoiturage_liste" } }
             ]
-        },
-        {
-          name: "Payer droit de jeu en ligne", parentName: "Paiement droit de jeu en ligne", competitionType: "OLP", screen: "subMenu", params: { subMenuTitle: "OLP" },
         },
       ],
     },

@@ -5,6 +5,7 @@ import CustomHeader from './CustomHeader';
 interface ScreenContainerProps {
   children: React.ReactNode;
   showHeader?: boolean;
+  showFooter?: boolean;
   onMenuPress?: () => void;
   isHome?: boolean;
   appVersion?: string;
@@ -13,6 +14,7 @@ interface ScreenContainerProps {
 export default function ScreenContainer({
   children,
   showHeader = true,
+  showFooter = true,
   onMenuPress,
   isHome = false,
   appVersion,
@@ -35,6 +37,10 @@ export default function ScreenContainer({
       >
         {children}
       </View>
+
+      {showFooter && (
+        <View style={styles.footer} />
+      )}
     </View>
   );
 }
@@ -53,5 +59,10 @@ const styles = StyleSheet.create({
   contentWithoutHeader: {
     paddingTop: 30,
     paddingBottom: 50,
+  },
+
+  footer: {
+    height: 34,
+    backgroundColor: '#83bff7ff',
   },
 });

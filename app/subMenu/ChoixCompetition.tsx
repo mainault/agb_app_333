@@ -82,23 +82,42 @@ export default function ChoixCompetition() {
   const getServerResponse = (jsonObject: any) => {
     switch (jsonObject.operationType) {
       case "getASTarifs":
-        setGlobalAsTarifs(jsonObject);
-        // Ouverture automatique de la modale OLPTransaction si competitionType === "OLP"
-        if (competitionType === "OLP" && jsonObject.status === "OK") {
-          //setIsOLPTransactionModalVisible(true);
-        }
-        break;
+          setGlobalAsTarifs(jsonObject);
+          // Ouverture automatique de la modale OLPTransaction si competitionType === "OLP"
+          if (competitionType === "OLP" && jsonObject.status === "OK") {
+            //setIsOLPTransactionModalVisible(true);
+          }
+          break;
 
       case "getCurrentCompetitions":
         if (jsonObject.status === "KO") {
-          showAlert("Erreur", jsonObject.error || "Impossible de récupérer les compétitions.");
+          showAlert(
+            "Erreur",
+            jsonObject.error || "Impossible de récupérer les compétitions."
+          );
           return;
         }
+
+        if (jsonObject.isComplete === "incomplete") {
+          if (!Array.isArray(jsonObject.incomplete) || jsonObject.incomplete.length === 0) {
+            showAlert(
+              "Information",
+              "Il n'y a aucune équipe incomplète."
+            );
+            router.back();
+            return;
+          }
+
+          setMultiCompetitionsList(jsonObject.incomplete);
+          break;
+        }
+
         if (competitionType === "OLP") {
           setCompetitions(jsonObject.multiCompetitionsList || []);
         } else {
           setMultiCompetitionsList(jsonObject.multiCompetitionsList || []);
         }
+
         break;
 
       default:
@@ -108,10 +127,7 @@ export default function ChoixCompetition() {
 
   // Appel initial du serveur
   useEffect(() => {
-    setGlobalProperty(
-      'menuEquipeIncomplete',
-      subMenuTitle == "Compléter équipe" ? true : false
-    );
+    setGlobalProperty('menuEquipeIncomplete', subMenuTitle == "Compléter équipe" ? true : false);
 
     if (subMenuTitle === "Mes résultats") {
       setGlobalProperty('sous_menu', subMenuTitle as string);

@@ -13,6 +13,7 @@ import CustomHeader from '../components/CustomHeader';
 import { sendRequest } from '../utils/api';
 import { showAlert } from '../utils/utilities';
 import { getGlobalJsonObject } from '../store/GlobalPropertiesManager';
+import CustomFooter from '../components/CustomFooter';
 
 
 type CompetitionClass =
@@ -457,10 +458,10 @@ export default function MesResultats() {
             </View>
           )}
         />
-        <View style={styles.footer}>
-        </View>
       </View>
+      <CustomFooter />
     </View>
+    
   );
 }
 
@@ -560,7 +561,8 @@ borderColor: '#909090',
   },
 
   date: {
-    width: 76,
+    width: 86,
+    flexShrink: 0,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -678,12 +680,6 @@ borderColor: '#909090',
     justifyContent: 'space-between',
   },
 
-  footer: {
-    height: 34,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#7db9ea',
-    marginHorizontal: -12,
-  },
+
 
 });

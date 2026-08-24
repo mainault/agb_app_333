@@ -253,8 +253,9 @@ const LoginScreen = () => {
                 },
             })
             break;
-          case "Classement" :
-            router.push({
+            
+          case "Classement":
+              router.replace({
                 pathname: `/src/results/displayRanking`,
                 params: {
                   menuTitle: subMenuTitle,
@@ -262,7 +263,7 @@ const LoginScreen = () => {
                   competitionType: competitionType,
                   competitionName: selectedCompetitionName,
                 },
-              })
+              });
               break;
 
           case "Liste des inscrits":

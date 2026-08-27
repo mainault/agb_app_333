@@ -78,9 +78,7 @@ const DisplayRanking = () => {
 
   const getServerResponse = async (jsonObject: any) => {
     setIsLoading(false);
-
     const operationType = jsonObject.operationType;
-
     if (jsonObject.status === "KO") {
       if (operationType === "getUserCurrentQuarterEclecticScores") {
         pendingPlayerRef.current = null;
@@ -88,8 +86,6 @@ const DisplayRanking = () => {
         showAlert("Gestion des Erreurs", jsonObject.error);
         return;
       }
-
-      // Réinitialisation complète des données du classement
       setPlayersData([]);
       setPlayersDataRS([]);
       setTrimestres([]);
@@ -98,14 +94,13 @@ const DisplayRanking = () => {
       setSelectedScoreCard(null);
       pendingPlayerRef.current = null;
       await showAlert("Gestion des Erreurs", jsonObject.error);
-        router.replace('/');
-        return;
+      router.replace('/');
+      return;
     }
 
     switch (operationType) {
       case "getUserCurrentQuarterEclecticScores": {
         const pendingPlayer = pendingPlayerRef.current;
-
         if (!pendingPlayer) {
           return;
         }
@@ -117,50 +112,46 @@ const DisplayRanking = () => {
         if (!scoreCard) {
           pendingPlayerRef.current = null;
           setSelectedScoreCard(null);
-          showAlert(
-            "Carte de score",
-            "La carte de score de ce joueur n’est pas disponible."
-          );
+          showAlert("Carte de score", "La carte de score de ce joueur n’est pas disponible.");
           return;
         }
+
         setSelectedPlayer(pendingPlayer);
         setSelectedScoreCard(scoreCard);
         setModalVisible(true);
         pendingPlayerRef.current = null;
-        return;
+        break;
       }
+
       case "getRanking":
+        if (jsonObject.nbrPlayers) {
+          setGlobalProperty("nbrPlayersForRanking", jsonObject.nbrPlayers);
+        }
+        if (jsonObject.nbrTrimestres) {
+          const formattedTrimestres = jsonObject.nbrTrimestres.map(
+            (item: { trimestre: string }) => ({
+              label: item.trimestre,
+              value: item.trimestre,
+            })
+          );
+          setTrimestres([
+            { label: "Tous", value: "tous" },
+            ...formattedTrimestres,
+          ]);
+        }
+        if (jsonObject.parcoursPars) {
+          setParcoursPars(jsonObject.parcoursPars);
+          setGlobalProperty("parcoursPars", jsonObject.parcoursPars);
+        }
+        if (isRingerScore) {
+          setPlayersDataRS([...(jsonObject.mergedRanking ?? [])]);
+        } else {
+          setPlayersData([...(jsonObject.mergedRanking ?? [])]);
+        }
+        break;
+
       default:
         break;
-    }
-
-    if (jsonObject.nbrPlayers) {
-      setGlobalProperty("nbrPlayersForRanking", jsonObject.nbrPlayers);
-    }
-
-    if (jsonObject.nbrTrimestres) {
-      const formattedTrimestres = jsonObject.nbrTrimestres.map(
-        (item: { trimestre: string }) => ({
-          label: item.trimestre,
-          value: item.trimestre,
-        })
-      );
-
-      setTrimestres([
-        { label: "Tous", value: "tous" },
-        ...formattedTrimestres,
-      ]);
-    }
-
-    if (jsonObject.parcoursPars) {
-      setParcoursPars(jsonObject.parcoursPars);
-      setGlobalProperty("parcoursPars", jsonObject.parcoursPars);
-    }
-
-    if (isRingerScore) {
-      setPlayersDataRS([...(jsonObject.mergedRanking ?? [])]);
-    } else {
-      setPlayersData([...(jsonObject.mergedRanking ?? [])]);
     }
   };
 
@@ -239,40 +230,46 @@ const DisplayRanking = () => {
   };
 
   const renderPlayerName = (content: GlobalPlayerRanking | GlobalPlayerRankingRS) => {
-    // Vérifier si c'est une ligne de break (catégorie)
-    const isBreakLine = isHtmlContent(content.nom_prenom) ||
-                      content.nom_prenom.includes("Dames") ||
-                      content.nom_prenom.includes("Messieurs") ||
-                      (content.serie?.toLowerCase().includes("série"));
 
-    // Vérifier si la série est en HTML et doit être affichée dans le nom
-    const hasHtmlSerie = content && 'serie' in content && content.serie && isHtmlContent(content.serie);
+    const isSerieBreak = content.serie?.toLowerCase().includes("série");
 
-    if (isBreakLine || hasHtmlSerie) {
-
-      // Pour les lignes de break ou quand la série est en HTML, on combine nom et série
-      let htmlContent = content.nom_prenom;
-
-      if (hasHtmlSerie) {
-        // Si la série est en HTML, on l'ajoute au nom
-        htmlContent = `${content.serie}`;
-      }
+    if (isSerieBreak && content.serie) {
+      const serieText = extractTextFromHtml(content.serie);
 
       return (
-        <RenderHTML
-          contentWidth={130}
-          source={{ html: htmlContent }}
-          baseStyle={styles.categorieSerieInPlayerCell}
-        />
-      );
-    } else {
-      // Pour les lignes normales, on affiche juste le nom
-      return (
-        <Text style={styles.playerName} numberOfLines={1} ellipsizeMode="tail">
-          {content.nom_prenom}
+        <Text
+          style={styles.serieBreakText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
+          {serieText}
         </Text>
       );
     }
+    const isCategoryBreak =
+      isHtmlContent(content.nom_prenom) ||
+      content.nom_prenom.includes("Dames") ||
+      content.nom_prenom.includes("Messieurs");
+
+    if (isCategoryBreak) {
+      return (
+        <RenderHTML
+          contentWidth={Dimensions.get('window').width}
+          source={{ html: content.nom_prenom }}
+          baseStyle={styles.categorieSerieInPlayerCell}
+        />
+      );
+    }
+
+    return (
+      <Text
+        style={styles.playerName}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
+        {content.nom_prenom}
+      </Text>
+    );
   };
 
 
@@ -411,7 +408,7 @@ const DisplayRanking = () => {
     return (
       <View style={styles.rowRS}>
         {/* Colonne Joueur */}
-        <View style={[styles.cellRS, { flex: 3.0 }]}>
+        <View style={[styles.cellRS, { flex: 5.5 }]}>
           {renderPlayerName(item)}
         </View>
 
@@ -813,7 +810,7 @@ const styles = StyleSheet.create({
     borderRightColor: '#eee',
   },
   playerCell: {
-    flex: 1.7,
+    flex: 5.5,
     minWidth: '30%',
   },
   infoCell: {
@@ -980,7 +977,7 @@ const styles = StyleSheet.create({
   },
   categorieSerieInPlayerCell: {
     fontSize: 14,
-    color: '#fd1818',
+    color: 'red',
     textAlign: 'center',
     fontWeight: 'bold',
   },
@@ -1056,6 +1053,12 @@ const styles = StyleSheet.create({
   },
   headerRS: {
     paddingBottom: 5,
+  },
+  serieBreakText: {
+    fontSize: 14,
+    color: 'blue',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
 

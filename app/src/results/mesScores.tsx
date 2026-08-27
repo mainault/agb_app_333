@@ -173,23 +173,30 @@ useEffect(() => {
           showAlert("Gestion des erreurs", jsonObject.error);
           return;
         }
+
         setData({
           title: jsonObject.title || 'Mes Scores',
           cumuls: jsonObject.cumuls || [],
           usersArray: jsonObject.usersArray || []
         });
+
         setScoreCards(jsonObject.scoreCards || []);
+
         setGlobalProperty('nbrPlayersForRanking', jsonObject.nbrPlayers);
-        setGlobalProperty('scoreForScores', jsonObject.score[0]);
-        setGlobalProperty('rankNet', jsonObject.score[0]);
+        setGlobalProperty('scoreForScores', jsonObject.score?.[0]);
+
         setGlobalProperty('scoresBrut', jsonObject.brut);
         setGlobalProperty('scoresNet', jsonObject.net);
-        setGlobalProperty('rankBrut', jsonObject.rang[0]);
+
+        setGlobalProperty('rankBrut', jsonObject.score?.[0]);
+        setGlobalProperty('rankNet', jsonObject.rang?.[0]);
+
         if ((jsonObject.scoreCards || []).length > 0) {
           setCodeClub(jsonObject.scoreCards[0].code_club || "");
-        } else if (jsonObject.usersArray.length > 0) {
-          setCodeClub(jsonObject.usersArray[0].code_club);
+        } else if ((jsonObject.usersArray || []).length > 0) {
+          setCodeClub(jsonObject.usersArray[0].code_club || "");
         }
+
         break;
     }
   };

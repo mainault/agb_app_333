@@ -306,7 +306,7 @@ const Covoiturage = () => {
                 <View style={styles.buttonsContainer}>
                     <CustomButton
                         id="abandonner-btn"
-                        title="Abandonner"
+                        title="Pas intéressé"
                         onPress={handleAbandonner}
                         buttonStates={buttonStates}
                         setButtonState={handleButtonState}

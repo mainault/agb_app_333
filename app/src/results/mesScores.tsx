@@ -71,6 +71,7 @@ const MesScores = () => {
   const [showSynthesis, setShowSynthesis] = useState(false);
   const params = useLocalSearchParams();
   const globalJsonObject = useRef(params.globalJsonObject ? JSON.parse(params.globalJsonObject as string) : getGlobalJsonObject()).current;
+  const truncatedPlayersRef = useRef<Set<number>>(new Set());
   const [codeClub, setCodeClub] = useState("");
   const [scoreCards, setScoreCards] = useState<ScoreCard[]>([]);
   const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);

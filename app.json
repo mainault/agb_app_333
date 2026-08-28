@@ -15,7 +15,7 @@
     "android": {
       "predictiveBackGestureEnabled": false,
       "package": "com.mainault.agb_app_333",
-      "versionCode": 117
+      "versionCode": 118
     },
     "web": {
       "output": "static",

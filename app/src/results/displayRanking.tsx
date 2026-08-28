@@ -48,13 +48,14 @@ const DisplayRanking = () => {
   const [parcoursPars, setParcoursPars] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<GlobalPlayerRanking | GlobalPlayerRankingRS | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-
   const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);
   const flatListRef = useRef<FlatList<any>>(null);
   const pendingPlayerRef = useRef<GlobalPlayerRanking | GlobalPlayerRankingRS | null>(null);
   const isRingerScore = getGlobalJsonObjectForRanking().isEclectic === "isRingerScore";
   const isEclectic = getGlobalJsonObjectForRanking().isEclectic === "isEclectic" ||
                    getGlobalJsonObjectForRanking().isEclectic === "isEclectic-IS";
+
+  const truncatedPlayersRef = useRef<Set<number>>(new Set());
   const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
 
   // Initialisation correcte de sortBy en fonction du mode
@@ -262,13 +263,37 @@ const DisplayRanking = () => {
     }
 
     return (
-      <Text
-        style={styles.playerName}
-        numberOfLines={1}
-        ellipsizeMode="tail"
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        onPress={() => {
+          if (truncatedPlayersRef.current.has(content.numLigne)) {
+            showAlert("", content.nom_prenom);
+          }
+        }}
       >
-        {content.nom_prenom}
-      </Text>
+        {/* Mesure dans exactement la même largeur */}
+        <Text
+          style={[styles.playerName, styles.measurePlayerName]}
+          onTextLayout={(event) => {
+            if (event.nativeEvent.lines.length > 1) {
+              truncatedPlayersRef.current.add(content.numLigne);
+            } else {
+              truncatedPlayersRef.current.delete(content.numLigne);
+            }
+          }}
+        >
+          {content.nom_prenom}
+        </Text>
+
+        {/* Affichage réel */}
+        <Text
+          style={styles.playerName}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {content.nom_prenom}
+        </Text>
+      </TouchableOpacity>
     );
   };
 
@@ -384,14 +409,19 @@ const DisplayRanking = () => {
             <View style={[styles.cell, styles.scoreCell]}>
               <Text style={styles.scoreText}>{item.brut}</Text>
             </View>
+
             <View style={[styles.cell, styles.scoreCell]}>
               <Text style={styles.scoreText}>{item.net}</Text>
             </View>
+
             <View style={[styles.cell, styles.scoreCell]}>
               <Text style={styles.scoreText}>{item.bn}</Text>
             </View>
+
             <View style={[styles.cell, styles.scoreCell]}>
-              <Text style={styles.scoreText}>{item["1"]}</Text>
+              <Text style={styles.scoreText}>
+                {sortBy === "series" ? item.index_min : item["1"]}
+              </Text>
             </View>
           </>
         )}
@@ -1059,6 +1089,10 @@ const styles = StyleSheet.create({
     color: 'blue',
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  measurePlayerName: {
+    position: 'absolute',
+    opacity: 0,
   },
 });
 

@@ -326,19 +326,61 @@ const DisplayRanking = () => {
   const renderRingerScoreHeader = () => {
     return (
       <View style={styles.headerRowRS}>
-        <Text style={[styles.headerCellRS, { flex: 3.5 }]}>JOUEUR</Text>
-        <View style={[styles.headerCellRS, { flex: 0.4 }]}>
-          <Text style={styles.headerTextRS}> </Text>
+
+        <View style={[styles.headerCellRS, { flex: 4.8 }]}>
+          <Text
+            style={styles.headerTextRS}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            JOUEUR
+          </Text>
         </View>
-        <Text style={[styles.headerCellRS, { flex: 1 }]}>BRUT</Text>
-        <Text style={[styles.headerCellRS, { flex: 1 }]}>NET</Text>
+
+        <View style={[styles.headerCellRS, styles.infoCellRS]} />
+
+        <View style={[styles.headerCellRS, { flex: 1 }]}>
+          <Text
+            style={[styles.headerTextRS, { fontSize: 13 }]}
+            numberOfLines={1}
+          >
+            BRUT
+          </Text>
+        </View>
+
+        <View style={[styles.headerCellRS, { flex: 1 }]}>
+          <Text
+            style={[styles.headerTextRS, { fontSize: 13 }]}
+            numberOfLines={1}
+          >
+            NET
+          </Text>
+        </View>
+
         <View style={[styles.headerCellRS, { flex: 2 }]}>
-          <Text style={styles.headerTextRS}>RANG</Text>
+          <Text style={styles.headerTextRS}>
+            RANG
+          </Text>
+
           <View style={styles.subHeaderRowRS}>
-            <Text style={[styles.subHeaderTextRS, { flex: 1 }]}>BRUT</Text>
-            <Text style={[styles.subHeaderTextRS, { flex: 1 }]}>NET</Text>
+            <Text
+              style={[styles.subHeaderTextRS, { flex: 1 }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              BRUT
+            </Text>
+
+            <Text
+              style={[styles.subHeaderTextRS, { flex: 1 }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              NET
+            </Text>
           </View>
         </View>
+
       </View>
     );
   };
@@ -438,7 +480,7 @@ const DisplayRanking = () => {
     return (
       <View style={styles.rowRS}>
         {/* Colonne Joueur */}
-        <View style={[styles.cellRS, { flex: 5.5 }]}>
+        <View style={[styles.cellRS, { flex: 4.8 }]}>
           {renderPlayerName(item)}
         </View>
 
@@ -895,8 +937,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   subHeaderTextRS: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#555',
+    textAlign: 'center',
   },
   rowRS: {
     flexDirection: 'row',

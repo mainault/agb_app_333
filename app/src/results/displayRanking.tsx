@@ -276,9 +276,9 @@ const DisplayRanking = () => {
   const renderNormalHeader = () => {
     return (
       <View style={styles.headerRow}>
-        <Text style={[styles.headerCell, styles.playerCell]}>
+        <View style={[styles.headerCell, styles.playerCell]}>
           <Text style={styles.headerText}>JOUEUR</Text>
-        </Text>
+        </View>
         <View style={[styles.headerCell, styles.infoCell]}>
           <Text style={styles.headerText}> </Text>
         </View>
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
     borderRightColor: '#eee',
   },
   playerCell: {
-    flex: 5.5,
+    flex: 3,
     minWidth: '30%',
   },
   infoCell: {

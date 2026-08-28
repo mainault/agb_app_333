@@ -173,24 +173,22 @@ useEffect(() => {
           showAlert("Gestion des erreurs", jsonObject.error);
           return;
         }
-
         setData({
           title: jsonObject.title || 'Mes Scores',
           cumuls: jsonObject.cumuls || [],
           usersArray: jsonObject.usersArray || []
         });
-
         setScoreCards(jsonObject.scoreCards || []);
-
         setGlobalProperty('nbrPlayersForRanking', jsonObject.nbrPlayers);
-        setGlobalProperty('scoreForScores', jsonObject.score?.[0]);
-
-        setGlobalProperty('scoresBrut', jsonObject.brut);
-        setGlobalProperty('scoresNet', jsonObject.net);
-
-        setGlobalProperty('rankBrut', jsonObject.score?.[0]);
-        setGlobalProperty('rankNet', jsonObject.rang?.[0]);
-
+        if (globalJsonObject.isEclectic === 'isRingerScore') {
+          setGlobalProperty('scoresBrut', jsonObject.brut);
+          setGlobalProperty('scoresNet', jsonObject.net);
+          setGlobalProperty('rankBrut', jsonObject.score?.[0]);
+          setGlobalProperty('rankNet', jsonObject.rang?.[0]);
+        } else {
+          setGlobalProperty('scoreForScores', jsonObject.score?.[0]);
+          setGlobalProperty('rankForScores', jsonObject.rang?.[0]);
+       }
         if ((jsonObject.scoreCards || []).length > 0) {
           setCodeClub(jsonObject.scoreCards[0].code_club || "");
         } else if ((jsonObject.usersArray || []).length > 0) {
@@ -603,9 +601,17 @@ useEffect(() => {
           )}
           {globalJsonObject.isEclectic !== 'isRingerScore' && (
             <Text style={styles.classementText}>
-              Classement : B+N : <Text style={styles.classementValue}>{getGlobalProperties().scoreForScores}</Text> -
-              Rang : <Text style={styles.classementValue}>{getGlobalProperties().rankBrut}</Text> /
-              <Text style={styles.classementValue}>{getGlobalProperties().nbrPlayersForRanking}</Text> joueurs
+              Classement    B+N : <Text style={styles.classementValue}>
+                {getGlobalProperties().scoreForScores}
+              </Text>
+              {'    '}Rang : <Text style={styles.classementValue}>
+                {getGlobalProperties().rankForScores}
+              </Text>
+              {' / '}
+              <Text style={styles.classementValue}>
+                {getGlobalProperties().nbrPlayersForRanking}
+              </Text>
+              {' joueurs'}
             </Text>
           )}
         </View>

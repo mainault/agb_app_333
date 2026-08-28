@@ -14,6 +14,7 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  useWindowDimensions,
   View
 } from 'react-native';
 import { Checkbox, RadioButton } from 'react-native-paper';
@@ -177,6 +178,8 @@ const ResaScreen = () => {
   const [filteredItems, setFilteredItems] = useState<DropdownItem[]>([]);
   const menusRepasChoiceResolverRef = useRef<((response: any | null) => void) | null>(null);
   const repasDataRef = useRef<JoueurRepas[]>([]);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
   /**
    * Construit les informations de menu attendues par le backend à partir
@@ -303,6 +306,12 @@ const ResaScreen = () => {
     repere: string;
   }[]>([]);
 
+  const normalizeBooleanFlag = (value: unknown): boolean => {
+    return value === true ||
+          value === 1 ||
+          value === '1' ||
+          value === 'true';
+    };
   // Fonction pour obtenir les membres de l'équipe depuis getGlobalJsonProperties().members
   const getTeamMembersFromCompetition = (): any[] => {
     const members = getGlobalProperties().members;
@@ -658,7 +667,7 @@ const ResaScreen = () => {
   // Fonction displayResaManagement
   const displayResaManagement = (jsonObject: any) => {
     setGlobalProperty('repere', getPlayerRepere(getGlobalJsonObject().licence));
-    setGlobalProperty('isPEL', getGlobalJsonObject().isPEL_enabled === '1');
+    setGlobalProperty('isPEL', normalizeBooleanFlag(getGlobalJsonObject().isPEL_enabled));
 
     setGlobalProperty('newTeamManagement', true);
 
@@ -1036,9 +1045,7 @@ const ResaScreen = () => {
           break;
         }
 
-        if (
-          jsonObject.action !== "removeUser" &&
-          (
+        if (jsonObject.action !== "removeUser" && (
             getGlobalJsonObject().isAlreadyPaid === true ||
             getGlobalProperties().isPEL == false
           )
@@ -2608,8 +2615,18 @@ const ResaScreen = () => {
                 ))}
               </View>
               {(
-                <View style={styles.radioButtonContainer}>
-                  <Text style={styles.radioTitre}>Vous pouvez changer le repère (Joueur 1)</Text>
+                <View
+                  style={[styles.radioButtonContainer, isTablet && styles.radioButtonContainerTablet,]}
+                >
+                  <Text
+                    style={[
+                      styles.radioTitre,
+                      isTablet && styles.radioTitreTablet,
+                    ]}
+                  >
+                    Vous pouvez changer le repère (Joueur 1)
+                  </Text>
+
                   <RadioButton.Group
                     onValueChange={(value) => {
                       setSelectedRepere(value);
@@ -2933,7 +2950,7 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   radioButtonContainer: {
-    marginBottom: 5,
+    marginBottom: -5,
     marginTop: 0,
   },
   radioContainer: {
@@ -2946,8 +2963,9 @@ const styles = StyleSheet.create({
   radioTitre: {
     fontWeight: 'bold',
     marginTop: 5,
-    marginBottom: 0,
+    marginBottom: 10,
     fontSize: 16,
+    textAlign: 'center',
   },
   radioItem: {
     flexDirection: 'row',
@@ -3067,7 +3085,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
+  radioButtonContainerTablet: {
+    width: '75%',
+    alignSelf: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  radioTitreTablet: {
+    marginBottom: 10,
+    textAlign: 'center',
+  },
 
 });
 

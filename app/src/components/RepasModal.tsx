@@ -684,14 +684,18 @@ const RepasModal = ({
                         styles.checkboxContainer
                       }
                     >
-                      <Checkbox
-                        status={
-                          joueur.dejeune
-                            ? 'checked'
-                            : 'unchecked'
-                        }
-                        onPress={() => handleDejeuneChange(joueur.id, !joueur.dejeune)}
-                      />
+                    <Checkbox
+                      status={
+                        joueur.dejeune
+                          ? 'checked'
+                          : 'unchecked'
+                      }
+                      onPress={() =>
+                        handleDejeuneChange(joueur.id, !joueur.dejeune)
+                      }
+                      color="#099237ff"
+                      uncheckedColor="#181717ff"
+                    />
 
                       <Text
                         style={styles.repasTitle}

@@ -194,7 +194,6 @@ const LoginScreen = () => {
             return;
           }
         }
-        
         if(subMenuTitle === "Compléter équipe" && (jsonObject.teamLeader === "OK" || jsonObject.teamMember === "OK")){
           const labelError = jsonObject.teamLeader === "OK" ? "Vous êtes déjà Capitaine d'une équipe" : "Vous êtes déjà Membre d'une équipe";
           showAlert("Information", labelError);

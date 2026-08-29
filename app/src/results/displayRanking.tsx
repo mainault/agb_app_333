@@ -308,16 +308,47 @@ const DisplayRanking = () => {
           <Text style={styles.headerText}> </Text>
         </View>
         <View style={[styles.headerCell, styles.scoreCell]}>
-          <Text style={styles.headerText}>BRUT</Text>
+          <Text
+            style={styles.headerText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            BRUT
+          </Text>
         </View>
+
         <View style={[styles.headerCell, styles.scoreCell]}>
-          <Text style={styles.headerText}>NET</Text>
+          <Text
+            style={styles.headerText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            NET
+          </Text>
         </View>
+
         <View style={[styles.headerCell, styles.scoreCell]}>
-          <Text style={styles.headerText}>BN</Text>
+          <Text
+            style={styles.headerText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            BN
+          </Text>
         </View>
+
         <View style={[styles.headerCell, styles.scoreCell]}>
-          <Text style={styles.headerText}>RANG</Text>
+          <Text
+            style={styles.headerText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            RANG
+          </Text>
         </View>
       </View>
     );
@@ -343,6 +374,8 @@ const DisplayRanking = () => {
           <Text
             style={[styles.headerTextRS, { fontSize: 13 }]}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
           >
             BRUT
           </Text>

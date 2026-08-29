@@ -679,31 +679,21 @@ const RepasModal = ({
                   <View
                     style={styles.playerLine}
                   >
-                    <View
-                      style={
-                        styles.checkboxContainer
-                      }
-                    >
-                    <Checkbox
-                      status={
-                        joueur.dejeune
-                          ? 'checked'
-                          : 'unchecked'
-                      }
-                      onPress={() =>
-                        handleDejeuneChange(joueur.id, !joueur.dejeune)
-                      }
-                      color="#099237ff"
-                      uncheckedColor="#181717ff"
-                    />
-
-                      <Text
-                        style={styles.repasTitle}
+                    <View style={styles.checkboxContainer}>
+                      <TouchableOpacity
+                        style={styles.customCheckbox}
+                        onPress={() =>
+                          handleDejeuneChange(joueur.id, !joueur.dejeune)
+                        }
                       >
-                        Repas
-                      </Text>
+                        {joueur.dejeune && (
+                          <Text style={styles.customCheckboxCheck}>✓</Text>
+                        )}
+                      </TouchableOpacity>
+                        <Text style={styles.repasTitle}>
+                          Repas
+                        </Text>
                     </View>
-
                     <Text
                       style={styles.joueurNom}
                       numberOfLines={1}
@@ -963,6 +953,22 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       fontSize: 16,
       marginBottom: 15,
+    },
+    customCheckbox: {
+      width: 24,
+      height: 24,
+      borderWidth: 2,
+      borderColor: '#181717ff',
+      borderRadius: 3,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    customCheckboxCheck: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      lineHeight: 22,
+      color: '#099237ff',
     },
   });
 

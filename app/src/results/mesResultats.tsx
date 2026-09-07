@@ -39,6 +39,7 @@ type ResultItem = {
   net: number;
   sba: number;
   index: number;
+  newIndex: number | null;
   hcp: number;
   repere: string;
   comptePourIndex: boolean;
@@ -367,7 +368,16 @@ export default function MesResultats() {
             </Text>
           </View>
         </View>
-
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <Text style={styles.legendText}>
+              <Text style={{ fontWeight: 'bold' }}>(A)</Text>
+              {' = Ancien index  -  '}
+              <Text style={{ fontWeight: 'bold' }}>(N)</Text>
+              {' = Nouvel index'}
+            </Text>
+          </View>
+        </View>
         <FlatList
           data={displayedResults}
           keyExtractor={item => item.id}
@@ -409,8 +419,12 @@ export default function MesResultats() {
                   SBA
                 </Text>
 
-                <Text style={styles.cell}>
-                  Index
+                <Text style={styles.indexCell}>
+                  (A) 
+                </Text>
+
+                <Text style={styles.indexCell}>
+                (N)
                 </Text>
 
                 <Text style={styles.cell}>
@@ -437,6 +451,10 @@ export default function MesResultats() {
 
                 <Text style={styles.cell}>
                   {item.index}
+                </Text>
+
+                <Text style={styles.cell}>
+                  {item.newIndex ?? "-"}
                 </Text>
 
                 <Text style={styles.cell}>
@@ -512,7 +530,7 @@ const styles = StyleSheet.create({
   fakeDropdown: {
     height: 38,
     borderWidth: 1,
-borderColor: '#909090',
+    borderColor: '#909090',
     borderRadius: 6,
     paddingHorizontal: 10,
     flexDirection: 'row',
@@ -679,7 +697,12 @@ borderColor: '#909090',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-
+  indexCell: {
+    flex: 1.0,
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '600',
+  },
 
 
 });

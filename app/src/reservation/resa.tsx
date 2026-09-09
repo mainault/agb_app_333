@@ -169,8 +169,7 @@ const ResaScreen = () => {
   const covoiturageResultRef = useRef<((value: boolean) => void) | null>(null);
   const [isPaymentSucceed, setPaymentSucceed] = useState<(Boolean)>(false);
   const [selectedRepere, setSelectedRepere] = useState<string>("blanc");
-  const [isPaymentConfirmationVisible, setIsPaymentConfirmationVisible] =
-  useState(false);
+  const [isPaymentConfirmationVisible, setIsPaymentConfirmationVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dropdownModalVisible, setDropdownModalVisible] = useState(false);
   const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
@@ -180,6 +179,7 @@ const ResaScreen = () => {
   const repasDataRef = useRef<JoueurRepas[]>([]);
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
+  const [competitionTitleFontSize, setCompetitionTitleFontSize] = useState(17);
 
   /**
    * Construit les informations de menu attendues par le backend à partir
@@ -667,7 +667,12 @@ const ResaScreen = () => {
   // Fonction displayResaManagement
   const displayResaManagement = (jsonObject: any) => {
     setGlobalProperty('repere', getPlayerRepere(getGlobalJsonObject().licence));
-    setGlobalProperty('isPEL', normalizeBooleanFlag(getGlobalJsonObject().isPEL_enabled));
+    //setGlobalProperty('isPEL', normalizeBooleanFlag(getGlobalJsonObject().isPEL_enabled));
+
+    const isPELEnabled = normalizeBooleanFlag(getGlobalJsonObject().isPEL_enabled);
+    const competitionPEL = normalizeBooleanFlag(getGlobalJsonObject().pel);
+    setGlobalProperty('isPEL', isPELEnabled && competitionPEL);
+
 
     setGlobalProperty('newTeamManagement', true);
 
@@ -1113,7 +1118,7 @@ const ResaScreen = () => {
       setGlobalProperty('tranche_duree', jsonObject.tranche_duree);
       setGlobalProperty('duree_trou', parseInt(jsonObject.duree_trou));
       setGlobalProperty('nbre_joueurs', jsonObject.nbre_joueurs);
-      calculateJauge();
+      //calculateJauge(); A supprimer dans une prochaine version, car la jauge est calculée côté serveur
     }
     setGlobalProperty('validateTeamLeaderObject', null);
     if (jsonObject.status === "OK") {
@@ -1367,7 +1372,7 @@ const ResaScreen = () => {
       fetchDataFromServer(sendMailClosure);
     }
   };
-
+/* A supprimer dans une prochaine version, car la jauge est calculée côté serveur
   // Fonction calculateJauge
   const calculateJauge = () => {
     if(getGlobalProperties().duree_trou == 0) {
@@ -1376,7 +1381,7 @@ const ResaScreen = () => {
       setGlobalProperty('jauge', Math.round((getGlobalProperties().tranche_duree / getGlobalProperties().duree_trou)) * getGlobalProperties().nbre_joueurs);
     }
   };
-
+*/
   // Fonction setTranchesManagement
   const setTranchesManagement = (jsonObject: any) => {
     if (jsonObject.status === "KO") {
@@ -1393,7 +1398,7 @@ const ResaScreen = () => {
 
     setGlobalProperty('nbre_joueurs', parseInt(jsonObject.nbre_joueurs));
 
-    calculateJauge();
+    //calculateJauge(); // À supprimer définitivement dans une prochaine version
 
     // Identifiants des tranches disponibles
     const globalTrancheIds = getGlobalProperties().trancheId || [];
@@ -1631,7 +1636,7 @@ const ResaScreen = () => {
       memberName: getGlobalProperties().teamLeaderNomPrenom,
       tranche: getGlobalProperties().trancheId ? getGlobalProperties().trancheId[0] : null,
       periode: getGlobalProperties().shotgun ? "Début" : getGlobalProperties().labelPeriode,
-      jauge: getGlobalProperties().jauge,
+      //jauge: getGlobalProperties().jauge, A supprimer dans une prochaine version
       licence: getGlobalJsonObject().licence,
       civilite: getGlobalJsonObject().civilite,
       resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
@@ -2081,7 +2086,7 @@ const ResaScreen = () => {
 
         tranche: trancheId,
         periode: periodeLabel,
-        jauge: getGlobalProperties().jauge,
+        //jauge: getGlobalProperties().jauge, A supprimer dans une prochaine version
 
         licence_1:
           joueursSelectionnes[0]?.licence || '',
@@ -2151,7 +2156,7 @@ const ResaScreen = () => {
         memberName: getGlobalProperties().teamLeaderNomPrenom,
         tranche: trancheId,
         periode: periodeLabel,
-        jauge: getGlobalProperties().jauge,
+        //jauge: getGlobalProperties().jauge, A supprimer dans une prochaine version
         licence: getGlobalJsonObject().licence,
         civilite: getGlobalJsonObject().civilite,
         resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
@@ -2498,7 +2503,24 @@ const ResaScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.globalContainer}>
           <View style={styles.competitionTitleContainer}>
-            <Text style={styles.competitionTitle}>{params.competitionName} - {getGlobalJsonObject().date_competition}</Text>
+            <Text
+              style={[
+                styles.competitionTitle,
+                { fontSize: competitionTitleFontSize }
+              ]}
+              onTextLayout={(event) => {
+                if (event.nativeEvent.lines.length > 1) {
+                  setCompetitionTitleFontSize(currentSize => {
+                    if (currentSize > 15) return 15;
+                    if (currentSize > 13) return 13;
+                    if (currentSize > 12) return 12;
+                    return currentSize;
+                  });
+                }
+              }}
+            >
+              {params.competitionName} - {getGlobalJsonObject().date_competition}
+            </Text>
           </View>
 
           {isLoading ? (
@@ -2810,7 +2832,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   competitionTitle: {
-    fontSize: 17,
     fontWeight: 'bold',
     color: '#1232e2ff',
   },

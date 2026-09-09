@@ -339,7 +339,7 @@ const LoginScreen = () => {
         setGlobalProperty('tranche_duree', jsonObject.tranche_duree);
         setGlobalProperty('duree_trou', jsonObject.duree_trou);
         setGlobalProperty('nbre_joueurs', jsonObject.nbre_joueurs);
-        calculateJauge();
+        //calculateJauge(); // À supprimer définitivement dans une prochaine version
         setGlobalProperty('shotgun', jsonObject.duree_trou === "0");
         router.push({
         pathname: `/src/reservation/resa`,
@@ -683,7 +683,7 @@ const LoginScreen = () => {
   const getFormuleOfCurrentCompetition = (jsonObject: any) => {
     // À compléter plus tard
   }
-
+/* A supprimer définitivement dans une prochaine version
   const calculateJauge = () => {
     if(getGlobalProperties().duree_trou == 0) {
       setGlobalProperty('jauge', Math.round((2 * getGlobalProperties().nbre_joueurs) * 18));
@@ -691,7 +691,7 @@ const LoginScreen = () => {
       setGlobalProperty('jauge', Math.round((getGlobalProperties().tranche_duree / getGlobalProperties().duree_trou)) * getGlobalProperties().nbre_joueurs);
     }
   };
-
+*/
   const setButtonState = (id: string, enabled: boolean) => {
     setButtonStates(prev => ({
       ...prev,

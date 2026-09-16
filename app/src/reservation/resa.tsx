@@ -886,7 +886,7 @@ const ResaScreen = () => {
                     placeholder="Rechercher un joueur..."
                     value={searchText}
                     onChangeText={filterItems}
-                    autoFocus={true}
+                    autoFocus={false}
                   />
                   <FlatList
                     data={filteredItems}
@@ -2865,16 +2865,17 @@ const styles = StyleSheet.create({
     marginRight: 10,
     fontSize: 15,
     fontWeight: 'bold',
-    width: 80,
+    flex: 1,
+  },
+
+  dropdownContainer: {
+    flex: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   selectedDropdownLabel: {
     color: '#099237ff',
     fontWeight: 'bold',
-  },
-  dropdownContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   dropdown: {
     flex: 1,

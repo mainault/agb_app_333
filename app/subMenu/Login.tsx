@@ -492,6 +492,22 @@ const LoginScreen = () => {
         return true;
       }
       if (getGlobalJsonObject().teamLeader === "KO") {
+
+        // Règle métier OLP :
+        // - le paiement ne permet jamais de créer une équipe ;
+        // - le joueur doit déjà être inscrit à la compétition.
+        if (selectedCompetitionKey === "OLP") {
+          if (getGlobalJsonObject().asAlreadyRESA === "0") {
+            showAlert(
+              "Information",
+              "Vous n'êtes pas inscrit à cette compétition"
+            );
+            router.replace('/');
+            return false;
+          }
+
+          return true;
+        }
         if(getGlobalJsonObject().asAlreadyRESA === "0" && getGlobalProperties().sous_menu === "Désinscription"){
           const _civilite = getGlobalJsonObject().civilite === "M." ? "inscrit": "inscrite";
           showAlert("Information", "Vous n'êtes pas " + _civilite + " à cette compétition");

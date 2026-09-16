@@ -35,7 +35,14 @@ const CustomButton = ({
       onPress={onPress}
       disabled={isDisabled}
     >
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text
+        style={styles.buttonText}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };

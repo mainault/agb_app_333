@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import ScreenContainer from './src/components/ScreenContainer';
 import MenuModal from './src/components/MenuModal';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { isVersionLower } from '../src/utils/version';
+import { isVersionLower } from './src/utils/version';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 

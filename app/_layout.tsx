@@ -13,18 +13,14 @@ import { Platform } from 'react-native';
 export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'android') {
-      NavigationBar.setBackgroundColorAsync('#aacdeeff');
-      NavigationBar.setButtonStyleAsync('dark');
+      NavigationBar.setStyle('light');
     }
   }, []);
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <PaperProvider>
         <MenuProvider>
-          <StatusBar
-            style="dark"
-            backgroundColor="#aacdeeff"
-          />
+          <StatusBar style="dark" />
           <Stack
             screenOptions={{
               headerShown: false,

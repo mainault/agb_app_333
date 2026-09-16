@@ -7,7 +7,7 @@
     "icon": "./assets/images/logo_as_transparent.png",
     "scheme": "agbapp333",
     "userInterfaceStyle": "automatic",
-    "sdkVersion": "55.0.0",
+    "sdkVersion": "57.0.0",
     "ios": {
       "supportsTablet": false,
       "buildNumber": "53"

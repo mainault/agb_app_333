@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { View, Modal, StyleSheet } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from 'expo-router/react-navigation';
+
+import type { StackNavigationProp } from 'expo-router/js-stack';
+
 import PaymentResultModal from '../components/PaymentResultModal';
 import { PaymentResultParams } from '../types/navigation';
-import { getGlobalJsonObject, getGlobalProperties } from '../store/GlobalPropertiesManager';
+import { getGlobalProperties } from '../store/GlobalPropertiesManager';
 
 // Définir les types pour la navigation
 type RootStackParamList = {
   Home: undefined;
   PaymentResult: PaymentResultParams;
-  DisplayListPlayers: { data: string; paymentsData: string };
+  DisplayListPlayers: {
+    data: string;
+    paymentsData: string;
+  };
 };
 
-type PaymentResultScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PaymentResult'>;
-type PaymentResultScreenRouteProp = RouteProp<RootStackParamList, 'PaymentResult'>;
+type PaymentResultScreenNavigationProp =
+  StackNavigationProp<RootStackParamList, 'PaymentResult'>;
+
+type PaymentResultScreenRouteProp =
+  RouteProp<RootStackParamList, 'PaymentResult'>;
 
 const PaymentResultScreen = () => {
   const navigation = useNavigation<PaymentResultScreenNavigationProp>();
@@ -36,17 +49,26 @@ const PaymentResultScreen = () => {
   } = params;
 
   // Conversion des valeurs string en boolean si nécessaire
-  const finalIsEclectic = typeof isEclectic === 'string' ? isEclectic === 'true' : isEclectic;
-  const finalIsResynchronized = typeof isResynchronized === 'string' ? isResynchronized === 'true' : isResynchronized;
+  const finalIsEclectic =
+    typeof isEclectic === 'string'
+      ? isEclectic === 'true'
+      : isEclectic;
+
+  const finalIsResynchronized =
+    typeof isResynchronized === 'string'
+      ? isResynchronized === 'true'
+      : isResynchronized;
 
   // Récupérer les données globales
-  const globalProperties= getGlobalProperties();
+  const globalProperties = getGlobalProperties();
 
   const handleCloseModal = () => {
     // Naviguer vers DisplayListPlayers avec les données
     navigation.navigate('DisplayListPlayers', {
       data: JSON.stringify(globalProperties.transformedData || []),
-      paymentsData: JSON.stringify(globalProperties.transformedDataPayments || [])
+      paymentsData: JSON.stringify(
+        globalProperties.transformedDataPayments || []
+      ),
     });
   };
 

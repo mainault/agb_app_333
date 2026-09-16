@@ -4,8 +4,6 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { sendRequest } from '../src/utils/api';
 import DropdownCompetition from '../src/components/DropdownCompetition';
 import ScreenContainer from './../src/components/ScreenContainer';
-import { formatHtmlForAlert } from '../src/utils/htmlUtils';
-import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../src/components/CustomButton';
 import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, getGlobalProperties, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
@@ -54,7 +52,6 @@ export default function ChoixCompetition() {
   const [asTarifs, setAsTarifs] = useState<ASTarifs | null>(null);
   const [isOLPTransactionModalVisible, setIsOLPTransactionModalVisible] = useState(false);
   const [selectedTarifType, setSelectedTarifType] = useState<'adulte' | 'enfant' | 'membre'>('adulte');
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const isCovoiturage = parentName === "Covoiturage";
 

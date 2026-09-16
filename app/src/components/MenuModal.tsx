@@ -82,17 +82,9 @@ export default function MenuModal({ visible, onClose, menus }: MenuModalProps) {
 
   if (!visible) return null;
 
-  return (
-
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-
-
-          <View
-            style={[
-              styles.modalContent,
-            ]}
-          >
+return (
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
             {menuStack.length > 0 && (
               <TouchableOpacity style={styles.backButton} onPress={goBack}>
                 <Ionicons name="arrow-back" size={24} color="black" />
@@ -140,15 +132,18 @@ export default function MenuModal({ visible, onClose, menus }: MenuModalProps) {
                 );
               })}
             </ScrollView>
-          </View>
         </View>
-      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   modalContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: '#aacdeeff',
     zIndex: 9999,
     elevation: 9999,

@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   Image,
-  TouchableOpacity
+  TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -21,9 +22,13 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   onMenuPress,
   isHome = false,
   appVersion,
-  showMainMenuButton = false
+  showMainMenuButton = false,
 }) => {
   const router = useRouter();
+
+  // Accessibilité : détection d'une taille de police système augmentée
+  const { fontScale } = useWindowDimensions();
+  const isLargeFont = fontScale > 1.2;
 
   const handleMenuPress = () => {
     if (isHome && onMenuPress) {
@@ -37,7 +42,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   const handleMainMenuPress = () => {
     router.replace('/');
   };
-  
+
   return (
     <SafeAreaView
       edges={['top']}
@@ -46,14 +51,21 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
       <View
         style={[
           styles.headerContainer,
-          showMainMenuButton && styles.compactHeader
+          showMainMenuButton && styles.compactHeader,
+          isLargeFont && styles.headerContainerLargeFont,
+          showMainMenuButton &&
+            isLargeFont &&
+            styles.compactHeaderLargeFont,
         ]}
       >
         {/* LEFT - LOGO OU MENU PRINCIPAL */}
         <View
           style={[
             styles.leftContainer,
-            showMainMenuButton && styles.mainMenuContainer
+            showMainMenuButton && styles.mainMenuContainer,
+            showMainMenuButton &&
+              isLargeFont &&
+              styles.mainMenuContainerLargeFont,
           ]}
         >
           {showMainMenuButton ? (
@@ -69,7 +81,12 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
                 color="#000"
               />
 
-              <Text style={styles.mainMenuText}>
+              <Text
+                style={[
+                  styles.mainMenuText,
+                  isLargeFont && styles.mainMenuTextLargeFont,
+                ]}
+              >
                 Accueil
               </Text>
             </TouchableOpacity>
@@ -84,16 +101,18 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
         {/* CENTER - TITLE */}
         <View style={styles.centerContainer}>
           <Text
-            style={styles.companyName}
+            style={[
+              styles.companyName,
+              isLargeFont && styles.companyNameLargeFont,
+            ]}
             numberOfLines={1}
-            adjustsFontSizeToFit
           >
             AS golf de Baugé
           </Text>
         </View>
 
         {/* RIGHT - MENU */}
-        <View style={styles.rightContainer}>
+        <View style={[styles.rightContainer, isLargeFont && styles.rightContainerLargeFont,]}>
           <TouchableOpacity
             style={styles.menuButton}
             onPress={handleMenuPress}
@@ -123,6 +142,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#83bff7ff',
   },
 
+  /*
+   * Affichage standard :
+   * on conserve exactement la hauteur historique.
+   */
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -132,8 +155,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
+  /*
+   * Header compact standard.
+   */
   compactHeader: {
     height: 58,
+  },
+
+  /*
+   * Police système agrandie :
+   * la hauteur n'est plus bloquée à 90 px.
+   */
+  headerContainerLargeFont: {
+    height: undefined,
+    minHeight: 110,
+  },
+
+  /*
+   * Même principe pour le header compact.
+   */
+  compactHeaderLargeFont: {
+    height: undefined,
+    minHeight: 72,
   },
 
   logo: {
@@ -146,6 +189,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+
+  /*
+   * On conserve fontSize 20 :
+   * React Native applique déjà le fontScale système.
+   */
+  companyNameLargeFont: {
+    fontSize: 20,
   },
 
   menuButton: {
@@ -174,6 +225,14 @@ const styles = StyleSheet.create({
     marginLeft: -4,
   },
 
+  /*
+   * Permet au texte "Accueil" de ne pas provoquer
+   * de débordement horizontal en grosse police.
+   */
+  mainMenuTextLargeFont: {
+    fontSize: 12,
+  },
+
   centerContainer: {
     flex: 1,
     alignItems: 'center',
@@ -189,6 +248,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     opacity: 0.9,
     marginTop: 2,
+  },
+  mainMenuContainerLargeFont: {
+    width: 70,
+  },
+
+  rightContainerLargeFont: {
+    width: 50,
   },
 });
 

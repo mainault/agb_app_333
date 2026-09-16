@@ -70,8 +70,7 @@ const DropdownCompetition: React.FC<DropdownCompetitionProps> = ({
 
 const styles = StyleSheet.create({
   dropdown: {
-
-    height: 50,
+    minHeight: 50,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
@@ -104,7 +103,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
   inputSearchStyle: {
-    height: 40,
+    minHeight: 40,
     fontSize: 15,
   },
   searchIcon: {

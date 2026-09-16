@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, FlatList, StyleSheet, Modal, Text, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, Modal, Text, TouchableOpacity, useWindowDimensions, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import CustomHeader from '../components/CustomHeader';
 import { Checkbox } from 'expo-checkbox';
@@ -27,7 +27,8 @@ interface ExpectedPaymentResultParams {
 }
 
 const DisplayListPlayers = () => {
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
+  const isLargeFont = fontScale > 1.2;
   const params = useLocalSearchParams() as any;
   const [players, setPlayers] = useState<Player[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
@@ -73,7 +74,7 @@ const DisplayListPlayers = () => {
   }, [players, payments]);
 
   const getTitleTextStyle = useCallback((item: Player): MixedStyleDeclaration => {
-    if (item.title.includes('TRANCHE')) {
+    if (item.title.includes('TRANCHE') || item.title.includes('Départ en SHOTGUN')) {
       return { fontSize: 16, fontWeight: '700', color: '#0000ff', textAlign: 'center' };
     }
     else if (item.title.includes('----- Joueur à trouver')) {
@@ -97,18 +98,41 @@ const DisplayListPlayers = () => {
   }, []);
 
   const HeaderRow = () => (
-    <View style={styles.headerRow}>
-      <View style={[styles.titleCell, { justifyContent: 'center' }]}>
-        <Text style={styles.headerText}>Titre</Text>
+    <View style={[styles.headerRow, isLargeFont && styles.headerRowLargeFont,]}>
+      <View style={[styles.cell, styles.titleCell, { justifyContent: 'center' }]}>
+        <Text
+          style={styles.headerText}
+          maxFontSizeMultiplier={1.0}
+        >
+          Titre
+        </Text>
       </View>
-      <View style={[styles.serieCell, { justifyContent: 'center' }]}>
-        <Text style={styles.headerText}>Série</Text>
+
+      <View style={[styles.cell, styles.serieCell, { justifyContent: 'center' }]}>
+        <Text
+          style={styles.headerText}
+          maxFontSizeMultiplier={1.0}
+        >
+          Série
+        </Text>
       </View>
-      <View style={[styles.indexCell, { justifyContent: 'center' }]}>
-        <Text style={styles.headerText}>Index</Text>
+
+      <View style={[styles.cell, styles.indexCell, { justifyContent: 'center' }]}>
+        <Text
+          style={styles.headerText}
+          maxFontSizeMultiplier={1.0}
+        >
+          Index
+        </Text>
       </View>
-      <View style={[styles.cbCell, { justifyContent: 'center' }]}>
-        <Text style={styles.headerText}>CB</Text>
+
+      <View style={[styles.cell, styles.cbCell]}>
+        <Text
+          style={styles.headerText}
+          maxFontSizeMultiplier={1.0}
+        >
+          CB
+        </Text>
       </View>
     </View>
   );
@@ -139,27 +163,55 @@ const DisplayListPlayers = () => {
 
     return (
       <View style={styles.row}>
-        <Text style={[styles.cell, styles.titleCell]} numberOfLines={1} ellipsizeMode="tail">
-          {item.title}
-        </Text>
-        <Text style={[styles.cell, styles.serieCell]} numberOfLines={1} ellipsizeMode="tail">
-          {item.serie}
-        </Text>
-        <Text style={[styles.cell, styles.indexCell]} numberOfLines={1} ellipsizeMode="tail">
-          {item.whs_index}
-        </Text>
+
+        <View style={[styles.cell, styles.titleCell, styles.playerCell]}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            maxFontSizeMultiplier={1.45}
+            onPress={() => {
+              if (item.title) {
+                Alert.alert('Joueur', item.title);
+              }
+            }}
+          >
+            {item.title}
+          </Text>
+        </View>
+
+        <View style={[styles.cell, styles.serieCell, styles.playerCell]}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            maxFontSizeMultiplier={1.15}
+          >
+            {item.serie}
+          </Text>
+        </View>
+
+        <View style={[styles.cell, styles.indexCell, styles.playerCell]}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            maxFontSizeMultiplier={1.15}
+          >
+            {item.whs_index}
+          </Text>
+        </View>
+
         <View style={[styles.cell, styles.cbCell]}>
           {licence && (
             <Checkbox
               value={isChecked}
-              onValueChange={() => {}}  // Désactive le changement de valeur
-              color={isChecked ? "#099237ff" : "#ccc"}  // Couleur verte quand coché
+              onValueChange={() => {}}
+              color={isChecked ? "#099237ff" : "#ccc"}
             />
           )}
         </View>
+
       </View>
-    );
-  };
+          );
+        };
 
   const renderItem = useCallback(({ item }: { item: Player }) => {
     return isHeaderItem(item) ? <TitleRow item={item} /> : <PlayerRow item={item} />;
@@ -306,13 +358,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 20,
   },
-  headerRow: {
-    flexDirection: 'row',
-    backgroundColor: '#dde9f5ff',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
   headerText: {
     fontWeight: 'bold',
     textAlign: 'center',
@@ -338,7 +383,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     paddingVertical: 8,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
@@ -361,6 +406,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     alignItems: 'center',
     justifyContent: 'center',
+    transform: [{ translateY: 3 }],
   },
   separator: {
     height: 1,
@@ -453,6 +499,23 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: '#666',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    backgroundColor: '#dde9f5ff',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    alignItems: 'center',
+  },
+
+  headerRowLargeFont: {
+    height: 56,
+    paddingVertical: 4,
+  },
+  playerCell: {
+    justifyContent: 'center',
   },
 });
 

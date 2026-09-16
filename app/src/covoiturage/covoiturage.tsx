@@ -400,8 +400,8 @@ const styles = StyleSheet.create({
     buttonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 55,
-        marginBottom: -25,
+        marginTop: 0,
+        marginBottom: 20,
     },
 });
 

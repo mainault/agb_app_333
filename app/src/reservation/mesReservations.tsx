@@ -252,13 +252,19 @@ export default function MesReservations() {
           renderItem={({ item }) => (
             <View style={styles.reservationCard}>
               <View style={styles.competitionHeader}>
-                <Text style={styles.date}>
+                <Text
+                  style={styles.date}
+                  maxFontSizeMultiplier={1.2}
+                  numberOfLines={1}
+                >
                   {item.date}
                 </Text>
 
-                <Text style={styles.competition}>
-                  {item.competition}
-                </Text>
+                <View style={styles.competitionContainer}>
+                  <Text style={styles.competition}>
+                    {item.competition}
+                  </Text>
+                </View>
               </View>
 
               <View style={styles.detailRow}>
@@ -381,25 +387,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#86888a',
   },
 
-  competitionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 12,
-  },
-
-  date: {
-    fontWeight: '600',
-    marginRight: 6,
-    flexShrink: 0,
-  },
-
-  competition: {
-    flex: 1,
-    fontWeight: '600',
-    flexShrink: 1,
-  },
-
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -449,5 +436,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#7db9ea',
     marginHorizontal: -12,
   },
+  competitionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 12,
+  },
 
+  date: {
+    width: 125,
+    fontWeight: '600',
+    flexShrink: 0,
+  },
+
+  competitionContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  competition: {
+    fontWeight: '600',
+    flexShrink: 1,
+  },
 });

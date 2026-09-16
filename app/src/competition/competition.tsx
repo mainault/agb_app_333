@@ -10,6 +10,7 @@ import {
     RefreshControl,
     StyleSheet,
     Text,
+    useWindowDimensions,
     View,
 } from "react-native";
 
@@ -46,6 +47,7 @@ interface Competition {
  * Aucune règle métier n'est reconstruite côté client.
  */
 export default function CompetitionScreen() {
+    const { fontScale } = useWindowDimensions();
     const [competitions, setCompetitions] =
         useState<Competition[]>([]);
 
@@ -54,7 +56,7 @@ export default function CompetitionScreen() {
 
     const [isRefreshing, setIsRefreshing] =
         useState(false);
-
+console.log('fontScale =', fontScale);
     /**
      * Distribue les réponses retournées par le backend.
      *

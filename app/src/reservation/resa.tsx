@@ -9,6 +9,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -161,6 +162,10 @@ const ResaScreen = () => {
     'abandonner-btn': true,
     'desinscrire-btn': true,
   });
+  const [isScrollable, setIsScrollable] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'succeeded' | 'failed' | null>(null);
   const navigation = useNavigation();
@@ -177,7 +182,8 @@ const ResaScreen = () => {
   const [filteredItems, setFilteredItems] = useState<DropdownItem[]>([]);
   const menusRepasChoiceResolverRef = useRef<((response: any | null) => void) | null>(null);
   const repasDataRef = useRef<JoueurRepas[]>([]);
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
+  const isLargeFont = fontScale > 1.2;
   const isTablet = width >= 768;
   const [competitionTitleFontSize, setCompetitionTitleFontSize] = useState(17);
 
@@ -220,7 +226,7 @@ const ResaScreen = () => {
 
     if (isScramble && isNewTeam) {
       // Pour une nouvelle équipe Scramble, activer les dropdowns nécessaires
-      const maxPlayers = formule.includes("Scramble à 2") ? 2 : 4;
+      const maxPlayers = getGlobalProperties().nbrScramblePlayers;
       return {
         dropdown_1: true,   // Désactivée (capitaine)
         dropdown_2: false,  // Activée pour le 2ème joueur
@@ -853,9 +859,12 @@ const ResaScreen = () => {
     );
   });
 
-
-
-
+  useEffect(() => {
+    setIsScrollable(
+      viewportHeight > 0 &&
+      contentHeight > viewportHeight + 10
+    );
+  }, [viewportHeight, contentHeight]);
 
   // Modal pour les dropdowns
   const DropdownModal = () => {
@@ -1607,7 +1616,7 @@ const ResaScreen = () => {
       return;
     }
 
-    const teamNumber = getGlobalProperties().teamNumber;
+    const teamNumber = getGlobalProperties().nbrScramblePlayers ;
     if (teamNumber === 2 && selectedValues[1] === null) {
       await showAlert("Attention", "Vous devez sélectionner le 2ème joueur pour un scramble à 2."); return;
     } else if (teamNumber === 4 && (selectedValues[1] === null || selectedValues[2] === null || selectedValues[3] === null)) {
@@ -1665,7 +1674,7 @@ const ResaScreen = () => {
         // Gestion spécifique pour les réservations multiples
       }
     }
-    if(getGlobalJsonObject().covoiturage === '1'){
+    if (jsonObject.action !== "removeUser" && getGlobalJsonObject().covoiturage === '1'){
       setIsWaitingCovoiturage(true);
       try {
         // Attendre le retour du covoiturage
@@ -1762,12 +1771,6 @@ const ResaScreen = () => {
     if (jsonObject.status === "KO") {
       await showAlert("Erreur", jsonObject.error); return;
     }
-    let _tranche = null;
-    if(getGlobalResaMember().duree_trou == '0'){
-        _tranche = jsonObject.tranche.substring(jsonObject.tranche.indexOf("TRANCHE") + 8, jsonObject.tranche.indexOf("</span>"));
-    }else{
-        _tranche = jsonObject.tranche.substring(jsonObject.tranche.indexOf(">") + 1,jsonObject.tranche.indexOf("</"));
-    }
     const donnees = {
         operationType: "sendResaMail",
         action: jsonObject.action,
@@ -1779,8 +1782,8 @@ const ResaScreen = () => {
         prenom: jsonObject.prenom,
         competition: jsonObject.nom_competition,
         date: jsonObject.date_competition,
-        tranche: _tranche,
-        periode: getGlobalResaMember().position.title?.substring(getGlobalResaMember().position.title?.indexOf('>') as any + 1, getGlobalResaMember().position.title?.indexOf('</')) || '',
+        tranche: jsonObject.tranche,
+        periode: jsonObject.periode,
         duree_trou: getGlobalProperties().duree_trou,
         isResaRepas: jsonObject.isResaRepas,
         resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
@@ -1925,15 +1928,15 @@ const ResaScreen = () => {
           removedMembers: jsonObject.removedMembers || [],
           competition: jsonObject.nom_competition,
           date: jsonObject.date_competition,
-          tranche: _tranche,
-          periode: jsonObject.periode.substring(jsonObject.periode.indexOf('>--') + 2, jsonObject.periode.indexOf('-<')),
+          tranche: jsonObject.tranche,
+          periode: jsonObject.periode,
           duree_trou: getGlobalProperties().duree_trou,
           isMobile: "1",
           support,
       };
       setTeamMembersRemoveData(removedMembersRemoveData);
     }
-    const _resaRepas = (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(',');
+    //const _resaRepas = (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(',');
     const donnees = {
       operationType: 'sendTeamResaMail',
       action: jsonObject.action,
@@ -1985,12 +1988,13 @@ const ResaScreen = () => {
     const removedMembers = getGlobalProperties().members .filter((member: any) => removedLicences.includes(member.licence));
 
     // Identifier les nouveaux membres
+    /*
     const addedMembers = newSelectedLicences.filter(licence => !currentMemberLicences.includes(licence));
       if (trancheId === null) {
         showAlert("Attention", "Vous devez sélectionner une période.");
         return;
       }
-
+    */
     const uniqueSelectedPlayers = [...new Set(selectedValues.filter(Boolean))];
     if (uniqueSelectedPlayers.length !== selectedValues.filter(Boolean).length) {
       showAlert("Erreur", "Un joueur ne peut pas être sélectionné plusieurs fois.");
@@ -2035,34 +2039,18 @@ const ResaScreen = () => {
       }
     }
 
-    const teamNumber = getGlobalProperties().teamNumber || 1;
+    //const teamNumber = getGlobalProperties().nbrScramblePlayers || 1;
     const selectedPlayersCount = selectedValues.filter(val => val !== null && val !== "").length;
 
-
     if (formule.includes("Scramble")) {
-      if (formule.includes("Scramble à 2") && selectedPlayersCount < 2) {
-        setGlobalProperty('isIncomplete', true);
-        setGlobalProperty('isComplete', "incomplete");
-
-      } else if (formule.includes("Scramble à 3") && selectedPlayersCount < 3) {
-        setGlobalProperty('isIncomplete', true);
-        setGlobalProperty('isComplete', "incomplete");
-
-      } else if (formule.includes("Scramble à 4") && selectedPlayersCount < 4) {
-        setGlobalProperty('isIncomplete', true);
-        setGlobalProperty('isComplete', "incomplete");
-
-      } else {
-        setGlobalProperty('isIncomplete', false);
-        setGlobalProperty('isComplete', "complete");
-      }
+      const isIncomplete = selectedPlayersCount < getGlobalProperties().nbrScramblePlayers;
+      setGlobalProperty('isIncomplete', isIncomplete);
+      setGlobalProperty('isComplete', isIncomplete ? "incomplete" : "complete");
     }
     setJoueursSelectionnes(joueursSelectionnes);
     const currentRepasData = repasDataRef.current.length > 0 ? repasDataRef.current : repasDataState;
     if (formule.includes('Scramble')) {
-      const currentRepasData = repasDataRef.current.length > 0 ? repasDataRef.current : repasDataState;
-
-      const setResaTeamData = {
+       const setResaTeamData = {
         operationType: 'setMassResaTeam',
         createTeam:
           getGlobalProperties().newTeamResa === false
@@ -2173,7 +2161,7 @@ const ResaScreen = () => {
     }
     if (formule.includes("Scramble")) {
       // Configuration des dropdowns pour une nouvelle équipe Scramble
-      const maxPlayers = formule.includes("Scramble à 2") ? 2 : 4;
+      const maxPlayers = getGlobalProperties().nbrScramblePlayers;
       const newDropdowns: DropdownsState = {
         dropdown_1: true,   // Désactivée (capitaine)
         dropdown_2: false,  // Activée pour le 2ème joueur
@@ -2245,37 +2233,31 @@ const ResaScreen = () => {
 
   // Gestion de la désinscription d'une RESA
   const handleRemove = async () => {
-    let menu;
-    switch (getGlobalJsonObject().isEclectic) {
-      case "isEclectic": menu = "Eclectic"; break;
-      case "isRingerScore": menu = "RingerScore"; break;
-      case "isEclectic-IS": menu = "Eclectic-IS"; break;
-      default: menu = "Standard"; break;
-    }
 
     const confirmed = await showAlert("Confirmation", "Êtes-vous sûr de vouloir vous désinscrire ?", {
-      buttons: [
-        { text: "Non", onPress: () => false, style: 'cancel' },
-        { text: "Oui", onPress: () => true },
-      ],
-      }).then((choice) => {
-        if(choice){
-          const data = {
-            operationType: 'removeResaUser',
-            action: "removeUser",
-            nom_competition: getGlobalJsonObject().nom_competition,
-            licence: getGlobalJsonObject().licence,
-            sendMail: true,
-            isEclectic: getGlobalJsonObject().isEclectic,
-            isMobile: '1',
-            support,
-            menu: menu,
-            sous_menu: "Désinscription - User",
-            repere: selectedRepere
-          };
-          fetchDataFromServer(data);
-        }}
-      );
+        buttons: [
+          { text: "Non", onPress: () => false, style: 'cancel' },
+          { text: "Oui", onPress: () => true },
+        ],
+      }
+    );
+    if (!confirmed) {
+      return;
+    }
+    const data = {
+      operationType: 'removeResaUser',
+      action: "removeUser",
+      nom_competition: getGlobalJsonObject().nom_competition,
+      licence: getGlobalJsonObject().licence,
+      sendMail: true,
+      isEclectic: getGlobalJsonObject().isEclectic,
+      isMobile: '1',
+      support,
+      menu: params.parentMenuName,
+      sous_menu: "Désinscription - User",
+      repere: selectedRepere
+    };
+    fetchDataFromServer(data);
   };
 
   const handleCancel = () => {
@@ -2309,16 +2291,16 @@ const ResaScreen = () => {
   };
 
   const annulerPaiement = () => {
-    let dataForPlayersList = null;
     setIsPaymentConfirmationVisible(false);
-    dataForPlayersList = {
+    const dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
       isEclectic: getGlobalJsonObject().isEclectic,
       nom_competition: getGlobalJsonObject().nom_competition,
       action: 'displayList',
-      isFromCBReturn: getGlobalJsonObject().isPEL_enabled ? true : false,
+      isFromCBReturn: getGlobalJsonObject().isPEL_enabled === '1',
       accessType: 'resa',
     };
+
     fetchDataFromServer(dataForPlayersList);
   };
 
@@ -2389,7 +2371,7 @@ const ResaScreen = () => {
             licence: getGlobalJsonObject().licence,
             isScramble: getGlobalProperties().isScramble
         };
-      }else if(getGlobalJsonObject().formule.indexOf("Scramble") > -1) {
+      }else if(getGlobalProperties().isScramble) {
         setGlobalProperty('newTeamManagement', getGlobalJsonObject().teamLeader === 'KO');
         donnees = {
           operationType: "validateTeamLeader",
@@ -2444,15 +2426,16 @@ const ResaScreen = () => {
     return unsubscribe;
   }, [isWaitingCovoiturage]);
 
-  const fetchCompetitionPlayersAndPrepareData = async () => {
+  const fetchCompetitionPlayersAndPrepareData = () => {
     const dataForPlayersList = {
       operationType: 'getCompetitionPlayers',
       isEclectic: getGlobalJsonObject().isEclectic,
       nom_competition: getGlobalJsonObject().nom_competition,
       action: 'displayList',
-      isFromCBReturn: !!getGlobalJsonObject().isPEL_enabled,
+      isFromCBReturn: getGlobalJsonObject().isPEL_enabled === '1',
       accessType: 'resa',
     };
+
     fetchDataFromServer(dataForPlayersList);
   };
 
@@ -2499,9 +2482,35 @@ const ResaScreen = () => {
 
 
   return (
-    <ScreenContainer showHeader={true}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.globalContainer}>
+    <ScreenContainer showHeader={true} showFooter={false}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.globalContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={true}
+
+          onLayout={(event) => {
+            const height = event.nativeEvent.layout.height;
+            setViewportHeight(height);
+          }}
+
+          onContentSizeChange={(_, height) => {
+            setContentHeight(height);
+          }}
+
+          onScroll={(event) => {
+            const y = event.nativeEvent.contentOffset.y;
+
+            if (y > 10) {
+              setHasScrolled(true);
+            }
+          }}
+
+          scrollEventThrottle={16}
+        >
+
           <View style={styles.competitionTitleContainer}>
             <Text
               style={[
@@ -2655,9 +2664,9 @@ const ResaScreen = () => {
                     }}
                     value={selectedRepere}
                   >
-                    <View style={styles.radioContainer}>
+                    <View style={[styles.radioContainer, isLargeFont && styles.radioContainerLargeFont,]}>
                       {RADIO_OPTIONS.map((option) => (
-                        <View key={option.id} style={styles.radioItem}>
+                        <View key={option.id} style={[styles.radioItem, isLargeFont && styles.radioItemLargeFont,]}>
                           <RadioButton.Item
                             value={option.id}
                             label={option.label}
@@ -2703,7 +2712,7 @@ const ResaScreen = () => {
                 nbrDaysCancelRefunded={nbrDaysCancelRefunded}
               />
 
-              <View style={styles.buttonsContainer}>
+              <View style={[styles.buttonsContainer, isLargeFont && styles.buttonsContainerLargeFont, ]}>
                 <CustomButton
                   id="desinscrire-btn"
                   title="Désinscrire"
@@ -2728,7 +2737,14 @@ const ResaScreen = () => {
               </View>
             </>
           )}
-        </View>
+        </ScrollView>
+        {isScrollable && !hasScrolled && (
+          <View style={styles.scrollHint}>
+            <Text style={styles.scrollHintText}>
+              ↓ Faites défiler pour voir la suite
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
       {/* WebView pour le paiement (superposé) */}
       <Modal
@@ -2819,11 +2835,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#aacdeeff',
   },
-  globalContainer: {
+  scrollView: {
     flex: 1,
+  },
+
+  globalContainer: {
     padding: 10,
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    paddingBottom: 20,
     marginTop: 0,
   },
   competitionTitleContainer: {
@@ -2834,7 +2852,7 @@ const styles = StyleSheet.create({
   competitionTitle: {
     fontWeight: 'bold',
     color: '#1232e2ff',
-  },
+    marginTop: 15,  },
   dropdownsContainer: {
     marginBottom: 0,
   },
@@ -2860,7 +2878,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     flex: 1,
-    height: 37,
+    minHeight: 37,
     borderColor: 'gray',
     borderWidth: 1,
     borderRadius: 8,
@@ -2900,7 +2918,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   searchInput: {
-    height: 40,
+    minHeight: 40,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     paddingHorizontal: 10,
@@ -2916,7 +2934,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    height: 40,
+    minHeight: 40,
   },
   selectedItem: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -2970,17 +2988,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%'
   },
-  radioButtonContainer: {
-    marginBottom: -5,
-    marginTop: 0,
-  },
-  radioContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'nowrap',
-    marginHorizontal: -10,
-    marginBottom: 0,
-  },
   radioTitre: {
     fontWeight: 'bold',
     marginTop: 5,
@@ -2988,16 +2995,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  radioItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 5,
-    width: '22%',
-  },
-  radioLabel: {
-    marginLeft: 2,
-    fontSize: 16,
-    fontWeight: 'bold',
+  radioButtonContainer: {
+    marginBottom: -5,
+    marginTop: 0,
   },
   tranchesContainer: {
     marginVertical: 5,
@@ -3039,11 +3039,7 @@ const styles = StyleSheet.create({
   disabledOptionLabel: {
     color: '#888',
   },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 0,
-  },
+
   transitionOverlay: {
     position: 'absolute',
     top: 0,
@@ -3116,7 +3112,68 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
+  scrollHint: {
+    position: 'absolute',
+    bottom: 8,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    elevation: 4,
+  },
 
+  scrollHintText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#1232e2ff',
+    textAlign: 'center',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'nowrap',
+    marginTop: 0,
+  },
+
+  buttonsContainerLargeFont: {
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  radioContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'nowrap',
+    marginHorizontal: -10,
+    marginBottom: 0,
+  },
+  radioItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    width: '22%',
+  },
+  radioLabel: {
+    marginLeft: 2,
+    fontSize: 16,
+    fontWeight: 'bold',
+    flexShrink: 1,
+  },
+  radioContainerLargeFont: {
+    flexWrap: 'wrap',
+    width: '82%',
+    alignSelf: 'center',
+    justifyContent: 'flex-start',
+    marginLeft: 30,
+  },
+
+  radioItemLargeFont: {
+    width: '50%',
+    marginHorizontal: 0,
+    marginBottom: 8,
+  },
 });
 
 export default ResaScreen;

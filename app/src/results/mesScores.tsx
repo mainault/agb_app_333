@@ -1,19 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions, Modal, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  Dimensions,
+  Modal,
+  Platform,
+} from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Dropdown from '../components/dropDown';
-import { getGlobalJsonObject, getGlobalProperties, setGlobalProperty } from '../store/GlobalPropertiesManager';
+import {
+  getGlobalJsonObject,
+  getGlobalProperties,
+  setGlobalProperty,
+} from '../store/GlobalPropertiesManager';
 import { showAlert } from '../utils/utilities';
 import { sendRequest } from '../utils/api';
 
-
 interface PlayerTour {
-  T1: string; T2: string; T3: string; T4: string; T5: string;
-  T6: string; T7: string; T8: string; T9: string; T10: string;
-  T11: string; T12: string; T13: string; T14: string; T15: string;
-  T16: string; T17: string; T18: string;
+  T1: string;
+  T2: string;
+  T3: string;
+  T4: string;
+  T5: string;
+  T6: string;
+  T7: string;
+  T8: string;
+  T9: string;
+  T10: string;
+  T11: string;
+  T12: string;
+  T13: string;
+  T14: string;
+  T15: string;
+  T16: string;
+  T17: string;
+  T18: string;
   score: string;
   tour: string;
   brut: string;
@@ -61,61 +87,76 @@ interface ScoreCard {
 
 const MesScores = () => {
   const router = useRouter();
+
   const [isLoading, setIsLoading] = useState(true);
+
   const [data, setData] = useState<ScoreData>({
     title: 'Mes Scores',
     cumuls: [],
-    usersArray: []
+    usersArray: [],
   });
+
   const [selectedTrimestre, setSelectedTrimestre] = useState('0');
   const [showSynthesis, setShowSynthesis] = useState(false);
+
   const params = useLocalSearchParams();
-  const globalJsonObject = useRef(params.globalJsonObject ? JSON.parse(params.globalJsonObject as string) : getGlobalJsonObject()).current;
+
+  const globalJsonObject = useRef(
+    params.globalJsonObject
+      ? JSON.parse(params.globalJsonObject as string)
+      : getGlobalJsonObject()
+  ).current;
+
   const truncatedPlayersRef = useRef<Set<number>>(new Set());
-  const [codeClub, setCodeClub] = useState("");
+
+  const [codeClub, setCodeClub] = useState('');
   const [scoreCards, setScoreCards] = useState<ScoreCard[]>([]);
-  const [selectedScoreCard, setSelectedScoreCard] = useState<ScoreCard | null>(null);
-  const {width: windowWidth, height: windowHeight} = Dimensions.get('window');
-  const support = Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
+  const [selectedScoreCard, setSelectedScoreCard] =
+    useState<ScoreCard | null>(null);
+
+  const {
+    width: windowWidth,
+    height: windowHeight,
+  } = Dimensions.get('window');
+
+  const support =
+    Platform.OS === 'android' ? 'APP_ANDROID' : 'APP_IOS';
 
   // Initialisation des tableaux vides avec toutes les colonnes
-useEffect(() => {
+  useEffect(() => {
+    if (
+      globalJsonObject.isEclectic === 'isEclectic' ||
+      globalJsonObject.isEclectic === 'isEclectic-IS' ||
+      globalJsonObject.isEclectic === 'isRingerScore'
+    ) {
+      const donnees = {
+        operationType:
+          globalJsonObject.isEclectic === 'isEclectic'
+            ? 'getUserCurrentQuarterEclecticScores'
+            : 'getUserSearchEclecticScores',
 
-  if (
-    globalJsonObject.isEclectic === "isEclectic" ||
-    globalJsonObject.isEclectic === "isEclectic-IS" ||
-    globalJsonObject.isEclectic === "isRingerScore"
-  ) {
+        CRUD: 'list',
+        trimestre: '',
+        tour: '',
+        isEclectic: globalJsonObject.isEclectic,
+        licence: globalJsonObject.licence,
+        action: 'manage',
+        isAppMobile: true,
+        support: support,
+        isMobile: 0,
+      };
 
-    const donnees = {
-      operationType:
-        globalJsonObject.isEclectic === "isEclectic"
-          ? "getUserCurrentQuarterEclecticScores"
-          : "getUserSearchEclecticScores",
-
-      CRUD: "list",
-      trimestre: "",
-      tour: "",
-      isEclectic: globalJsonObject.isEclectic,
-      licence: globalJsonObject.licence,
-      action: "manage",
-      isAppMobile: true,
-      support: support,
-      isMobile: 0,
-    };
-
-    setShowSynthesis(true);
-    fetchDataFromServer(donnees);
-  }
-
-}, []);
+      setShowSynthesis(true);
+      fetchDataFromServer(donnees);
+    }
+  }, []);
 
   const trimestreOptions = [
     { label: '', value: '0' },
     { label: 'Trimestre 1', value: '1' },
     { label: 'Trimestre 2', value: '2' },
     { label: 'Trimestre 3', value: '3' },
-    { label: 'Trimestre 4', value: '4' }
+    { label: 'Trimestre 4', value: '4' },
   ];
 
   const analyzeTours = () => {
@@ -147,20 +188,32 @@ useEffect(() => {
       allTourNumbers,
       hasSynthesis,
       synthesisData,
-      numberedTours
+      numberedTours,
     };
   };
 
-  const { allTourNumbers, hasSynthesis, synthesisData } = analyzeTours();
+  const {
+    allTourNumbers,
+    hasSynthesis,
+    synthesisData,
+  } = analyzeTours();
 
   const fetchDataFromServer = async (donnees: any) => {
     try {
       setIsLoading(true);
+
       const response = await sendRequest(donnees);
       getServerResponse(response);
     } catch (error) {
-      console.error("Erreur dans fetchDataFromServer:", error);
-      await showAlert("Gestion des erreurs", "Problème de connexion.");
+      console.error(
+        'Erreur dans fetchDataFromServer:',
+        error
+      );
+
+      await showAlert(
+        'Gestion des erreurs',
+        'Problème de connexion.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -168,48 +221,96 @@ useEffect(() => {
 
   const getServerResponse = (jsonObject: any) => {
     switch (jsonObject.operationType) {
-      case "getUserCurrentQuarterEclecticScores":
-      case "getUserSearchEclecticScores":
-        if (jsonObject.status === "KO") {
-          showAlert("Gestion des erreurs", jsonObject.error);
+      case 'getUserCurrentQuarterEclecticScores':
+      case 'getUserSearchEclecticScores':
+        if (jsonObject.status === 'KO') {
+          showAlert(
+            'Gestion des erreurs',
+            jsonObject.error
+          );
           return;
         }
+
         setData({
           title: jsonObject.title || 'Mes Scores',
           cumuls: jsonObject.cumuls || [],
-          usersArray: jsonObject.usersArray || []
+          usersArray: jsonObject.usersArray || [],
         });
+
         setScoreCards(jsonObject.scoreCards || []);
-        setGlobalProperty('nbrPlayersForRanking', jsonObject.nbrPlayers);
-        if (globalJsonObject.isEclectic === 'isRingerScore') {
-          setGlobalProperty('scoresBrut', jsonObject.brut);
-          setGlobalProperty('scoresNet', jsonObject.net);
-          setGlobalProperty('rankBrut', jsonObject.score?.[0]);
-          setGlobalProperty('rankNet', jsonObject.rang?.[0]);
+
+        setGlobalProperty(
+          'nbrPlayersForRanking',
+          jsonObject.nbrPlayers
+        );
+
+        if (
+          globalJsonObject.isEclectic ===
+          'isRingerScore'
+        ) {
+          setGlobalProperty(
+            'scoresBrut',
+            jsonObject.brut
+          );
+
+          setGlobalProperty(
+            'scoresNet',
+            jsonObject.net
+          );
+
+          setGlobalProperty(
+            'rankBrut',
+            jsonObject.score?.[0]
+          );
+
+          setGlobalProperty(
+            'rankNet',
+            jsonObject.rang?.[0]
+          );
         } else {
-          setGlobalProperty('scoreForScores', jsonObject.score?.[0]);
-          setGlobalProperty('rankForScores', jsonObject.rang?.[0]);
-       }
-        if ((jsonObject.scoreCards || []).length > 0) {
-          setCodeClub(jsonObject.scoreCards[0].code_club || "");
-        } else if ((jsonObject.usersArray || []).length > 0) {
-          setCodeClub(jsonObject.usersArray[0].code_club || "");
+          setGlobalProperty(
+            'scoreForScores',
+            jsonObject.score?.[0]
+          );
+
+          setGlobalProperty(
+            'rankForScores',
+            jsonObject.rang?.[0]
+          );
+        }
+
+        if (
+          (jsonObject.scoreCards || []).length > 0
+        ) {
+          setCodeClub(
+            jsonObject.scoreCards[0].code_club || ''
+          );
+        } else if (
+          (jsonObject.usersArray || []).length > 0
+        ) {
+          setCodeClub(
+            jsonObject.usersArray[0].code_club || ''
+          );
         }
 
         break;
     }
   };
+
   const fetchSynthesisData = () => {
     const donnees = {
       operationType:
-        globalJsonObject.isEclectic === "isEclectic" &&
-        selectedTrimestre === "0"
-          ? "getUserCurrentQuarterEclecticScores"
-          : "getUserSearchEclecticScores",
+        globalJsonObject.isEclectic === 'isEclectic' &&
+        selectedTrimestre === '0'
+          ? 'getUserCurrentQuarterEclecticScores'
+          : 'getUserSearchEclecticScores',
 
-      CRUD: "list",
-      trimestre: selectedTrimestre === '0' ? '' : selectedTrimestre,
-      tour: "",
+      CRUD: 'list',
+      trimestre:
+        selectedTrimestre === '0'
+          ? ''
+          : selectedTrimestre,
+      tour: '',
       isEclectic: globalJsonObject.isEclectic,
       licence: globalJsonObject.licence,
       isAppMobile: true,
@@ -232,14 +333,14 @@ useEffect(() => {
         : '';
 
     const donnees = {
-      operationType: "sendIndividualScores",
+      operationType: 'sendIndividualScores',
       annee: annee,
       licence: [globalJsonObject.licence],
       isEclectic: globalJsonObject.isEclectic,
       trimestre: trimestre,
-      tour: "",
+      tour: '',
       isSynthesis: hasSynthesis,
-      action: "sendIndividualScores",
+      action: 'sendIndividualScores',
       code_club: codeClub,
     };
 
@@ -251,43 +352,44 @@ useEffect(() => {
   };
 
   const openScoreCard = (tour: string) => {
-    const card = scoreCards.find(item => item.tour === tour);
+    const card =
+      scoreCards.find(item => item.tour === tour);
 
     if (card) {
       setSelectedScoreCard(card);
     }
   };
 
-  const getRepereColor = (repere?: string | null): string => {
-
+  const getRepereColor = (
+    repere?: string | null
+  ): string => {
     switch ((repere || '').toLowerCase()) {
+      case 'blanc':
+        return '#FFFFFF';
 
-        case 'blanc':
-            return '#FFFFFF';
+      case 'jaune':
+        return '#FFD400';
 
-        case 'jaune':
-            return '#FFD400';
+      case 'bleu':
+        return '#0066CC';
 
-        case 'bleu':
-            return '#0066CC';
+      case 'rouge':
+        return '#D80000';
 
-        case 'rouge':
-            return '#D80000';
+      case 'orange':
+        return '#F28C00';
 
-        case 'orange':
-            return '#F28C00';
+      case 'violet':
+        return '#7A3DB8';
 
-        case 'violet':
-            return '#7A3DB8';
+      case 'vert':
+        return '#008000';
 
-        case 'vert':
-            return '#008000';
+      case 'noir':
+        return '#000000';
 
-        case 'noir':
-            return '#000000';
-
-        default:
-            return '#B0B0B0';
+      default:
+        return '#B0B0B0';
     }
   };
 
@@ -296,10 +398,13 @@ useEffect(() => {
       visible={selectedScoreCard !== null}
       transparent
       animationType="fade"
-      onRequestClose={() => setSelectedScoreCard(null)}
+      onRequestClose={() =>
+        setSelectedScoreCard(null)
+      }
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
+
           <Text style={styles.modalTitle}>
             {selectedScoreCard?.tour === 'S'
               ? 'Synthèse'
@@ -307,105 +412,187 @@ useEffect(() => {
           </Text>
 
           <View
-              style={{
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: 4,
-                  marginBottom: 10,
-              }}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 4,
+              marginBottom: 10,
+            }}
           >
-              <Text style={{ color: '#555', fontSize: 13 }}>
-                  {selectedScoreCard?.nom_parcours}
-              </Text>
+            <Text
+              style={{
+                color: '#555',
+                fontSize: 13,
+              }}
+            >
+              {selectedScoreCard?.nom_parcours}
+            </Text>
 
-              <View
-                  style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 6,
-                      backgroundColor: getRepereColor(selectedScoreCard?.repere),
-                      borderWidth: 1,
-                      borderColor: '#666',
-                      marginHorizontal: 6,
-                  }}
-              />
+            <View
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor:
+                  getRepereColor(
+                    selectedScoreCard?.repere
+                  ),
+                borderWidth: 1,
+                borderColor: '#666',
+                marginHorizontal: 6,
+              }}
+            />
 
-              <Text style={{ color: '#555', fontSize: 13 }}>
-                  {selectedScoreCard?.repere}
-              </Text>
+            <Text
+              style={{
+                color: '#555',
+                fontSize: 13,
+              }}
+            >
+              {selectedScoreCard?.repere}
+            </Text>
           </View>
 
           <View style={styles.cardHeaderRow}>
-            <Text style={[styles.cardHeaderCell, styles.cardHoleCell]}>Trou</Text>
-            <Text style={styles.cardHeaderCell}>Par</Text>
-            <Text style={styles.cardHeaderCell}>Score</Text>
-            <Text style={styles.cardHeaderCell}>Brut</Text>
-            <Text style={styles.cardHeaderCell}>Net</Text>
+            <Text
+              style={[
+                styles.cardHeaderCell,
+                styles.cardHoleCell,
+              ]}
+            >
+              Trou
+            </Text>
+
+            <Text style={styles.cardHeaderCell}>
+              Par
+            </Text>
+
+            <Text style={styles.cardHeaderCell}>
+              Score
+            </Text>
+
+            <Text style={styles.cardHeaderCell}>
+              Brut
+            </Text>
+
+            <Text style={styles.cardHeaderCell}>
+              Net
+            </Text>
           </View>
 
-          <ScrollView style={styles.cardScrollView}>
-            {selectedScoreCard?.holes.map((hole) => (
-              <View key={`card-hole-${hole.hole}`} style={styles.cardRow}>
-                <Text style={[styles.cardCell, styles.cardHoleCell]}>
-                  {hole.hole}
-                </Text>
-
-                <Text style={styles.cardCell}>
-                  {hole.par ?? '—'}
-                </Text>
-
-                <Text style={styles.cardCell}>
-                  {hole.score ?? '—'}
-                </Text>
-
-                <Text style={styles.cardCell}>
-                  {hole.brut ?? '—'}
-                </Text>
-
-                <View style={styles.cardNetCell}>
+          <ScrollView
+            style={styles.cardScrollView}
+          >
+            {selectedScoreCard?.holes.map(
+              hole => (
+                <View key={`card-hole-${hole.hole}`} style={styles.cardRow}>
                   <Text
                     style={[
-                      styles.cardNetText,
-                      hole.score !== null &&
-                      hole.par !== null &&
-                      hole.score > hole.par &&
-                      styles.cardNetOverPar,
-                      hole.score !== null &&
-                      hole.par !== null &&
-                      hole.score < hole.par &&
-                      styles.cardNetUnderPar
+                      styles.cardCell,
+                      styles.cardHoleCell,
                     ]}
                   >
-                    {hole.net ?? '—'}
+                    {hole.hole}
                   </Text>
+
+                  <Text style={styles.cardCell}>
+                    {hole.par ?? '—'}
+                  </Text>
+
+                  <Text style={styles.cardCell}>
+                    {hole.score ?? '—'}
+                  </Text>
+
+                  <Text style={styles.cardCell}>
+                    {hole.brut ?? '—'}
+                  </Text>
+
+                    <View style={styles.cardNetCell}>
+                      {hole.score !== null &&
+                      hole.par !== null &&
+                      hole.score < hole.par ? (
+
+                        <View style={styles.cardNetUnderParCircle}>
+                          <Text style={styles.cardNetUnderParText}>
+                            {hole.net ?? '—'}
+                          </Text>
+                        </View>
+
+                      ) : (
+
+                        <Text
+                          style={[
+                            styles.cardNetText,
+                            hole.score !== null &&
+                              hole.par !== null &&
+                              hole.score > hole.par &&
+                              styles.cardNetOverPar,
+                          ]}
+                        >
+                          {hole.net ?? '—'}
+                        </Text>
+
+                      )}
+                    </View>
                 </View>
-              </View>
-            ))}
+              )
+            )}
           </ScrollView>
 
-          <View style={styles.cardTotalsRow}>
-            <Text style={[styles.cardTotalsLabel, styles.cardHoleCell]}>
+          <View
+            style={styles.cardTotalsRow}
+          >
+            <Text
+              style={[
+                styles.cardTotalsLabel,
+                styles.cardHoleCell,
+              ]}
+            >
               Total
             </Text>
-            <Text style={styles.cardTotalsCell}>—</Text>
-            <Text style={styles.cardTotalsCell}>
-              {selectedScoreCard?.totals.score ?? '—'}
+
+            <Text
+              style={styles.cardTotalsCell}
+            >
+              —
             </Text>
-            <Text style={styles.cardTotalsCell}>
-              {selectedScoreCard?.totals.brut ?? '—'}
+
+            <Text
+              style={styles.cardTotalsCell}
+            >
+              {selectedScoreCard?.totals
+                .score ?? '—'}
             </Text>
-            <Text style={styles.cardTotalsCell}>
-              {selectedScoreCard?.totals.net ?? '—'}
+
+            <Text
+              style={styles.cardTotalsCell}
+            >
+              {selectedScoreCard?.totals
+                .brut ?? '—'}
+            </Text>
+
+            <Text
+              style={styles.cardTotalsCell}
+            >
+              {selectedScoreCard?.totals
+                .net ?? '—'}
             </Text>
           </View>
 
           <TouchableOpacity
             style={styles.closeModalButton}
-            onPress={() => setSelectedScoreCard(null)}
+            onPress={() =>
+              setSelectedScoreCard(null)
+            }
           >
-            <Text style={styles.finishButtonText}>Fermer</Text>
+            <Text
+              style={styles.finishButtonText}
+            >
+              Fermer
+            </Text>
           </TouchableOpacity>
+
         </View>
       </View>
     </Modal>
@@ -413,18 +600,37 @@ useEffect(() => {
 
   const renderHeader = () => (
     <View style={styles.headerRow}>
-      <Text style={[styles.headerCell, styles.trouHeader]}>
+
+      <Text
+        style={[
+          styles.headerCell,
+          styles.trouHeader,
+        ]}
+        maxFontSizeMultiplier={1.0}
+      >
         Trou
       </Text>
 
-      {allTourNumbers.map((tourNum) => (
+      {allTourNumbers.map(tourNum => (
         <TouchableOpacity
           key={`header-${tourNum}`}
-          style={[styles.headerTouchable, { width: tourColumnWidth }]}
-          onPress={() => openScoreCard(tourNum)}
-          disabled={!scoreCards.some(card => card.tour === tourNum)}
+          style={[
+            styles.headerTouchable,
+            { width: tourColumnWidth },
+          ]}
+          onPress={() =>
+            openScoreCard(tourNum)
+          }
+          disabled={
+            !scoreCards.some(
+              card => card.tour === tourNum
+            )
+          }
         >
-          <Text style={styles.headerCell}>
+          <Text
+            style={styles.headerCell}
+            maxFontSizeMultiplier={1.0}
+          >
             {`T${tourNum}`}
           </Text>
         </TouchableOpacity>
@@ -433,31 +639,70 @@ useEffect(() => {
       {hasSynthesis && (
         <TouchableOpacity
           key="header-synthesis"
-          style={[styles.headerTouchable, { width: tourColumnWidth }]}
-          onPress={() => openScoreCard('S')}
-          disabled={!scoreCards.some(card => card.tour === 'S')}
+          style={[
+            styles.headerTouchable,
+            { width: tourColumnWidth },
+          ]}
+          onPress={() =>
+            openScoreCard('S')
+          }
+          disabled={
+            !scoreCards.some(
+              card => card.tour === 'S'
+            )
+          }
         >
-          <Text style={styles.headerCell}>S</Text>
+          <Text
+            style={styles.headerCell}
+            maxFontSizeMultiplier={1.0}
+          >
+            S
+          </Text>
         </TouchableOpacity>
       )}
+
     </View>
   );
 
-  const renderScoreRow = (row: ScoreRow, index: number) => (
-    <View key={`row-${index}`} style={styles.scoreRow}>
-      <Text style={[styles.scoreCell, styles.trouCell]}>
+  const renderScoreRow = (
+    row: ScoreRow,
+    index: number
+  ) => (
+    <View
+      key={`row-${index}`}
+      style={styles.scoreRow}
+    >
+      <Text
+        style={[
+          styles.scoreCell,
+          styles.trouCell,
+        ]}
+        maxFontSizeMultiplier={1.0}
+      >
         {row.trou}
       </Text>
 
-      {allTourNumbers.map((tourNum) => (
+      {allTourNumbers.map(tourNum => (
         <TouchableOpacity
           key={`cell-${row.trou}-tour${tourNum}`}
-          style={[styles.scoreTouchable, { width: tourColumnWidth }]}
-          onPress={() => openScoreCard(tourNum)}
-          disabled={!scoreCards.some(card => card.tour === tourNum)}
+          style={[
+            styles.scoreTouchable,
+            { width: tourColumnWidth },
+          ]}
+          onPress={() =>
+            openScoreCard(tourNum)
+          }
+          disabled={
+            !scoreCards.some(
+              card => card.tour === tourNum
+            )
+          }
         >
-          <Text style={styles.scoreCell}>
-            {row[`tour${tourNum}`] || "—"}
+          <Text
+            style={styles.scoreCell}
+            maxFontSizeMultiplier={1.0}
+          >
+            {row[`tour${tourNum}`] || '—'}
           </Text>
         </TouchableOpacity>
       ))}
@@ -465,12 +710,24 @@ useEffect(() => {
       {hasSynthesis && (
         <TouchableOpacity
           key={`cell-${row.trou}-synthese`}
-          style={[styles.scoreTouchable, { width: tourColumnWidth }]}
-          onPress={() => openScoreCard('S')}
-          disabled={!scoreCards.some(card => card.tour === 'S')}
+          style={[
+            styles.scoreTouchable,
+            { width: tourColumnWidth },
+          ]}
+          onPress={() =>
+            openScoreCard('S')
+          }
+          disabled={
+            !scoreCards.some(
+              card => card.tour === 'S'
+            )
+          }
         >
-          <Text style={styles.scoreCell}>
-            {row.synthese || "—"}
+          <Text
+            style={styles.scoreCell}
+            maxFontSizeMultiplier={1.0}
+          >
+            {row.synthese || '—'}
           </Text>
         </TouchableOpacity>
       )}
@@ -479,11 +736,16 @@ useEffect(() => {
 
   const renderCumuls = () => (
     <View style={styles.cumulsContainer}>
-      {data.cumuls.map((cumul, index) => (
-        <Text key={index} style={styles.cumulText}>
-          {cumul.label}: {cumul.value}
-        </Text>
-      ))}
+      {data.cumuls.map(
+        (cumul, index) => (
+          <Text
+            key={index}
+            style={styles.cumulText}
+          >
+            {cumul.label}: {cumul.value}
+          </Text>
+        )
+      )}
     </View>
   );
 
@@ -493,133 +755,310 @@ useEffect(() => {
     netRow: ScoreRow;
   } => {
     const trouRows: ScoreRow[] = [];
-    const brutRow: ScoreRow = { trou: "BRUT" };
-    const netRow: ScoreRow = { trou: "NET" };
+
+    const brutRow: ScoreRow = {
+      trou: 'BRUT',
+    };
+
+    const netRow: ScoreRow = {
+      trou: 'NET',
+    };
 
     for (let i = 1; i <= 18; i++) {
-      const trouKey = `T${i}` as keyof PlayerTour;
-      const row: ScoreRow = { trou: `${i}` };
+      const trouKey =
+        `T${i}` as keyof PlayerTour;
 
-      allTourNumbers.forEach((tourNum) => {
-        const tourData = data.usersArray.find(
-          item => item.tour === tourNum
-        );
+      const row: ScoreRow = {
+        trou: `${i}`,
+      };
 
-        row[`tour${tourNum}`] =
-          tourData?.[trouKey] || "—";
-      });
+      allTourNumbers.forEach(
+        tourNum => {
+          const tourData =
+            data.usersArray.find(
+              item =>
+                item.tour === tourNum
+            );
+
+          row[`tour${tourNum}`] =
+            tourData?.[trouKey] || '—';
+        }
+      );
 
       if (hasSynthesis) {
         row.synthese =
-          synthesisData?.[trouKey] || "—";
+          synthesisData?.[trouKey] ||
+          '—';
       }
 
       trouRows.push(row);
     }
 
-    allTourNumbers.forEach((tourNum) => {
-      const tourData = data.usersArray.find(
-        item => item.tour === tourNum
-      );
+    allTourNumbers.forEach(
+      tourNum => {
+        const tourData =
+          data.usersArray.find(
+            item =>
+              item.tour === tourNum
+          );
 
-      brutRow[`tour${tourNum}`] =
-        tourData?.brut || "—";
+        brutRow[`tour${tourNum}`] =
+          tourData?.brut || '—';
 
-      netRow[`tour${tourNum}`] =
-        tourData?.net || "—";
-    });
+        netRow[`tour${tourNum}`] =
+          tourData?.net || '—';
+      }
+    );
 
     if (hasSynthesis) {
       brutRow.synthese =
-        synthesisData?.brut || "—";
+        synthesisData?.brut || '—';
 
       netRow.synthese =
-        synthesisData?.net || "—";
+        synthesisData?.net || '—';
     }
 
     return {
       trouRows,
       brutRow,
-      netRow
+      netRow,
     };
   };
 
-  const { trouRows, brutRow, netRow } = prepareScoreData();
+  const {
+    trouRows,
+    brutRow,
+    netRow,
+  } = prepareScoreData();
 
-  const synthesisColumnCount = hasSynthesis ? 1 : 0;
-  const columnCount = allTourNumbers.length + synthesisColumnCount;
+  const synthesisColumnCount =
+    hasSynthesis ? 1 : 0;
+
+  const columnCount =
+    allTourNumbers.length +
+    synthesisColumnCount;
+
   const trouColumnWidth = 40;
-  const tourColumnWidth = (windowWidth - trouColumnWidth) / columnCount;
+
+  const tourColumnWidth =
+    (windowWidth - trouColumnWidth) /
+    columnCount;
+
   const tableWidth = windowWidth;
 
   const getTableMaxHeight = () => {
-   
+
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+
         <Text style={styles.title}>
-          Compétitions : {globalJsonObject.isEclectic === 'isEclectic' ? 'ECLECTIC' : globalJsonObject.isEclectic === 'isEclectic-IS' ? 'CHALLENGE HIVER' : 'RINGER SCORE'}
+          Compétitions :{' '}
+          {globalJsonObject.isEclectic ===
+          'isEclectic'
+            ? 'ECLECTIC'
+            : globalJsonObject.isEclectic ===
+              'isEclectic-IS'
+            ? 'CHALLENGE HIVER'
+            : 'RINGER SCORE'}
         </Text>
 
         {globalJsonObject.isEclectic === 'isEclectic' && (
           <View style={styles.dropdownsContainer}>
-            <Dropdown
-              label="Trimestre"
-              selectedValue={selectedTrimestre}
-              onValueChange={setSelectedTrimestre}
-              options={trimestreOptions}
-              placeholder="Sélection..."
-              width="45%"
-            />
 
-            <TouchableOpacity
-              style={styles.synthesisButton}
-              onPress={fetchSynthesisData}
-            >
-              <Text style={styles.finishButtonText}>
-                Afficher
+            <View style={styles.eclecticColumn}>
+              <Dropdown
+                label="Trimestre"
+                selectedValue={selectedTrimestre}
+                onValueChange={setSelectedTrimestre}
+                options={trimestreOptions}
+                placeholder="Sélection..."
+                style={styles.eclecticDropdown}
+              />
+            </View>
+
+            <View style={styles.eclecticColumn}>
+              <Text style={styles.buttonLabelSpacer}>
+                {' '}
               </Text>
-            </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.synthesisButton}
+                onPress={fetchSynthesisData}
+              >
+                <Text style={styles.finishButtonText}>
+                  Afficher
+                </Text>
+              </TouchableOpacity>
+            </View>
+
           </View>
         )}
 
-        <View style={styles.classementContainer}>
-          {globalJsonObject.isEclectic === 'isRingerScore' && (
+        <View
+          style={
+            styles.classementContainer
+          }
+        >
+          {globalJsonObject.isEclectic ===
+            'isRingerScore' && (
             <>
-              <Text style={styles.classementText}>
-                Classement Brut : <Text style={styles.classementValue}>{getGlobalProperties().scoresBrut}</Text> -
-                Rang : <Text style={styles.classementValue}>{getGlobalProperties().rankBrut}</Text> /
-                <Text style={styles.classementValue}>{getGlobalProperties().nbrPlayersForRanking}</Text> joueurs
+              <Text
+                style={
+                  styles.classementText
+                }
+                maxFontSizeMultiplier={
+                  1.15
+                }
+              >
+                Classement Brut :{' '}
+                <Text
+                  style={
+                    styles.classementValue
+                  }
+                >
+                  {
+                    getGlobalProperties()
+                      .scoresBrut
+                  }
+                </Text>{' '}
+                - Rang :{' '}
+                <Text
+                  style={
+                    styles.classementValue
+                  }
+                >
+                  {
+                    getGlobalProperties()
+                      .rankBrut
+                  }
+                </Text>{' '}
+                /{' '}
+                <Text
+                  style={
+                    styles.classementValue
+                  }
+                >
+                  {
+                    getGlobalProperties()
+                      .nbrPlayersForRanking
+                  }
+                </Text>{' '}
+                joueurs
               </Text>
-              <Text style={styles.classementText}>
-                Classement Net : <Text style={styles.classementValue}>{getGlobalProperties().scoresNet}</Text> -
-                Rang : <Text style={styles.classementValue}>{getGlobalProperties().rankNet}</Text> /
-                <Text style={styles.classementValue}>{getGlobalProperties().nbrPlayersForRanking}</Text> joueurs
+
+              <Text
+                style={
+                  styles.classementText
+                }
+                maxFontSizeMultiplier={
+                  1.15
+                }
+              >
+                Classement Net :{' '}
+                <Text
+                  style={
+                    styles.classementValue
+                  }
+                >
+                  {
+                    getGlobalProperties()
+                      .scoresNet
+                  }
+                </Text>{' '}
+                - Rang :{' '}
+                <Text
+                  style={
+                    styles.classementValue
+                  }
+                >
+                  {
+                    getGlobalProperties()
+                      .rankNet
+                  }
+                </Text>{' '}
+                /{' '}
+                <Text
+                  style={
+                    styles.classementValue
+                  }
+                >
+                  {
+                    getGlobalProperties()
+                      .nbrPlayersForRanking
+                  }
+                </Text>{' '}
+                joueurs
               </Text>
             </>
           )}
-          {globalJsonObject.isEclectic !== 'isRingerScore' && (
-            <Text style={styles.classementText}>
-              Classement    B+N : <Text style={styles.classementValue}>
-                {getGlobalProperties().scoreForScores}
+
+          {globalJsonObject.isEclectic !==
+            'isRingerScore' && (
+            <Text
+              style={
+                styles.classementText
+              }
+              maxFontSizeMultiplier={
+                1.1
+              }
+            >
+              Classement B+N :{' '}
+              <Text
+                style={
+                  styles.classementValue
+                }
+              >
+                {
+                  getGlobalProperties()
+                    .scoreForScores
+                }
               </Text>
-              {'    '}Rang : <Text style={styles.classementValue}>
-                {getGlobalProperties().rankForScores}
+
+              {'    '}Rang :{' '}
+
+              <Text
+                style={
+                  styles.classementValue
+                }
+              >
+                {
+                  getGlobalProperties()
+                    .rankForScores
+                }
               </Text>
+
               {' / '}
-              <Text style={styles.classementValue}>
-                {getGlobalProperties().nbrPlayersForRanking}
+
+              <Text
+                style={
+                  styles.classementValue
+                }
+              >
+                {
+                  getGlobalProperties()
+                    .nbrPlayersForRanking
+                }
               </Text>
+
               {' joueurs'}
             </Text>
           )}
         </View>
-        <Text style={styles.helpText}>
-            Touchez l'en-tête d'un tour pour afficher la carte détaillée.
+
+        <Text
+          style={styles.helpText}
+          maxFontSizeMultiplier={1.1}
+        >
+          Touchez l'en-tête d'un tour
+          pour afficher la carte
+          détaillée.
         </Text>
-        {data.cumuls.length > 0 && renderCumuls()}
+
+        {data.cumuls.length > 0 &&
+          renderCumuls()}
 
         {isLoading ? (
           <ActivityIndicator
@@ -627,11 +1066,17 @@ useEffect(() => {
             style={styles.loader}
           />
         ) : (
-          <View style={styles.tableOuterContainer}>
+          <View
+            style={
+              styles.tableOuterContainer
+            }
+          >
             <View
               style={[
                 styles.tableContainer,
-                { width: tableWidth }
+                {
+                  width: tableWidth,
+                },
               ]}
             >
               {renderHeader()}
@@ -639,17 +1084,36 @@ useEffect(() => {
               <ScrollView
                 nestedScrollEnabled
                 style={styles.scrollView}
-                contentContainerStyle={styles.scoreRowsContainer}
-                showsVerticalScrollIndicator={true}
+                contentContainerStyle={
+                  styles.scoreRowsContainer
+                }
+                showsVerticalScrollIndicator={
+                  true
+                }
               >
-                {trouRows.map((row, index) =>
-                  renderScoreRow(row, index)
+                {trouRows.map(
+                  (row, index) =>
+                    renderScoreRow(
+                      row,
+                      index
+                    )
                 )}
               </ScrollView>
 
-              <View style={styles.brutNetContainer}>
-                {renderScoreRow(brutRow, 18)}
-                {renderScoreRow(netRow, 19)}
+              <View
+                style={
+                  styles.brutNetContainer
+                }
+              >
+                {renderScoreRow(
+                  brutRow,
+                  18
+                )}
+
+                {renderScoreRow(
+                  netRow,
+                  19
+                )}
               </View>
             </View>
           </View>
@@ -658,13 +1122,40 @@ useEffect(() => {
         {renderScoreCardModal()}
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.finishButton} onPress={handleEmailScores}>
-            <Text style={styles.finishButtonText}>Email scores</Text>
+          <TouchableOpacity
+            style={
+              styles.finishButton
+            }
+            onPress={
+              handleEmailScores
+            }
+          >
+            <Text
+              style={
+                styles.finishButtonText
+              }
+            >
+              Email scores
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.finishButton]} onPress={handleTerminer}>
-            <Text style={styles.finishButtonText}>Terminer</Text>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.finishButton,
+            ]}
+            onPress={handleTerminer}
+          >
+            <Text
+              style={
+                styles.finishButtonText
+              }
+            >
+              Terminer
+            </Text>
           </TouchableOpacity>
         </View>
+
       </View>
     </SafeAreaView>
   );
@@ -675,11 +1166,13 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#aacdeeff',
   },
+
   container: {
     flex: 1,
     backgroundColor: '#dee2e6',
     padding: 0,
   },
+
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -687,38 +1180,38 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     color: '#333',
   },
-  dropdownsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-  },
+
   classementContainer: {
     marginBottom: 8,
     paddingHorizontal: 10,
   },
+
   classementText: {
     fontSize: 14,
+    lineHeight: 20,
     marginBottom: 3,
     color: '#333',
     fontWeight: 'bold',
   },
+
   classementValue: {
     color: '#e71313',
     fontWeight: 'bold',
   },
+
   cumulsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
     paddingHorizontal: 10,
   },
+
   cumulText: {
     fontSize: 12,
     marginBottom: 3,
     color: '#333',
   },
+
   headerRow: {
     flexDirection: 'row',
     backgroundColor: '#b9d6ee',
@@ -726,6 +1219,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     paddingVertical: 6,
   },
+
   headerCell: {
     textAlign: 'center',
     fontWeight: 'bold',
@@ -733,10 +1227,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   trouHeader: {
     width: 40,
     textAlign: 'center',
   },
+
   scoreRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -745,11 +1241,13 @@ const styles = StyleSheet.create({
     minHeight: 30,
     flexGrow: 1,
   },
+
   brutNetContainer: {
     borderTopWidth: 2,
     borderTopColor: '#999',
     backgroundColor: '#f3ecec',
   },
+
   scoreCell: {
     textAlign: 'center',
     fontSize: 13,
@@ -758,28 +1256,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 4,
   },
+
   trouCell: {
     width: 40,
     textAlign: 'center',
     fontWeight: '600',
     fontSize: 13,
   },
+
   headerTouchable: {
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   scoreTouchable: {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: 30,
   },
+
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor:
+      'rgba(0, 0, 0, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
   },
+
   modalContainer: {
     width: '100%',
     maxWidth: 520,
@@ -788,12 +1292,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
   },
+
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#333',
   },
+
   modalSubtitle: {
     fontSize: 13,
     textAlign: 'center',
@@ -801,15 +1307,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 10,
   },
+
   cardScrollView: {
     maxHeight: 500,
   },
+
   cardHeaderRow: {
     flexDirection: 'row',
     backgroundColor: '#b9d6ee',
     borderBottomWidth: 1,
     borderBottomColor: '#999',
   },
+
   cardHeaderCell: {
     flex: 1,
     textAlign: 'center',
@@ -817,33 +1326,39 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     color: '#333',
   },
+
   cardRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#d5e3f5',
   },
+
   cardCell: {
     flex: 1,
     textAlign: 'center',
     paddingVertical: 6,
     color: '#333',
   },
+
   cardHoleCell: {
     flex: 0.8,
     fontWeight: 'bold',
   },
+
   cardTotalsRow: {
     flexDirection: 'row',
     borderTopWidth: 2,
     borderTopColor: '#999',
     backgroundColor: '#f3ecec',
   },
+
   cardTotalsLabel: {
     textAlign: 'center',
     paddingVertical: 8,
     fontWeight: 'bold',
     color: '#333',
   },
+
   cardTotalsCell: {
     flex: 1,
     textAlign: 'center',
@@ -851,6 +1366,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+
   closeModalButton: {
     alignSelf: 'center',
     backgroundColor: '#3498db',
@@ -859,11 +1375,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 12,
   },
+
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -872,6 +1390,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#ccc',
     backgroundColor: '#dee2e6',
   },
+
   button: {
     backgroundColor: '#007bff',
     paddingVertical: 8,
@@ -879,6 +1398,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
   },
+
   finishButton: {
     backgroundColor: '#3498db',
     paddingHorizontal: 15,
@@ -886,26 +1406,19 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: 10,
   },
+
   finishButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 12,
   },
-  synthesisButton: {
-    backgroundColor: '#3498db',
-    paddingHorizontal: 14,
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 38,
-    flex: 1,
-    marginTop: 25,
-  },
+
   synthesisButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 12,
   },
+
   helpText: {
     fontSize: 13,
     color: '#080808',
@@ -913,10 +1426,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
+
   cardNetCell: {
-  flex: 1,
-  alignItems: 'center',
-  justifyContent: 'center',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   cardNetText: {
@@ -930,20 +1444,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  cardNetUnderPar: {
-    color: 'green',
-    fontWeight: 'bold',
-    borderWidth: 2,
-    borderColor: 'green',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    paddingVertical: 1,
-  },
   tableOuterContainer: {
-  flex: 1,
+    flex: 1,
   },
 
   tableContainer: {
@@ -953,8 +1455,59 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+
   scoreRowsContainer: {
     flexGrow: 1,
+  },
+
+  cardNetUnderParCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'green',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  cardNetUnderParText: {
+    color: 'green',
+    fontWeight: 'bold',
+    fontSize: 13,
+    lineHeight: 16,
+    textAlign: 'center',
+  },
+
+  dropdownsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 12,
+    gap: 12,
+    marginBottom: 12,
+  },
+
+  eclecticColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  eclecticDropdown: {
+    width: '100%',
+    marginBottom: 0,
+  },
+
+  buttonLabelSpacer: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+
+  synthesisButton: {
+    minHeight: 40,
+    backgroundColor: '#3498db',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

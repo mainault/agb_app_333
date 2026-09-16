@@ -397,7 +397,7 @@ export default function MesResultats() {
                   ]}
                 />
 
-                <Text style={styles.date}>
+                <Text style={styles.date} maxFontSizeMultiplier={1.2} numberOfLines={1}>
                   {item.date}
                 </Text>
 
@@ -407,57 +407,57 @@ export default function MesResultats() {
               </View>
 
               <View style={styles.labelsRow}>
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   Brut
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   Net
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   SBA
                 </Text>
 
-                <Text style={styles.indexCell}>
-                  (A) 
+                <Text style={styles.indexCell} maxFontSizeMultiplier={1.2}>
+                  (A)
                 </Text>
 
-                <Text style={styles.indexCell}>
-                (N)
+                <Text style={styles.indexCell} maxFontSizeMultiplier={1.2}>
+                  (N)
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   HCP
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   Repère
                 </Text>
               </View>
 
               <View style={styles.valuesRow}>
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   {item.brut}
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   {item.net}
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   {item.sba}
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   {item.index}
                 </Text>
 
-                <Text style={styles.cell}>
-                  {item.newIndex ?? "-"}
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
+                  {item.newIndex ?? '-'}
                 </Text>
 
-                <Text style={styles.cell}>
+                <Text style={styles.cell} maxFontSizeMultiplier={1.2}>
                   {item.hcp}
                 </Text>
 
@@ -466,8 +466,7 @@ export default function MesResultats() {
                     style={[
                       styles.repereDot,
                       {
-                        backgroundColor:
-                          getRepereColor(item.repere),
+                        backgroundColor: getRepereColor(item.repere),
                       },
                     ]}
                   />

@@ -362,36 +362,46 @@ const DisplayRanking = () => {
           <Text
             style={styles.headerTextRS}
             numberOfLines={1}
-            adjustsFontSizeToFit
+            maxFontSizeMultiplier={1.0}
           >
             JOUEUR
           </Text>
+
+          <View style={styles.subHeaderSpacerRS} />
         </View>
 
         <View style={[styles.headerCellRS, styles.infoCellRS]} />
 
         <View style={[styles.headerCellRS, { flex: 1 }]}>
           <Text
-            style={[styles.headerTextRS, { fontSize: 13 }]}
+            style={styles.headerTextRS}
             numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.75}
+            maxFontSizeMultiplier={1.0}
           >
             BRUT
           </Text>
+
+          <View style={styles.subHeaderSpacerRS} />
         </View>
 
         <View style={[styles.headerCellRS, { flex: 1 }]}>
           <Text
-            style={[styles.headerTextRS, { fontSize: 13 }]}
+            style={styles.headerTextRS}
             numberOfLines={1}
+            maxFontSizeMultiplier={1.0}
           >
             NET
           </Text>
+
+          <View style={styles.subHeaderSpacerRS} />
         </View>
 
         <View style={[styles.headerCellRS, { flex: 2 }]}>
-          <Text style={styles.headerTextRS}>
+          <Text
+            style={styles.headerTextRS}
+            numberOfLines={1}
+            maxFontSizeMultiplier={1.0}
+          >
             RANG
           </Text>
 
@@ -399,7 +409,7 @@ const DisplayRanking = () => {
             <Text
               style={[styles.subHeaderTextRS, { flex: 1 }]}
               numberOfLines={1}
-              adjustsFontSizeToFit
+              maxFontSizeMultiplier={1.0}
             >
               BRUT
             </Text>
@@ -407,7 +417,7 @@ const DisplayRanking = () => {
             <Text
               style={[styles.subHeaderTextRS, { flex: 1 }]}
               numberOfLines={1}
-              adjustsFontSizeToFit
+              maxFontSizeMultiplier={1.0}
             >
               NET
             </Text>
@@ -752,11 +762,7 @@ const DisplayRanking = () => {
 
       <View style={styles.container}>
         <View
-          style={[
-            styles.header,
-            isRingerScore && styles.headerRS
-          ]}
-        >
+          style={[styles.header, isRingerScore && styles.headerRS]}>
           <View style={styles.titleContainer}>
             <Text style={styles.title}>
               {getCompetitionTitle()}
@@ -784,11 +790,7 @@ const DisplayRanking = () => {
                 updateCellsBatchingPeriod={50}
                 windowSize={10}
                 removeClippedSubviews={true}
-                getItemLayout={(_data, index) => ({
-                  length: 40,
-                  offset: 40 * index,
-                  index
-                })}
+
                 contentContainerStyle={styles.flatListContent}
                 showsVerticalScrollIndicator={true}
               />
@@ -952,27 +954,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     paddingVertical: 5,
-  },
-  headerCellRS: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 2,
-  },
-  headerTextRS: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#2c3e50',
-  },
-  subHeaderRowRS: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 2,
-    fontSize: 14,
-  },
-  subHeaderTextRS: {
-    fontSize: 12,
-    color: '#555',
-    textAlign: 'center',
   },
   rowRS: {
     flexDirection: 'row',
@@ -1169,6 +1150,38 @@ const styles = StyleSheet.create({
   measurePlayerName: {
     position: 'absolute',
     opacity: 0,
+  },
+  headerCellRS: {
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 2,
+  },
+
+  headerTextRS: {
+    fontWeight: 'bold',
+    fontSize: 13,
+    color: '#2c3e50',
+    textAlign: 'center',
+  },
+
+  subHeaderRowRS: {
+    flexDirection: 'row',
+    width: '100%',
+    marginTop: 4,
+    minHeight: 18,
+    alignItems: 'center',
+  },
+
+  subHeaderTextRS: {
+    fontSize: 13,
+    color: '#555',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+
+  subHeaderSpacerRS: {
+    marginTop: 4,
+    minHeight: 18,
   },
 });
 

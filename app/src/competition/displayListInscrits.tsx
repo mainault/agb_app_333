@@ -132,7 +132,17 @@ const PlayerSeriesList = () => {
     return (
       <View style={styles.playerRow}>
         <View style={styles.playerNameContainer}>
-          <Text style={styles.playerText} numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            style={styles.playerText}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            onPress={() => {
+              Alert.alert(
+                'Joueur',
+                item.title
+              );
+            }}
+          >
             {item.title}
           </Text>
         </View>
@@ -155,10 +165,34 @@ const PlayerSeriesList = () => {
   // En-tête de la liste
   const renderHeader = () => (
     <View style={styles.listHeader}>
-      <Text style={[styles.headerText, styles.joueurHeader]}>Joueur</Text>
-      <Text style={[styles.headerText, styles.indexHeader]}>Index</Text>
-      <Text style={[styles.headerText, styles.serieHeader]}>Série</Text>
-      <Text style={[styles.headerText, styles.repereHeader]}>Repère</Text>
+      <Text
+        style={[styles.headerText, styles.joueurHeader]}
+        maxFontSizeMultiplier={1.0}
+      >
+        Joueur
+      </Text>
+
+      <Text
+        style={[styles.headerText, styles.indexHeader]}
+        maxFontSizeMultiplier={1.0}
+      >
+        Index
+      </Text>
+
+      <Text
+        style={[styles.headerText, styles.serieHeader]}
+        maxFontSizeMultiplier={1.0}
+      >
+        Série
+      </Text>
+
+      <Text
+        style={[styles.headerText, styles.repereHeader]}
+        maxFontSizeMultiplier={1.0}
+        numberOfLines={1}
+      >
+        Repère
+      </Text>
     </View>
   );
 

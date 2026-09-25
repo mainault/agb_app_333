@@ -56,7 +56,6 @@ export default function CompetitionScreen() {
 
     const [isRefreshing, setIsRefreshing] =
         useState(false);
-console.log('fontScale =', fontScale);
     /**
      * Distribue les réponses retournées par le backend.
      *

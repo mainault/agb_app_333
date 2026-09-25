@@ -996,6 +996,11 @@ const ResaScreen = () => {
             break;
         }
         setGlobalCurrentCompetition(jsonObject);
+        if (params.competitionKey === "OLP" && !normalizeBooleanFlag(jsonObject.isPEL)) {
+          showAlert("Information", "Le paiement en ligne n'est pas disponible pour cette compétition.");
+          router.replace("/");
+          break;
+        }
         displayCBPayment();
         break;
 

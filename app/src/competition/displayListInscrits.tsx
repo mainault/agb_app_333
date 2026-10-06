@@ -14,6 +14,7 @@ interface Player {
   cb?: string;
   repere?: string;
   licence?: string;
+  resa_repas?: string | number;
 }
 
 const PlayerSeriesList = () => {
@@ -158,41 +159,77 @@ const PlayerSeriesList = () => {
             <Text style={styles.repereText}>-</Text>
           )}
         </View>
+        <View style={styles.repasContainer}>
+          {String(item.resa_repas) === '1' && (
+            <Text
+              style={styles.repasCheck}
+              accessibilityLabel="Repas réservé"
+              maxFontSizeMultiplier={1}
+            >
+              ✓
+            </Text>
+          )}
+        </View>
       </View>
     );
   };
 
   // En-tête de la liste
+  /**
+   * Affiche les entêtes avec les mêmes largeurs que les colonnes
+   * des joueurs, sans retour à la ligne.
+   */
   const renderHeader = () => (
     <View style={styles.listHeader}>
-      <Text
-        style={[styles.headerText, styles.joueurHeader]}
-        maxFontSizeMultiplier={1.0}
-      >
-        Joueur
-      </Text>
+      <View style={styles.playerNameContainer}>
+        <Text
+          style={[styles.columnHeaderText, { textAlign: 'left' }]}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
+        >
+          Joueur
+        </Text>
+      </View>
 
-      <Text
-        style={[styles.headerText, styles.indexHeader]}
-        maxFontSizeMultiplier={1.0}
-      >
-        Index
-      </Text>
+      <View style={{ flex: 0.65 }}>
+        <Text
+          style={styles.columnHeaderText}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
+        >
+          Index
+        </Text>
+      </View>
 
-      <Text
-        style={[styles.headerText, styles.serieHeader]}
-        maxFontSizeMultiplier={1.0}
-      >
-        Série
-      </Text>
+      <View style={{ flex: 0.9 }}>
+        <Text
+          style={styles.columnHeaderText}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
+        >
+          Série
+        </Text>
+      </View>
 
-      <Text
-        style={[styles.headerText, styles.repereHeader]}
-        maxFontSizeMultiplier={1.0}
-        numberOfLines={1}
-      >
-        Repère
-      </Text>
+      <View style={styles.repereContainer}>
+        <Text
+          style={styles.columnHeaderText}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
+        >
+          Repère
+        </Text>
+      </View>
+
+      <View style={styles.repasContainer}>
+        <Text
+          style={styles.columnHeaderText}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
+        >
+          Repas
+        </Text>
+      </View>
     </View>
   );
 
@@ -292,9 +329,9 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontWeight: '600',
-    textAlign: 'center',
+    textAlign: 'left',
     color: '#28292b',
-    fontSize: 16,
+    fontSize: 15,
   },
   dateText: {
     color: 'blue',
@@ -314,18 +351,6 @@ const styles = StyleSheet.create({
     color: '#0a7ef1',
     fontWeight: '500',
     fontSize: 17,
-  },
-  joueurHeader: {
-    flex: 2,
-  },
-  indexHeader: {
-    flex: 1,
-  },
-  serieHeader: {
-    flex: 1,
-  },
-  repereHeader: {
-    flex: 0.8,
   },
   fullWidthHtmlTextBold: {
     color: 'red',
@@ -348,9 +373,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playerNameContainer: {
-    flex: 2,
-  },
   playerText: {
     color: '#343a40',
     fontSize: 13,
@@ -362,25 +384,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginBottom: -10,
-  },
-  indexText: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#343a40',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  serieText: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#343a40',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  repereContainer: {
-    flex: 0.8,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   repereDot: {
     width: 20,
@@ -401,6 +404,79 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     padding: 20,
     color: '#6c757d',
+  },
+
+  indexText: {
+    flex: 0.65,
+    textAlign: 'center',
+    color: '#343a40',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  serieText: {
+    flex: 0.9,
+    textAlign: 'center',
+    color: '#343a40',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  repasCheck: {
+    color: '#16803c',
+    fontSize: 19,
+    fontWeight: '700',
+  },
+  joueurHeader: {
+    flex: 2,
+    textAlign: 'left',
+  },
+
+  indexHeader: {
+    flex: 0.65,
+    textAlign: 'center',
+    fontSize: 13,
+  },
+
+  serieHeader: {
+    flex: 0.9,
+    textAlign: 'center',
+    fontSize: 13,
+  },
+
+  repereHeader: {
+    flex: 0.65,
+    textAlign: 'center',
+    fontSize: 12,
+  },
+
+  repasHeader: {
+    flex: 0.6,
+    textAlign: 'center',
+    fontSize: 12,
+  },
+
+  columnHeaderText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#28292b',
+  textAlign: 'center',
+  },
+
+  playerNameContainer: {
+    flex: 1.7, // Au lieu de 2
+  },
+
+  repereContainer: {
+    flex: 0.8, // Au lieu de 0.65
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  repasContainer: {
+    flex: 0.75, // Au lieu de 0.6
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

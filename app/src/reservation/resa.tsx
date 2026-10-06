@@ -585,9 +585,9 @@ const ResaScreen = () => {
       else if (isTeamIncomplete && isTeamLeader) {
         dropdowns = {
           dropdown_1: true,  // Toujours désactivée (team leader)
-          dropdown_2: dropdowns.dropdown_2 === true && (getGlobalProperties().formule.includes("2") && getGlobalProperties().members.length < 2)  ? false : true, 
-          dropdown_3: dropdowns.dropdown_3 === false && (getGlobalProperties().formule.includes("3") && getGlobalProperties().members.length < 3)  ? false : true, 
-          dropdown_4: dropdowns.dropdown_4 === false && (getGlobalProperties().formule.includes("4") && getGlobalProperties().members.length < 4)  ? false : true, 
+          dropdown_2: dropdowns.dropdown_2 === true && (getGlobalProperties().formule.includes("2") && getGlobalProperties().members.length < 2)  ? false : true,
+          dropdown_3: dropdowns.dropdown_3 === false && (getGlobalProperties().formule.includes("3") && getGlobalProperties().members.length < 3)  ? false : true,
+          dropdown_4: dropdowns.dropdown_4 === false && (getGlobalProperties().formule.includes("4") && getGlobalProperties().members.length < 4)  ? false : true,
         };
       }
       else if (isTeamLeader) {
@@ -754,7 +754,7 @@ const ResaScreen = () => {
           return {
             ...tranche,
             selectedOption: optionId
-            
+
           };
         }
         return {
@@ -1042,7 +1042,7 @@ const ResaScreen = () => {
           break;
         }
         // Ouvrir l'URL de paiement
-        setPaymentUrl(jsonObject.redirectUrl); 
+        setPaymentUrl(jsonObject.redirectUrl);
         break;
 
       case "validateTeamLeader":
@@ -1052,7 +1052,7 @@ const ResaScreen = () => {
       case "setMassResaTeam":
         setMassResaTeam(jsonObject);
         break;
-        
+
       case "sendTeamResaMail":
         if (jsonObject.status === "KO") {
           showAlert(jsonObject.error, "OK");
@@ -1124,7 +1124,7 @@ const ResaScreen = () => {
     }
   };
 
-  
+
   // Fonction getResaMember
   const getResaMember = (jsonObject: any) => {
     setGlobalProperty('shotgun', jsonObject.duree_trou == '0');
@@ -1248,7 +1248,7 @@ const ResaScreen = () => {
 
     // Mettre à jour les membres dans GlobalProperties
     if (jsonObject.identMember && Array.isArray(jsonObject.identMember)) {
-      
+
       let updatedMembers = [...jsonObject.identMember];
 
       // Si on est en mode incomplet, ajouter le joueur connecté à la liste des membres
@@ -1258,7 +1258,7 @@ const ResaScreen = () => {
         const connectedUserAlreadyInTeam = updatedMembers.some(member => member.licence === connectedUserLicence);
         // Si le joueur connecté n'est pas déjà dans l'équipe, l'ajouter
         if (!connectedUserAlreadyInTeam) {
-          
+
           const connectedUser = allUsersList.find((u: any) => u.licence === connectedUserLicence);
           if (connectedUser) {
             updatedMembers.push({
@@ -1338,7 +1338,7 @@ const ResaScreen = () => {
       setGlobalProperty('licence', jsonObject.licence);
       setGlobalProperty('teamLeaderNomPrenom', jsonObject.nom_prenom);
     }
-    
+
     displayResaManagement(jsonObject);
   };
 
@@ -1374,7 +1374,9 @@ const ResaScreen = () => {
         periode: getGlobalProperties().labelPeriode,
         duree_trou: getGlobalProperties().duree_trou,
         isResaRepas: jsonObject.isResaRepas,
-        resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
+        resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false])
+          .map((item: any) => normalizeRepasValue(item) ? '1' : '0')
+          .join(','),
         ...buildMenuPayload(),
         licence: jsonObject.licence,
         isMobile: '1',
@@ -1478,7 +1480,7 @@ const ResaScreen = () => {
         const trancheId = globalTrancheIds[index] || tranche.id;
      const options = tranche.options.map(option => ({
             ...option,
-            isActive: index < nbTranches && !(getGlobalProperties().shotgun &&  option.id !== 1 ), 
+            isActive: index < nbTranches && !(getGlobalProperties().shotgun &&  option.id !== 1 ),
           }));
         let selectedOption: number | undefined;
 
@@ -1641,6 +1643,7 @@ const ResaScreen = () => {
     }
 
     const hasChanged = JSON.stringify(getGlobalProperties().allResaRepas) !== JSON.stringify(getGlobalProperties().allResaRepasSave);
+
     const setResaMemberData = {
       operationType: 'setResaMember',
       action: "terminate",
@@ -1653,7 +1656,9 @@ const ResaScreen = () => {
       //jauge: getGlobalProperties().jauge, A supprimer dans une prochaine version
       licence: getGlobalJsonObject().licence,
       civilite: getGlobalJsonObject().civilite,
-      resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
+      resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false])
+        .map((item: any) => normalizeRepasValue(item) ? '1' : '0')
+        .join(','),
       isEclectic: getGlobalJsonObject().isEclectic,
       isResaRepas: getGlobalJsonObject().isResaRepas == '1' ? true : false,
       ...buildMenuPayload(),
@@ -1791,7 +1796,9 @@ const ResaScreen = () => {
         periode: jsonObject.periode,
         duree_trou: getGlobalProperties().duree_trou,
         isResaRepas: jsonObject.isResaRepas,
-        resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
+        resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false])
+          .map((item: any) => normalizeRepasValue(item) ? '1' : '0')
+          .join(','),
         ...buildMenuPayload(),
         licence: jsonObject.licence,
         isMobile: '1',
@@ -1941,7 +1948,6 @@ const ResaScreen = () => {
       };
       setTeamMembersRemoveData(removedMembersRemoveData);
     }
-    //const _resaRepas = (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(',');
     const donnees = {
       operationType: 'sendTeamResaMail',
       action: jsonObject.action,
@@ -1956,7 +1962,13 @@ const ResaScreen = () => {
       periode: jsonObject.periode.substring(jsonObject.periode.indexOf('>--') + 2, jsonObject.periode.indexOf('-<')),
       duree_trou: getGlobalProperties().duree_trou,
       isResaRepas: jsonObject.isResaRepas === "1" ? true : false,
-      resa_repas: getGlobalProperties().allResaRepas.length == 4 ? getGlobalProperties().allResaRepas : (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
+      resa_repas: getGlobalProperties().allResaRepas?.length === 4
+        ? getGlobalProperties().allResaRepas.map(
+            (item: any) => normalizeRepasValue(item) ? 1 : 0
+          )
+        : (getGlobalProperties().allResaRepas || [false, false, false, false])
+            .map((item: any) => normalizeRepasValue(item) ? '1' : '0')
+            .join(','),
       ...buildMenuPayload(),
       nbrScramblePlayers: getGlobalProperties().nbrScramblePlayers,
       isComplete: getGlobalProperties().isComplete,
@@ -1973,7 +1985,7 @@ const ResaScreen = () => {
         setTeamMembersRemoveData(null);
       }
   }, [teamMembersRemoveData]);
-  
+
   const getNumberOfUsedDropdowns = (): number => {
   // On suppose que selectedValues est accessible dans ce contexte
     return selectedValues.filter(value => value && value.trim() !== "").length;
@@ -2152,7 +2164,12 @@ const ResaScreen = () => {
         //jauge: getGlobalProperties().jauge, A supprimer dans une prochaine version
         licence: getGlobalJsonObject().licence,
         civilite: getGlobalJsonObject().civilite,
-        resa_repas: (getGlobalProperties().allResaRepas || [false, false, false, false]).map((item: any) => item ? '1' : '0').join(','),
+        resa_repas: Array.from({ length: 4 }, (_, index) =>
+          String(getGlobalJsonObject().isResaRepas) === '1' &&
+          normalizeRepasValue(getGlobalProperties().allResaRepas?.[index])
+            ? '1'
+            : '0'
+        ).join(','),
         isEclectic: getGlobalJsonObject().isEclectic,
         isResaRepas: getGlobalJsonObject().isResaRepas == '1' ? true : false,
         ...buildMenuPayload(),
@@ -2193,8 +2210,8 @@ const ResaScreen = () => {
     if (resaRecord && getGlobalJsonObject().isResaRepas != '1') {
       fetchDataFromServer(resaRecord);
     }
-  } , [resaRecord]);
-  
+  }, [resaRecord]);
+
   useEffect(() => {
     if (
       initialRender.current ||
@@ -2956,7 +2973,7 @@ const styles = StyleSheet.create({
   placeholderStyle: {
     fontSize: 14,
     color: '#333',
-    
+
   },
   emptyListContainer: {
     padding: 20,

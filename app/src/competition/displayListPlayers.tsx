@@ -13,6 +13,7 @@ interface Player {
   cb?: string;
   repere?: string;
   licence?: string;
+  resa_repas?: string | number;
 }
 
 interface ExpectedPaymentResultParams {
@@ -97,45 +98,67 @@ const DisplayListPlayers = () => {
     setCheckedItems(prev => ({ ...prev, [licence]: newValue }));
   }, []);
 
+  /**
+   * Affiche les entêtes des colonnes des joueurs.
+   * Les largeurs sont communes aux entêtes et aux lignes.
+   */
   const HeaderRow = () => (
-    <View style={[styles.headerRow, isLargeFont && styles.headerRowLargeFont,]}>
-      <View style={[styles.cell, styles.titleCell, { justifyContent: 'center' }]}>
+    <View style={[
+      styles.headerRow,
+      isLargeFont && styles.headerRowLargeFont,
+    ]}>
+      <View style={[styles.cell, styles.titleCell]}>
         <Text
-          style={styles.headerText}
-          maxFontSizeMultiplier={1.0}
+          style={[styles.headerText, { textAlign: 'left' }]}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
         >
-          Titre
+          Joueur
         </Text>
       </View>
 
-      <View style={[styles.cell, styles.serieCell, { justifyContent: 'center' }]}>
+      <View style={[styles.cell, styles.serieCell]}>
         <Text
           style={styles.headerText}
-          maxFontSizeMultiplier={1.0}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
         >
           Série
         </Text>
       </View>
 
-      <View style={[styles.cell, styles.indexCell, { justifyContent: 'center' }]}>
+      <View style={[styles.cell, styles.indexCell]}>
         <Text
           style={styles.headerText}
-          maxFontSizeMultiplier={1.0}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
         >
           Index
+        </Text>
+      </View>
+
+      <View style={[styles.cell, styles.repasCell]}>
+        <Text
+          style={styles.headerText}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
+        >
+          Repas
         </Text>
       </View>
 
       <View style={[styles.cell, styles.cbCell]}>
         <Text
           style={styles.headerText}
-          maxFontSizeMultiplier={1.0}
+          maxFontSizeMultiplier={1}
+          numberOfLines={1}
         >
           CB
         </Text>
       </View>
     </View>
   );
+
   const TitleRow = ({ item }: { item: Player }) => {
     const htmlContent = item.title.includes('<')
       ? item.title
@@ -198,7 +221,17 @@ const DisplayListPlayers = () => {
             {item.whs_index}
           </Text>
         </View>
-
+        <View style={[styles.cell, styles.repasCell]}>
+          {String(item.resa_repas) === '1' && (
+            <Text
+              style={styles.repasCheck}
+              accessibilityLabel="Repas réservé"
+              maxFontSizeMultiplier={1}
+            >
+              ✓
+            </Text>
+          )}
+        </View>
         <View style={[styles.cell, styles.cbCell]}>
           {licence && (
             <Checkbox
@@ -358,12 +391,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 20,
   },
-  headerText: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#000',
-  },
+
   headerTitleCell: {
     flex: 0.9,
     fontWeight: 'bold',
@@ -383,30 +411,12 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     width: '100%',
-  },
-  cell: {
-    paddingHorizontal: 8,
-  },
-  titleCell: {
-    flex: 3,
-  },
-  serieCell: {
-    flex: 1,
-  },
-  indexCell: {
-    flex: 1,
-  },
-  cbCell: {
-    flex: 0.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ translateY: 3 }],
   },
   separator: {
     height: 1,
@@ -509,13 +519,47 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     alignItems: 'center',
   },
-
   headerRowLargeFont: {
     height: 56,
     paddingVertical: 4,
   },
   playerCell: {
     justifyContent: 'center',
+  },
+  headerText: {
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#28292b',
+  },
+  cell: {
+    paddingHorizontal: 2,
+  },
+  titleCell: {
+    flex: 2,
+  },
+  serieCell: {
+    flex: 0.9,
+    alignItems: 'center',
+  },
+  indexCell: {
+    flex: 0.65,
+    alignItems: 'center',
+  },
+  cbCell: {
+    flex: 0.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  repasCell: {
+    flex: 0.75,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  repasCheck: {
+    color: '#16803c',
+    fontSize: 19,
+    fontWeight: '700',
   },
 });
 

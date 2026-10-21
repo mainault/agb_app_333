@@ -2,7 +2,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import { Ionicons } from '@expo/vector-icons';
 
 interface DropdownCompetitionProps {
   competitions: any[];
@@ -28,6 +27,19 @@ const DropdownCompetition: React.FC<DropdownCompetitionProps> = ({
       : label;
   };
 
+  const competitionOptions = competitions.map((competition) => {
+    const date = String(competition.date_competition ?? '').trim();
+    const jourMois = /^\d{2}-\d{2}-\d{4}$/.test(date)
+      ? date.substring(0, 5)
+      : '';
+
+    return {
+      ...competition,
+      label: (jourMois ? `${jourMois} — ` : '') +
+        competition.nom_competition,
+    };
+  });
+
   return (
     <Dropdown
         style={styles.dropdown}
@@ -35,9 +47,9 @@ const DropdownCompetition: React.FC<DropdownCompetitionProps> = ({
         selectedTextStyle={styles.selectedTextStyle}
         inputSearchStyle={styles.inputSearchStyle}
         iconStyle={styles.iconStyle}
-        data={competitions}
+        data={competitionOptions}
         maxHeight={250}
-        labelField="nom_competition"
+        labelField="label"
         valueField="competition_key"
         placeholder="Sélectionnez une compétition"
         search={showSearch}
@@ -53,7 +65,7 @@ const DropdownCompetition: React.FC<DropdownCompetitionProps> = ({
             numberOfLines={1} // Empêche le multi-ligne
             ellipsizeMode="tail" // Ajoute "..." si le texte est trop long
           >
-            {truncateLabel(item.nom_competition)}
+            {truncateLabel(item.label)}
           </Text>
         </View>
       )}

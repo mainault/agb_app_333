@@ -19,6 +19,7 @@ interface Competition {
   tarif_enfant?: string;
   tarif_membre?: string;
   formule?: string;
+  date_competition?: string;
 }
 
 interface ASTarifs {

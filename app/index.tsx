@@ -8,17 +8,30 @@ import {
   Alert,
   Linking,
   Platform,
-  BackHandler
+  BackHandler,
+  TouchableOpacity
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import ScreenContainer from './src/components/ScreenContainer';
 import MenuModal from './src/components/MenuModal';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { isVersionLower } from './src/utils/version';
+import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 
 import {
+  isMemberAuthenticated,
+  setMemberAuthenticated,
+  resetGlobalReturnResaMember,
+  resetGlobalIdentMember,
+  resetGlobalOrphanList,
+  resetGlobalUserOrphanList,
+  resetGlobalPlayerRanking,
+  resetGlobalPlayerRankingRS,
+  setGlobalPlayerForScores,
+  resetGlobalCurrentCompetition,
+  resetGlobalCovoiturageObject,
   resetGlobalAsTarifs,
   resetGlobalJsonObject,
   resetGlobalJsonObjectForRanking,
@@ -152,6 +165,8 @@ const menus: MenuItemType[] = [
 
 export default function Index() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [memberConnected, setMemberConnected] = useState(() => isMemberAuthenticated());
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const isFocused = useIsFocused();
@@ -188,6 +203,46 @@ export default function Index() {
 
     return () => backHandler.remove();
   }, [isFocused, menuVisible]);
+
+  useEffect(() => {
+    if (isFocused) setMemberConnected(isMemberAuthenticated());
+  }, [isFocused]);
+
+  const clearMemberContext = () => {
+    resetGlobalJsonObject();
+    resetGlobalResaMember();
+    resetGlobalProperties();
+    resetGlobalPlayersList();
+    resetGlobalPaymentsList();
+    resetGlobalUsersList();
+    resetGlobalTeamLeader();
+    resetGlobalJsonObjectForRanking();
+    resetGlobalAsTarifs();
+    resetGlobalReturnResaMember();
+    resetGlobalIdentMember();
+    resetGlobalOrphanList();
+    resetGlobalUserOrphanList();
+    resetGlobalPlayerRanking();
+    resetGlobalPlayerRankingRS();
+    setGlobalPlayerForScores({});
+    resetGlobalCurrentCompetition();
+    resetGlobalCovoiturageObject();
+  };
+
+  const handleSignOut = () => {
+    setMenuVisible(false);
+    setMemberAuthenticated(false);
+    setMemberConnected(false);
+    clearMemberContext();
+
+    router.dismissAll();
+    router.replace('/');
+
+    void showAlert(
+      "Changer de compte",
+      "Choisissez une action (menu), puis validez le compte proposé ou choisissez un autre compte."
+    );
+  };
 
   // 🔧 Reset global data
   useEffect(() => {
@@ -332,7 +387,7 @@ export default function Index() {
   };
 
   const handleMenuPress = () => {
-    setMenuVisible(!menuVisible);
+    if (!isSigningOut) setMenuVisible(!menuVisible);
   };
 
   return (
@@ -359,6 +414,20 @@ export default function Index() {
         </ImageBackground>
       </View>
 
+      {memberConnected && (
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={() => { void handleSignOut(); }}
+          disabled={isSigningOut}
+          accessibilityRole="button"
+          accessibilityLabel="Changer de compte"
+        >
+          <Text style={styles.signOutText}>
+            Changer de compte
+          </Text>
+        </TouchableOpacity>
+      )}
+
       <MenuModal
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
@@ -370,6 +439,23 @@ export default function Index() {
 
 // 🎨 STYLES
 const styles = StyleSheet.create({
+  signOutButton: {
+    alignSelf: 'center',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#3182ce',
+    borderRadius: 8,
+    backgroundColor: '#edf2f7',
+  },
+  signOutText: {
+    color: '#3182ce',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: 'white',

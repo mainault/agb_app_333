@@ -840,15 +840,14 @@ const MesScores = () => {
 
   const trouColumnWidth = 40;
 
+  const availableWidth = windowWidth - trouColumnWidth;
+
   const tourColumnWidth =
-    (windowWidth - trouColumnWidth) /
-    columnCount;
+    globalJsonObject.isEclectic === 'isRingerScore'
+      ? Math.max(44, availableWidth / Math.max(columnCount, 1))
+      : availableWidth / Math.max(columnCount, 1);
 
-  const tableWidth = windowWidth;
-
-  const getTableMaxHeight = () => {
-
-  };
+  const tableWidth = trouColumnWidth + tourColumnWidth * columnCount;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1066,57 +1065,40 @@ const MesScores = () => {
             style={styles.loader}
           />
         ) : (
-          <View
-            style={
-              styles.tableOuterContainer
-            }
-          >
-            <View
-              style={[
-                styles.tableContainer,
-                {
-                  width: tableWidth,
-                },
-              ]}
-            >
-              {renderHeader()}
+<View style={styles.tableOuterContainer}>
+  <ScrollView
+    horizontal
+    nestedScrollEnabled
+    showsHorizontalScrollIndicator
+    style={{ flex: 1 }}
+    contentContainerStyle={{ minWidth: windowWidth }}
+  >
+    <View
+      style={{
+        width: tableWidth,
+        alignSelf: 'stretch',
+      }}
+    >
+      {renderHeader()}
 
-              <ScrollView
-                nestedScrollEnabled
-                style={styles.scrollView}
-                contentContainerStyle={
-                  styles.scoreRowsContainer
-                }
-                showsVerticalScrollIndicator={
-                  true
-                }
-              >
-                {trouRows.map(
-                  (row, index) =>
-                    renderScoreRow(
-                      row,
-                      index
-                    )
-                )}
-              </ScrollView>
+      <ScrollView
+        nestedScrollEnabled
+        style={styles.scrollView}
+        contentContainerStyle={styles.scoreRowsContainer}
+        showsVerticalScrollIndicator
+      >
+        {trouRows.map((row, index) =>
+          renderScoreRow(row, index)
+        )}
+      </ScrollView>
 
-              <View
-                style={
-                  styles.brutNetContainer
-                }
-              >
-                {renderScoreRow(
-                  brutRow,
-                  18
-                )}
-
-                {renderScoreRow(
-                  netRow,
-                  19
-                )}
-              </View>
-            </View>
-          </View>
+      <View style={styles.brutNetContainer}>
+        {renderScoreRow(brutRow, 18)}
+        {renderScoreRow(netRow, 19)}
+      </View>
+    </View>
+  </ScrollView>
+</View>
         )}
 
         {renderScoreCardModal()}

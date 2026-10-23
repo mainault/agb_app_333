@@ -1,10 +1,10 @@
 // app/subMenu/Login.tsx
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getGlobalJsonObject, getGlobalJsonObjectForRanking, getGlobalOrphanList, getGlobalProperties, getGlobalUserOrphanList, resetGlobalJsonObject, resetGlobalJsonObjectForRanking, resetGlobalOrphanList, setGlobalIdentMember, setGlobalJsonObject, setGlobalJsonObjectForRanking, setGlobalOrphanList, setGlobalProperty, setGlobalUserOrphanList, setGlobalUsersList } from '../src//store/GlobalPropertiesManager';
+import { isMemberAuthenticated, setMemberAuthenticated, getGlobalJsonObject, getGlobalJsonObjectForRanking, getGlobalOrphanList, getGlobalProperties, getGlobalUserOrphanList, resetGlobalJsonObject, resetGlobalJsonObjectForRanking, resetGlobalOrphanList, setGlobalIdentMember, setGlobalJsonObject, setGlobalJsonObjectForRanking, setGlobalOrphanList, setGlobalProperty, setGlobalUserOrphanList, setGlobalUsersList } from '../src//store/GlobalPropertiesManager';
 import CustomButton from '../src/components/CustomButton';
 import ScreenContainer from '../src/components/ScreenContainer';
 import { sendRequest } from '../src/utils/api';
@@ -56,23 +56,48 @@ const LoginScreen = () => {
   const [newPasswordError, setNewPasswordError] = useState('');
   const [showChangePassword, setShowChangePassword] = useState(false); // État pour afficher/masquer la section de changement de mot de passe
 
+  const [credentialsLoaded, setCredentialsLoaded] = useState(false);
+  const [automaticLogin, setAutomaticLogin] = useState(() => isMemberAuthenticated());
+  const automaticLoginStarted = useRef(false);
+
   const togglePasswordVisibility = () => setIsPasswordVisible(!isPasswordVisible);
   const toggleNewPasswordVisibility = () => setIsNewPasswordVisible(!isNewPasswordVisible);
   const toggleConfirmNewPasswordVisibility = () => setIsConfirmNewPasswordVisible(!isConfirmNewPasswordVisible);
 
   useEffect(() => {
-  const loadCredentials = async () => {
-    const savedEmail = await SecureStore.getItemAsync('agb_email');
-    const savedPassword = await SecureStore.getItemAsync('agb_password');
-    if (savedEmail) setEmail(savedEmail);
-    if (savedPassword) setPassword(savedPassword);
-  };
-  loadCredentials();
+    let cancelled = false;
+
+    const loadCredentials = async () => {
+      try {
+        const savedEmail = await SecureStore.getItemAsync('agb_email');
+        const savedPassword = await SecureStore.getItemAsync('agb_password');
+        if (cancelled) return;
+
+        setEmail(savedEmail ?? '');
+        setPassword(savedPassword ?? '');
+
+        if (!savedEmail || !savedPassword) {
+          setMemberAuthenticated(false);
+          setAutomaticLogin(false);
+        }
+      } catch {
+        if (cancelled) return;
+        setMemberAuthenticated(false);
+        setAutomaticLogin(false);
+        void showAlert("Connexion", "Impossible de lire les identifiants mémorisés.");
+      } finally {
+        if (!cancelled) setCredentialsLoaded(true);
+      }
+    };
+
+    void loadCredentials();
+    return () => { cancelled = true; };
   }, []);
 
   const saveCredentials = async () => {
+    const effectivePassword = showChangePassword && newPassword ? newPassword : password;
     await SecureStore.setItemAsync('agb_email', email);
-    await SecureStore.setItemAsync('agb_password', password);
+    await SecureStore.setItemAsync('agb_password', effectivePassword);
   };
 
   const validateFields = () => {
@@ -113,10 +138,11 @@ const LoginScreen = () => {
   };
 
   const handleLogin = async () => {
-    if (!validateFields()) return;
-
-    await SecureStore.setItemAsync('agb_email', email);
-    await SecureStore.setItemAsync('agb_password', password);
+    if (!validateFields()) {
+      setMemberAuthenticated(false);
+      setAutomaticLogin(false);
+      return;
+    }
 
     let action = subMenuTitle.includes("Classement")
       ? "classement"
@@ -155,27 +181,42 @@ const LoginScreen = () => {
       userLogin: email,
       userPassword: password,
     };
-    fetchDataFromServer(donnees as any);
+    await fetchDataFromServer(donnees as any);
   }
 
   const fetchDataFromServer = async (donnees: any) => {
     try {
       setIsLoading(true);
-      getServerResponse(await sendRequest(donnees));
+      await getServerResponse(await sendRequest(donnees));
     } catch (error) {
       console.error("Erreur :", error);
       showAlert("Erreur", "Problème de connexion.");
-      throw error;
+      setAutomaticLogin(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   // Fonction de dispatch des réponses du serveur
-  const getServerResponse = (jsonObject: any) => {
+  const getServerResponse = async (jsonObject: any) => {
     setIsLoading(false);
     switch(jsonObject.operationType){
       case "validateUserLogin":
+        if (jsonObject.status !== "OK") {
+          setMemberAuthenticated(false);
+          setAutomaticLogin(false);
+        } else {
+          // Les identifiants sont conservés uniquement après validation serveur.
+          setMemberAuthenticated(true);
+          setGlobalProperty('nbrAttempt', 0);
+          try {
+            await saveCredentials();
+          } catch {
+            // La navigation reste possible, mais le prochain accès sera manuel.
+            setMemberAuthenticated(false);
+            void showAlert("Connexion", "Impossible de mémoriser les identifiants.");
+          }
+        }
         if(jsonObject.status == "KO"){
           if (getGlobalProperties().nbrAttempt === 0) {
               setGlobalProperty('nbrAttempt', 1);
@@ -194,6 +235,8 @@ const LoginScreen = () => {
             return;
           }
         }
+        if (jsonObject.status !== "OK") return;
+
         if(subMenuTitle === "Compléter équipe" && (jsonObject.teamLeader === "OK" || jsonObject.teamMember === "OK")){
           const labelError = jsonObject.teamLeader === "OK" ? "Vous êtes déjà Capitaine d'une équipe" : "Vous êtes déjà Membre d'une équipe";
           showAlert("Information", labelError);
@@ -216,9 +259,9 @@ const LoginScreen = () => {
           setGlobalJsonObject(jsonObject);
         }
         if(!validateUserLogin()){
+          setAutomaticLogin(false);
           return;
         }
-        saveCredentials();
 
         // Gestion du dispatch en fonction du sous-menu  ou présence covoiturage
         switch (normalizedSubMenuTitle) {
@@ -729,6 +772,27 @@ const LoginScreen = () => {
       }
     );
   };
+
+  // L'effet utilise le traitement courant, avec le contexte du menu courant.
+  const automaticLoginHandler = useRef(handleLogin);
+  automaticLoginHandler.current = handleLogin;
+
+  useEffect(() => {
+    if (!credentialsLoaded || !automaticLogin || automaticLoginStarted.current) return;
+    automaticLoginStarted.current = true;
+    void automaticLoginHandler.current();
+  }, [credentialsLoaded, automaticLogin]);
+
+  if (!credentialsLoaded || automaticLogin) {
+    return (
+      <ScreenContainer showHeader={true}>
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#3182ce" />
+          <Text style={{ textAlign: 'center', marginTop: 12 }}>Chargement…</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer showHeader={true}>

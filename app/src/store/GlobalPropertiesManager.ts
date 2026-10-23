@@ -553,13 +553,14 @@ export const resetGlobalAppVersionObject = () => {
   };
 };
 
+// Connexion validée pendant l'exécution courante de l'application.
+// Indépendante du contexte des menus et des compétitions.
+let memberAuthenticated = false;
 
+export const isMemberAuthenticated = (): boolean => memberAuthenticated;
 
-
-
-
-
-
-
+export const setMemberAuthenticated = (authenticated: boolean): void => {
+  memberAuthenticated = authenticated;
+};
 
 export default globalpropertiesManagerRoute; // Export par défaut requis par expo-router

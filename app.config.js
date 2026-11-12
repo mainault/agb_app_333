@@ -58,6 +58,10 @@ export default ({ config }) => {
       [
         "expo-build-properties",
         {
+          android: {
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+          },
           ios: {
             useFrameworks: "static",
             extraPods: [

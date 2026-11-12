@@ -55,6 +55,10 @@ const DropdownCompetition: React.FC<DropdownCompetitionProps> = ({
         search={showSearch}
         searchPlaceholder={`\u{1F50D} Rechercher...`}
         value={selectedCompetition}
+        selectedTextProps={{
+          numberOfLines: 1,
+          ellipsizeMode: 'tail',
+        }}
         onChange={(item) => {
           onSelect(item.competition_key);
         }}

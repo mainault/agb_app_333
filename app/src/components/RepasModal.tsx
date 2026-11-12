@@ -1,12 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { Checkbox } from 'react-native-paper';
 
 import CustomButton from './CustomButton';
 
-import { getGlobalJsonObject, getGlobalTeamLeader, setGlobalProperty } from '../store/GlobalPropertiesManager';
+import {
+  getGlobalJsonObject,
+  getGlobalTeamLeader,
+  setGlobalProperty,
+} from '../store/GlobalPropertiesManager';
 
 /*
  * Définition du menu proposé par la compétition.
@@ -70,15 +83,9 @@ export interface JoueurRepas {
 interface RepasModalProps {
   visible: boolean;
 
-  onValidate: (
-    repasData: JoueurRepas[],
-    repasArray: boolean[],
-  ) => void;
+  onValidate: (repasData: JoueurRepas[], repasArray: boolean[]) => void;
 
-  onClose: (
-    repasData: JoueurRepas[],
-    repasArray: boolean[],
-  ) => void;
+  onClose: (repasData: JoueurRepas[], repasArray: boolean[]) => void;
 
   joueurs: {
     id: string;
@@ -88,6 +95,10 @@ interface RepasModalProps {
   nbJoueursMax?: number;
 
   selectedValues: string[];
+
+  // Contexte explicite pour l'administration ; le parcours joueur garde son contexte global.
+  initialData?: JoueurRepas[];
+  menuDefinition?: Partial<MenuRepas> | Partial<MenuRepas>[] | null;
 }
 
 const EMPTY_MENU: MenuRepas = {
@@ -114,7 +125,9 @@ const EMPTY_MENU: MenuRepas = {
  *         ...
  *     }
  */
-const normalizeMenuRepas = (value: Partial<MenuRepas> | Partial<MenuRepas>[] | null | undefined): MenuRepas => {
+const normalizeMenuRepas = (
+  value: Partial<MenuRepas> | Partial<MenuRepas>[] | null | undefined,
+): MenuRepas => {
   const source = Array.isArray(value) ? value[0] : value;
 
   return {
@@ -182,21 +195,31 @@ const RepasModal = ({
   joueurs,
   nbJoueursMax = 4,
   selectedValues,
+  initialData,
+  menuDefinition,
 }: RepasModalProps) => {
-  const globalJsonObject = getGlobalJsonObject();
+  const globalJsonObject =
+    initialData !== undefined
+      ? { menu_repas: menuDefinition, resa_repas: [] }
+      : getGlobalJsonObject();
 
   /*
    * Repas déjà enregistrés par le backend.
    */
-  const existingRepas =
-    Array.isArray(globalJsonObject.resa_repas)
-      ? globalJsonObject.resa_repas.slice(0, 4)
-      : [false, false, false, false];
+  const existingRepas = Array.isArray(globalJsonObject.resa_repas)
+    ? globalJsonObject.resa_repas.slice(0, 4)
+    : [false, false, false, false];
 
   /*
    * Définition du menu proposée par la compétition.
    */
-  const menus = useMemo(() => normalizeMenuRepas(globalJsonObject.menu_repas), [globalJsonObject.menu_repas, visible]);
+  const menus = useMemo(
+    () =>
+      normalizeMenuRepas(
+        initialData !== undefined ? menuDefinition : globalJsonObject.menu_repas,
+      ),
+    [menuDefinition, initialData, globalJsonObject.menu_repas, visible],
+  );
 
   /*
    * Le menu A est obligatoire.
@@ -211,17 +234,20 @@ const RepasModal = ({
    *
    * joueur.id correspond à la licence.
    */
-  const joueursSelectionnes = joueurs.filter(joueur => selectedValues.includes(joueur.id) && joueur.id.trim() !== '');
+  const joueursSelectionnes = joueurs.filter(
+    (joueur) => selectedValues.includes(joueur.id) && joueur.id.trim() !== '',
+  );
 
   /*
    * Pour une réservation individuelle, joueursSelectionnes
    * peut être vide alors que selectedValues[0] est renseigné.
    */
-  const finalJoueursSelectionnes = joueursSelectionnes.length > 0
-    ? joueursSelectionnes.slice(0, nbJoueursMax)
-    : selectedValues[0]
-      ? [joueurs[0]].filter(Boolean)
-      : [];
+  const finalJoueursSelectionnes =
+    joueursSelectionnes.length > 0
+      ? joueursSelectionnes.slice(0, nbJoueursMax)
+      : selectedValues[0]
+        ? [joueurs[0]].filter(Boolean)
+        : [];
 
   /*
    * Structure de référence pour les repas.
@@ -252,43 +278,67 @@ const RepasModal = ({
   });
 
   /*
-  * Initialisation de l'objet repas à l'ouverture de la
-  * fenêtre.
-  */
+   * Initialisation de l'objet repas à l'ouverture de la
+   * fenêtre.
+   */
   useEffect(() => {
     if (!visible) {
       return;
     }
 
+    if (initialData !== undefined) {
+      const byLicence = new Map(initialData.map((joueur) => [joueur.id, joueur]));
+      setRepasData(
+        finalJoueursSelectionnes.map((joueur) => {
+          const existing = byLicence.get(joueur.id);
+          return {
+            id: joueur.id,
+            nom: joueur.nom,
+            dejeune: existing?.dejeune === true,
+            choixMenu: existing?.choixMenu ?? null,
+          };
+        }),
+      );
+      setMenuSelections({});
+      setActivePlayer(null);
+      setMenuModalVisible(false);
+      return;
+    }
+
     const globalJsonObject = getGlobalJsonObject();
 
-    const isScramble = String(globalJsonObject.formule ?? '').toLowerCase().includes('scramble');
+    const isScramble = String(globalJsonObject.formule ?? '')
+      .toLowerCase()
+      .includes('scramble');
 
-    const reservationContext = isScramble ? getGlobalTeamLeader().globalTeamLeaderObject : globalJsonObject;
+    const reservationContext = isScramble
+      ? getGlobalTeamLeader().globalTeamLeaderObject
+      : globalJsonObject;
 
-    const existingRepas = Array.isArray(reservationContext.resa_repas) ? reservationContext.resa_repas : [];
+    const existingRepas = Array.isArray(reservationContext.resa_repas)
+      ? reservationContext.resa_repas
+      : [];
 
-    const existingMenus =
-      Array.isArray(reservationContext.resa_menu)
-        ? reservationContext.resa_menu
-        : reservationContext.resa_menu
-            ? [reservationContext.resa_menu]
-            : [];
+    const existingMenus = Array.isArray(reservationContext.resa_menu)
+      ? reservationContext.resa_menu
+      : reservationContext.resa_menu
+        ? [reservationContext.resa_menu]
+        : [];
     setRepasData(
-      finalJoueursSelectionnes.map(
-        (joueur, index) => ({
-          id: joueur.id,
-          nom: joueur.nom,
+      finalJoueursSelectionnes.map((joueur, index) => ({
+        id: joueur.id,
+        nom: joueur.nom,
 
-          dejeune: existingRepas[index] === true || existingRepas[index] === 1 || existingRepas[index] === '1',
+        dejeune:
+          existingRepas[index] === true ||
+          existingRepas[index] === 1 ||
+          existingRepas[index] === '1',
 
-          choixMenu:
-            existingMenus[index] != null &&
-            String(existingMenus[index]).trim() !== ""
-              ? String(existingMenus[index])
-              : null,
-        }),
-      ),
+        choixMenu:
+          existingMenus[index] != null && String(existingMenus[index]).trim() !== ''
+            ? String(existingMenus[index])
+            : null,
+      })),
     );
 
     setMenuSelections({});
@@ -302,7 +352,7 @@ const RepasModal = ({
   const repasArrayRef = useRef<boolean[]>([]);
 
   useEffect(() => {
-    repasArrayRef.current = repasData.map(repas => repas.dejeune);
+    repasArrayRef.current = repasData.map((repas) => repas.dejeune);
   }, [repasData]);
 
   const [buttonStates, setButtonState] = useState<Record<string, boolean>>({
@@ -310,7 +360,7 @@ const RepasModal = ({
   });
 
   const updateButtonState = (id: string, enabled: boolean) => {
-    setButtonState(previous => ({
+    setButtonState((previous) => ({
       ...previous,
       [id]: enabled,
     }));
@@ -327,8 +377,8 @@ const RepasModal = ({
    * également supprimé.
    */
   const handleDejeuneChange = (licence: string, value: boolean) => {
-    setRepasData(previous =>
-      previous.map(item =>
+    setRepasData((previous) =>
+      previous.map((item) =>
         item.id === licence
           ? {
               ...item,
@@ -341,7 +391,7 @@ const RepasModal = ({
     );
 
     if (!value) {
-      setMenuSelections(previous => {
+      setMenuSelections((previous) => {
         const next = { ...previous };
 
         delete next[licence];
@@ -352,14 +402,14 @@ const RepasModal = ({
   };
 
   /*
-  * Ouvre la fenêtre de choix pour le joueur sélectionné.
-  *
-  * Lors de la première ouverture, la sélection enregistrée
-  * pour le joueur est restaurée.
-  *
-  * Lors des ouvertures suivantes, la sélection modifiée
-  * localement est conservée.
-  */
+   * Ouvre la fenêtre de choix pour le joueur sélectionné.
+   *
+   * Lors de la première ouverture, la sélection enregistrée
+   * pour le joueur est restaurée.
+   *
+   * Lors des ouvertures suivantes, la sélection modifiée
+   * localement est conservée.
+   */
   const openMenuChoice = (joueur: JoueurRepas) => {
     const localChoice = menuSelections[joueur.id];
 
@@ -367,32 +417,32 @@ const RepasModal = ({
 
     if (localChoice) {
       /*
-      * Le joueur a déjà ouvert ou modifié son menu
-      * pendant cette session.
-      */
+       * Le joueur a déjà ouvert ou modifié son menu
+       * pendant cette session.
+       */
       initialSelection = localChoice;
     } else if (joueur.choixMenu && joueur.choixMenu.trim() !== '') {
       /*
-      * La valeur enregistrée est de la forme :
-      *
-      * E_AA,,,P_BB,D_AA,
-      */
-      const selectedItems = joueur.choixMenu.split(',').map(item => item.trim()).filter(item => item !== '');
-
+       * La valeur enregistrée est de la forme :
+       *
+       * E_AA,,,P_BB,D_AA,
+       */
+      // Restaurer les six positions historiques, sans imposer de préfixe aux libellés.
+      const selectedItems = joueur.choixMenu.split(',').map((item) => item.trim());
       initialSelection = {
-        entree: selectedItems.find(item => item.startsWith('E_')) ?? '',
-        plat: selectedItems.find(item => item.startsWith('P_')) ?? '',
-        dessert: selectedItems.find(item => item.startsWith('D_')) ?? '',
+        entree: selectedItems[0] || selectedItems[1] || '',
+        plat: selectedItems[2] || selectedItems[3] || '',
+        dessert: selectedItems[4] || selectedItems[5] || '',
       };
     } else {
       /*
-      * Aucun choix n'est encore enregistré :
-      * proposition par défaut du menu A.
-      */
+       * Aucun choix n'est encore enregistré :
+       * proposition par défaut du menu A.
+       */
       initialSelection = {
-        entree: menus.menu_A_E ?? "",
-        plat: menus.menu_A_P ?? "",
-        dessert: menus.menu_A_D ?? "",
+        entree: menus.menu_A_E ?? '',
+        plat: menus.menu_A_P ?? '',
+        dessert: menus.menu_A_D ?? '',
       };
     }
     setActivePlayer(joueur);
@@ -408,16 +458,34 @@ const RepasModal = ({
       return;
     }
 
+    const requiredChoices = [
+      [currentSelection.entree, menus.menu_A_E, menus.menu_B_E],
+      [currentSelection.plat, menus.menu_A_P, menus.menu_B_P],
+      [currentSelection.dessert, menus.menu_A_D, menus.menu_B_D],
+    ];
+    if (
+      requiredChoices.some(
+        ([selected, a, b]) =>
+          (a || b) && (!selected || (selected !== a && selected !== b)),
+      )
+    ) {
+      Alert.alert(
+        'Choix du menu',
+        'Choisissez une proposition dans chaque rubrique du menu.',
+      );
+      return;
+    }
+
     const choixMenu = buildMenuChoice(currentSelection, menus);
 
-    setMenuSelections(previous => ({
+    setMenuSelections((previous) => ({
       ...previous,
 
       [activePlayer.id]: currentSelection,
     }));
 
-    setRepasData(previous =>
-      previous.map(item =>
+    setRepasData((previous) =>
+      previous.map((item) =>
         item.id === activePlayer.id
           ? {
               ...item,
@@ -439,9 +507,21 @@ const RepasModal = ({
      * Lorsqu'un menu existe, chaque joueur prenant le repas
      * doit avoir ouvert et validé son choix.
      */
-    const joueursSansMenu = hasMenus ? repasData.filter(joueur => joueur.dejeune && !joueur.choixMenu) : [];
+    const joueursSansMenu = hasMenus
+      ? repasData.filter((joueur) => {
+          if (!joueur.dejeune) return false;
+          const parts = (joueur.choixMenu ?? '').split(',').map((item) => item.trim());
+          return [
+            [parts[0] || parts[1] || '', menus.menu_A_E, menus.menu_B_E],
+            [parts[2] || parts[3] || '', menus.menu_A_P, menus.menu_B_P],
+            [parts[4] || parts[5] || '', menus.menu_A_D, menus.menu_B_D],
+          ].some(
+            ([selected, a, b]) =>
+              (a || b) && (!selected || (selected !== a && selected !== b)),
+          );
+        })
+      : [];
     if (joueursSansMenu.length > 0) {
-      
       Alert.alert('Choix du menu', `Sélectionnez le menu de ${joueursSansMenu[0].nom}.`);
 
       return;
@@ -452,12 +532,14 @@ const RepasModal = ({
      *
      *     [true, false, ...]
      */
-    const repasArray = repasData.map(repas => repas.dejeune);
+    const repasArray = repasData.map((repas) => repas.dejeune);
 
     /*
      * Conservation du mécanisme déjà utilisé par resa.tsx.
      */
-    setGlobalProperty('allResaRepas', repasArray);
+    if (initialData === undefined) {
+      setGlobalProperty('allResaRepas', repasArray);
+    }
 
     /*
      * L'objet repas enrichi est retourné à resa.tsx.
@@ -468,7 +550,12 @@ const RepasModal = ({
     onClose(repasData, repasArray);
   };
 
-  const renderChoice = (label: 'A' | 'B', value: string | null, selectedValue: string, onSelect: (value: string) => void) => {
+  const renderChoice = (
+    label: 'A' | 'B',
+    value: string | null,
+    selectedValue: string,
+    onSelect: (value: string) => void,
+  ) => {
     if (!value) {
       return null;
     }
@@ -476,39 +563,18 @@ const RepasModal = ({
     const selected = selectedValue === value;
 
     return (
-      <TouchableOpacity
-        style={styles.menuOption}
-        onPress={() => onSelect(value)}
-      >
-        <View
-          style={[
-            styles.radioOuter,
-            selected &&
-              styles.radioOuterSelected,
-          ]}
-        >
-          {selected && (
-            <View
-              style={styles.radioInner}
-            />
-          )}
+      <TouchableOpacity style={styles.menuOption} onPress={() => onSelect(value)}>
+        <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
+          {selected && <View style={styles.radioInner} />}
         </View>
 
-        <Text
-          style={styles.menuOptionLabel}
-        >
-          {label}
-        </Text>
+        <Text style={styles.menuOptionLabel}>{label}</Text>
 
-        <TextInput
-          style={styles.menuOptionValue}
-          value={value}
-          editable={false}
-        />
+        <TextInput style={styles.menuOptionValue} value={value} editable={false} />
       </TouchableOpacity>
     );
   };
-    /*
+  /*
    * Gère le retour natif Android selon la vue courante.
    *
    * Lorsque le choix du menu est affiché, le retour revient à
@@ -543,9 +609,7 @@ const RepasModal = ({
       transparent
       onRequestClose={handleNativeBack}
     >
-      <View
-        style={styles.modalContainer}
-      >
+      <View style={styles.modalContainer}>
         {menuModalVisible ? (
           /*
            * Une seule modale native est utilisée.
@@ -553,193 +617,127 @@ const RepasModal = ({
            * La vue Menu remplace temporairement la vue Repas,
            * conformément au fonctionnement du client Web.
            */
-          <View
-            style={styles.menuModalContent}
-          >
-            <Text
-              style={styles.modalTitle}
-            >
-              Choix du menu
-            </Text>
+          <View style={styles.menuModalContent}>
+            <Text style={styles.modalTitle}>Choix du menu</Text>
 
-            <Text
-              style={styles.playerName}
-            >
-              {activePlayer?.nom}
-            </Text>
+            <Text style={styles.playerName}>{activePlayer?.nom}</Text>
 
             <ScrollView>
-              <Text
-                style={styles.menuSectionTitle}
-              >
-                Entrée
-              </Text>
+              <Text style={styles.menuSectionTitle}>Entrée</Text>
 
-              {renderChoice(
-                'A',
-                menus.menu_A_E,
-                currentSelection.entree,
-                value => setCurrentSelection(previous => ({ ...previous, entree: value })),
+              {renderChoice('A', menus.menu_A_E, currentSelection.entree, (value) =>
+                setCurrentSelection((previous) => ({ ...previous, entree: value })),
               )}
 
-              {renderChoice(
-                'B',
-                menus.menu_B_E,
-                currentSelection.entree,
-                value => setCurrentSelection(previous => ({ ...previous, entree: value })),
+              {renderChoice('B', menus.menu_B_E, currentSelection.entree, (value) =>
+                setCurrentSelection((previous) => ({ ...previous, entree: value })),
               )}
 
-              <Text
-                style={styles.menuSectionTitle}
-              >
-                Plat
-              </Text>
+              <Text style={styles.menuSectionTitle}>Plat</Text>
 
-              {renderChoice(
-                'A',
-                menus.menu_A_P,
-                currentSelection.plat,
-                value => setCurrentSelection(previous => ({ ...previous, plat: value })),
+              {renderChoice('A', menus.menu_A_P, currentSelection.plat, (value) =>
+                setCurrentSelection((previous) => ({ ...previous, plat: value })),
               )}
 
-              {renderChoice(
-                'B',
-                menus.menu_B_P,
-                currentSelection.plat,
-                value => setCurrentSelection(previous => ({ ...previous, plat: value })),
+              {renderChoice('B', menus.menu_B_P, currentSelection.plat, (value) =>
+                setCurrentSelection((previous) => ({ ...previous, plat: value })),
               )}
 
-              <Text
-                style={styles.menuSectionTitle}
-              >
-                Dessert
-              </Text>
+              <Text style={styles.menuSectionTitle}>Dessert</Text>
 
-              {renderChoice(
-                'A',
-                menus.menu_A_D,
-                currentSelection.dessert,
-                value => setCurrentSelection(previous => ({ ...previous, dessert: value })),
+              {renderChoice('A', menus.menu_A_D, currentSelection.dessert, (value) =>
+                setCurrentSelection((previous) => ({ ...previous, dessert: value })),
               )}
 
-              {renderChoice(
-                'B',
-                menus.menu_B_D,
-                currentSelection.dessert,
-                value => setCurrentSelection(previous => ({ ...previous, dessert: value })),
+              {renderChoice('B', menus.menu_B_D, currentSelection.dessert, (value) =>
+                setCurrentSelection((previous) => ({ ...previous, dessert: value })),
               )}
             </ScrollView>
 
-            <View
-              style={styles.menuActions}
-            >
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={closeMenuChoice}
-              >
-                <Text
-                  style={
-                    styles.secondaryButtonText
-                  }
-                >
-                  Quitter
-                </Text>
+            <View style={styles.menuActions}>
+              <TouchableOpacity style={styles.secondaryButton} onPress={closeMenuChoice}>
+                <Text style={styles.secondaryButtonText}>Quitter</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={saveMenuChoice}
-              >
-                <Text
-                  style={
-                    styles.primaryButtonText
-                  }
-                >
-                  Valider
-                </Text>
+              <TouchableOpacity style={styles.primaryButton} onPress={saveMenuChoice}>
+                <Text style={styles.primaryButtonText}>Valider</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
-          <View
-            style={styles.modalContent}
-          >
-            <Text
-              style={styles.modalTitle}
-            >
-              Réservation des repas
-            </Text>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Réservation des repas</Text>
 
             {repasData.length > 0 ? (
-              repasData.map(joueur => (
-                <View
-                  key={joueur.id}
-                  style={styles.joueurRow}
-                >
-                  <View
-                    style={styles.playerLine}
-                  >
+              repasData.map((joueur) => (
+                <View key={joueur.id} style={styles.joueurRow}>
+                  <View style={styles.playerLine}>
                     <View style={styles.checkboxContainer}>
                       <TouchableOpacity
                         style={styles.customCheckbox}
-                        onPress={() =>
-                          handleDejeuneChange(joueur.id, !joueur.dejeune)
-                        }
+                        onPress={() => handleDejeuneChange(joueur.id, !joueur.dejeune)}
                       >
                         {joueur.dejeune && (
                           <Text style={styles.customCheckboxCheck}>✓</Text>
                         )}
                       </TouchableOpacity>
-                        <Text style={styles.repasTitle}>
-                          Repas
-                        </Text>
+                      <Text style={styles.repasTitle}>Repas</Text>
                     </View>
-                    <Text
-                      style={styles.joueurNom}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
+                    <Text style={styles.joueurNom} numberOfLines={1} ellipsizeMode="tail">
                       {joueur.nom}
                     </Text>
                   </View>
 
-                  {hasMenus &&
-                    joueur.dejeune && (
-                      <TouchableOpacity
-                        style={styles.menuButton}
-                        onPress={() => openMenuChoice(joueur)}
-                      >
-                        <Text
-                          style={
-                            styles.menuButtonText
-                          }
-                        >
-                          {joueur.choixMenu
-                            ? 'Modifier le menu'
-                            : 'Choisir le menu'}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                  {hasMenus && joueur.dejeune && (
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      onPress={() => openMenuChoice(joueur)}
+                    >
+                      <Text style={styles.menuButtonText}>
+                        {joueur.choixMenu ? 'Modifier le menu' : 'Choisir le menu'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ))
             ) : (
-              <Text
-                style={styles.noPlayersText}
-              >
-                Aucun joueur sélectionné.
-              </Text>
+              <Text style={styles.noPlayersText}>Aucun joueur sélectionné.</Text>
             )}
 
-            <View
-              style={styles.buttonRow}
-            >
-              <CustomButton
-                id="valider-btn"
-                title="Valider"
-                onPress={handleValidate}
-                buttonStates={buttonStates}
-                setButtonState={updateButtonState}
-              />
+            <View style={styles.buttonRow}>
+              {initialData !== undefined ? (
+                <>
+                  <TouchableOpacity
+                    style={[styles.mealActionButton, styles.mealCancelButton]}
+                    onPress={() => onClose(repasData, repasArrayRef.current)}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.mealActionText, styles.mealCancelText]}>
+                      Annuler
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.mealActionButton,
+                      styles.mealValidateButton,
+                      repasData.length === 0 && styles.mealActionDisabled,
+                    ]}
+                    disabled={repasData.length === 0}
+                    onPress={handleValidate}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.mealActionText}>Valider</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <CustomButton
+                  id="valider-btn"
+                  title="Valider"
+                  onPress={handleValidate}
+                  buttonStates={buttonStates}
+                  setButtonState={updateButtonState}
+                />
+              )}
             </View>
           </View>
         )}
@@ -749,227 +747,257 @@ const RepasModal = ({
 };
 
 const styles = StyleSheet.create({
-    modalContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
 
-      backgroundColor:
-        'rgba(0, 0, 0, 0.5)',
-    },
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
 
-    modalContent: {
-      backgroundColor: '#7ea5c9ff',
-      borderRadius: 10,
-      padding: 20,
-      width: '90%',
-      maxWidth: 430,
+  modalContent: {
+    backgroundColor: '#7ea5c9ff',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    maxWidth: 430,
 
-      borderBottomWidth: 1,
-      borderBottomColor: 'black',
-    },
+    borderBottomWidth: 1,
+    borderBottomColor: 'black',
+  },
 
-    menuModalContent: {
-      backgroundColor: '#7ea5c9ff',
-      borderRadius: 10,
-      padding: 20,
-      width: '90%',
-      maxWidth: 430,
-      maxHeight: '82%',
-    },
+  menuModalContent: {
+    backgroundColor: '#7ea5c9ff',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    maxWidth: 430,
+    maxHeight: '82%',
+  },
 
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginBottom: 10,
-      textAlign: 'center',
-    },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
 
-    playerName: {
-      fontSize: 15,
-      fontWeight: 'bold',
-      textAlign: 'center',
-      marginBottom: 12,
-    },
+  playerName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
 
-    repasTitle: {
-      fontSize: 15,
-      fontWeight: 'bold',
-      marginLeft: 8,
-    },
+  repasTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
 
-    joueurRow: {
-      marginBottom: 12,
+  joueurRow: {
+    marginBottom: 12,
 
-      borderBottomWidth: 1,
-      borderBottomColor: '#eee',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
 
-      paddingBottom: 12,
-      width: '100%',
-    },
+    paddingBottom: 12,
+    width: '100%',
+  },
 
-    playerLine: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
+  playerLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 
-    joueurNom: {
-      flex: 1,
+  joueurNom: {
+    flex: 1,
 
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
 
-      padding: 8,
+    padding: 8,
 
-      backgroundColor: '#d9dae6ff',
-      fontSize: 14,
-    },
+    backgroundColor: '#d9dae6ff',
+    fontSize: 14,
+  },
 
-    checkboxContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginRight: 10,
-    },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
 
-    menuButton: {
-      alignSelf: 'flex-end',
+  menuButton: {
+    alignSelf: 'flex-end',
 
-      marginTop: 8,
+    marginTop: 8,
 
-      paddingVertical: 8,
-      paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
 
-      borderRadius: 5,
-      backgroundColor: '#2f8de4',
-    },
+    borderRadius: 5,
+    backgroundColor: '#2f8de4',
+  },
 
-    menuButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-    },
+  menuButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 
-    menuSectionTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
+  menuSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
 
-      marginTop: 12,
-      marginBottom: 5,
-    },
+    marginTop: 12,
+    marginBottom: 5,
+  },
 
-    menuOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
+  menuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
 
-      minHeight: 44,
-      paddingVertical: 6,
-    },
+    minHeight: 44,
+    paddingVertical: 6,
+  },
 
-    radioOuter: {
-      width: 24,
-      height: 24,
+  radioOuter: {
+    width: 24,
+    height: 24,
 
-      borderRadius: 12,
-      borderWidth: 2,
-      borderColor: '#1d1d1d',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#1d1d1d',
 
-      alignItems: 'center',
-      justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
 
-      marginRight: 10,
-    },
+    marginRight: 10,
+  },
 
-    radioOuterSelected: {
-      borderColor: '#138d3d',
-    },
+  radioOuterSelected: {
+    borderColor: '#138d3d',
+  },
 
-    radioInner: {
-      width: 12,
-      height: 12,
+  radioInner: {
+    width: 12,
+    height: 12,
 
-      borderRadius: 6,
-      backgroundColor: '#138d3d',
-    },
+    borderRadius: 6,
+    backgroundColor: '#138d3d',
+  },
 
-    menuOptionLabel: {
-      width: 24,
-      fontWeight: 'bold',
-    },
+  menuOptionLabel: {
+    width: 24,
+    fontWeight: 'bold',
+  },
 
-    menuOptionValue: {
-      flex: 1,
+  menuOptionValue: {
+    flex: 1,
 
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
 
-      padding: 8,
-      backgroundColor: '#d9dae6ff',
-    },
+    padding: 8,
+    backgroundColor: '#d9dae6ff',
+  },
 
-    buttonRow: {
-      flexDirection: 'row',
-      marginTop: 20,
-      justifyContent: 'flex-end',
-    },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+    justifyContent: 'flex-end',
+  },
+  mealActionButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 40,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mealCancelButton: {
+    backgroundColor: '#eef0f5',
+  },
+  mealValidateButton: {
+    backgroundColor: '#2f8de4',
+  },
+  mealActionText: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  mealCancelText: {
+    color: '#245b91',
+  },
+  mealActionDisabled: {
+    opacity: 0.5,
+  },
 
-    menuActions: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
+  menuActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
 
-      gap: 10,
-      marginTop: 18,
-    },
+    gap: 10,
+    marginTop: 18,
+  },
 
-    primaryButton: {
-      backgroundColor: '#2f8de4',
+  primaryButton: {
+    backgroundColor: '#2f8de4',
 
-      paddingVertical: 10,
-      paddingHorizontal: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
 
-      borderRadius: 5,
-    },
+    borderRadius: 5,
+  },
 
-    primaryButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-    },
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 
-    secondaryButton: {
-      backgroundColor: '#eef0f5',
+  secondaryButton: {
+    backgroundColor: '#eef0f5',
 
-      paddingVertical: 10,
-      paddingHorizontal: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
 
-      borderRadius: 5,
-    },
+    borderRadius: 5,
+  },
 
-    secondaryButtonText: {
-      color: '#1598bd',
-      fontWeight: 'bold',
-    },
+  secondaryButtonText: {
+    color: '#1598bd',
+    fontWeight: 'bold',
+  },
 
-    noPlayersText: {
-      textAlign: 'center',
-      fontSize: 16,
-      marginBottom: 15,
-    },
-    customCheckbox: {
-      width: 24,
-      height: 24,
-      borderWidth: 2,
-      borderColor: '#181717ff',
-      borderRadius: 3,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+  noPlayersText: {
+    textAlign: 'center',
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  customCheckbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#181717ff',
+    borderRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
-    customCheckboxCheck: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      lineHeight: 22,
-      color: '#099237ff',
-    },
-  });
+  customCheckboxCheck: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    lineHeight: 22,
+    color: '#099237ff',
+  },
+});
 
 export default RepasModal;

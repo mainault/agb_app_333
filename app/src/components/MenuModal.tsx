@@ -116,7 +116,7 @@ return (
                     >
                       <Text style={styles.menuItemText}>{item.name}</Text>
 
-                      {item.subMenus && (
+                      {(item.subMenus || item.screen) && (
                         <Ionicons
                           name="chevron-forward"
                           size={20}

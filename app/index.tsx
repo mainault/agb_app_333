@@ -15,8 +15,7 @@ import { useRouter } from 'expo-router';
 import ScreenContainer from './src/components/ScreenContainer';
 import MenuModal from './src/components/MenuModal';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { isVersionLower } from './src/utils/version';
-import * as SecureStore from 'expo-secure-store';
+import { isVersionLower } from '../utils/version';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 
@@ -151,7 +150,10 @@ const menus: MenuItemType[] = [
         },
       ],
     },
-
+    {
+      name: "Administration",
+      screen: "administration",
+    },
     {
       name: "Informations légales",
       subMenus: [

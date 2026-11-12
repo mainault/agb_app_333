@@ -2358,7 +2358,7 @@ const ResaScreen = () => {
   */
 
   const env = Constants.expoConfig?.extra?.env;
-  setGlobalProperty('site', env === 'development' ? 'dev' : 'production');
+  setGlobalProperty('site', env === 'production' ? 'production' : 'dev');
 
   // Construction des données initiales à envoyer au serveur en fonction du type de menu choisi
    let donnees: any = null;

@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useFocusEffect, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { sendRequest } from '../src/utils/api';
 import DropdownCompetition from '../src/components/DropdownCompetition';
 import ScreenContainer from './../src/components/ScreenContainer';
-import CustomButton from '../src/components/CustomButton';
-import { getGlobalAppVersionObject, getGlobalAppVersionProperty, getGlobalAsTarif, getGlobalAsTarifs, getGlobalProperties, setGlobalAppVersionObject, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
+import { getGlobalAppVersionObject, getGlobalProperties, setGlobalAsTarifs, setGlobalProperty } from '../src/store/GlobalPropertiesManager';
 import { showAlert } from '../src/utils/utilities';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CompetitionClass, getCompetitionClassForRequest, getCompetitionClassFromType } from '../src/utils/competitionClass';
 
 
@@ -22,14 +21,7 @@ interface Competition {
   date_competition?: string;
 }
 
-interface ASTarifs {
-  tarif_adulte: string;
-  tarif_enfant: string;
-  tarif_membre: string;
-}
-
 export default function ChoixCompetition() {
-  const [menuVisible, setMenuVisible] = useState(false);
   const { params, subMenuTitle, parentName, competitionType } = useLocalSearchParams<{
     name: string;
     subMenuTitle: string;
@@ -38,31 +30,19 @@ export default function ChoixCompetition() {
     params: any;
   }>();
 
-  // État pour gérer l'état de chaque bouton par son ID
-  const [buttonStates, setButtonStates] = useState<Record<string, boolean>>({
-    'valider-btn': true,
-    'abandonner-btn': true,
-  });
-
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCompetitionKey, setSelectedCompetitionKey] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<string | null>("");
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [multiCompetitionsList, setMultiCompetitionsList] = useState<Competition[]>([]);
-  const [asTarifs, setAsTarifs] = useState<ASTarifs | null>(null);
-  const [isOLPTransactionModalVisible, setIsOLPTransactionModalVisible] = useState(false);
-  const [selectedTarifType, setSelectedTarifType] = useState<'adulte' | 'enfant' | 'membre'>('adulte');
-  const insets = useSafeAreaInsets();
   const isCovoiturage = parentName === "Covoiturage";
 
-  // Fonction pour mettre à jour l'état d'un bouton
-  const setButtonState = (id: string, enabled: boolean) => {
-    setButtonStates(prev => ({
-      ...prev,
-      [id]: enabled,
-    }));
-  };
+  const navigationStarted = useRef(false);
+
+  useFocusEffect(useCallback(() => {
+    navigationStarted.current = false;
+  }, []));
 
   const requestServer = async (donnees: any) => {
     try {
@@ -195,6 +175,7 @@ export default function ChoixCompetition() {
 
   const handleOptionChange = (option: string) => {
     setSelectedOption(option);
+    setSelectedCompetitionKey(null);
     let isEclecticValue = "isNotEclectic";
     switch (option) {
       case "Eclectic":
@@ -232,15 +213,22 @@ export default function ChoixCompetition() {
 
   const selectedCompetitionName = getSelectedCompetitionAbstract()?.nom_competition || null;
 
-  const handleValider = () => {
-    if (!selectedCompetitionKey) {
+  const handleCompetitionSelect = (key: string) => {
+    if (navigationStarted.current) {
+      return;
+    }
+    const list = competitionType === "OLP" ? competitions : multiCompetitionsList;
+    const selectedCompetition = list.find(item => String(item.competition_key) === String(key));
+    if (!selectedCompetition) {
       showAlert("Erreur", "Veuillez sélectionner une compétition.");
       return;
     }
-    if(subMenuTitle === "Compléter équipe" && getSelectedCompetitionAbstract()?.formule.includes("Scramble") !== true) {
+    if(subMenuTitle === "Compléter équipe" && selectedCompetition.formule?.includes("Scramble") !== true) {
       showAlert("Erreur", "La fonctionnalité de compléter équipe n'est disponible que pour les compétitions en formule scramble.");
       return;
     }
+    navigationStarted.current = true;
+    setSelectedCompetitionKey(key);
     setGlobalProperty('sous_menu', subMenuTitle as string);
     setGlobalProperty('menu', parentName as string);
     router.push({
@@ -253,8 +241,8 @@ export default function ChoixCompetition() {
           selectedOption === "Ringer Score" ? "isRingerScore" :
           selectedOption === "Challenge hiver" ? "isEclectic-IS" : "isNotEclectic"
         ) : competitionType,
-        selectedCompetitionKey: competitionType === "OLP" ? "OLP" : selectedCompetitionKey,
-        selectedCompetitionName: selectedCompetitionName,
+        selectedCompetitionKey: competitionType === "OLP" ? "OLP" : key,
+        selectedCompetitionName: selectedCompetition.nom_competition,
       },
     });
   };
@@ -265,6 +253,16 @@ export default function ChoixCompetition() {
         appVersion={getGlobalAppVersionObject()?.latestVersion}
       >
         <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          hitSlop={8}
+        >
+          <Ionicons name="arrow-back" size={28} color="#183b66" />
+          <Text style={{ fontSize: 16, color: '#183b66', marginLeft: 6 }}>Retour</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>Choix de la compétition</Text>
         <Text style={styles.subtitle}>Formule : {parentName}</Text>
 
@@ -289,7 +287,7 @@ export default function ChoixCompetition() {
                 <DropdownCompetition
                   competitions={competitions}
                   selectedCompetition={selectedCompetitionKey}
-                  onSelect={setSelectedCompetitionKey}
+                  onSelect={handleCompetitionSelect}
                   maxLabelLength={40}
                   flatListProps={{
                     contentContainerStyle: { paddingVertical: 0 },
@@ -297,24 +295,6 @@ export default function ChoixCompetition() {
                   }}
                 />
               )}
-
-
-            <View style={styles.buttonsContainer}>
-              <CustomButton
-                id="abandonner-btn"
-                title="Abandonner"
-                onPress={() => router.back()}
-                buttonStates={buttonStates}
-                setButtonState={setButtonState}
-              />
-              <CustomButton
-                id="valider-btn"
-                title="Valider"
-                onPress={handleValider}
-                buttonStates={buttonStates}
-                setButtonState={setButtonState}
-              />
-            </View>
           </>
         ) : (
           <>
@@ -328,28 +308,12 @@ export default function ChoixCompetition() {
                   <DropdownCompetition
                     competitions={multiCompetitionsList}
                     selectedCompetition={selectedCompetitionKey}
-                    onSelect={setSelectedCompetitionKey}
+                    onSelect={handleCompetitionSelect}
                     maxLabelLength={40}
                     flatListProps={{
                       contentContainerStyle: { paddingVertical: 0 },
                       ItemSeparatorComponent: () => <View style={{ height: 1, backgroundColor: 'transparent' }} />
                     }}
-                  />
-                </View>
-                <View style={styles.buttonsContainer}>
-                  <CustomButton
-                    id="abandonner-btn"
-                    title="Abandonner"
-                    onPress={() => router.back()}
-                    buttonStates={buttonStates}
-                    setButtonState={setButtonState}
-                  />
-                  <CustomButton
-                    id="valider-btn"
-                    title="Valider"
-                    onPress={handleValider}
-                    buttonStates={buttonStates}
-                    setButtonState={setButtonState}
                   />
                 </View>
               </>
@@ -367,11 +331,12 @@ const styles = StyleSheet.create({
     height: "40%",
   },
 
-  buttonsContainer: {
+  backButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: "50%",
-    paddingHorizontal: 0,
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    marginBottom: 8,
   },
   container: {
     flex: 1,

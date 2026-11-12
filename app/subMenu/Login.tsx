@@ -742,15 +742,7 @@ const LoginScreen = () => {
   const getFormuleOfCurrentCompetition = (jsonObject: any) => {
     // À compléter plus tard
   }
-/* A supprimer définitivement dans une prochaine version
-  const calculateJauge = () => {
-    if(getGlobalProperties().duree_trou == 0) {
-      setGlobalProperty('jauge', Math.round((2 * getGlobalProperties().nbre_joueurs) * 18));
-    } else {
-      setGlobalProperty('jauge', Math.round((getGlobalProperties().tranche_duree / getGlobalProperties().duree_trou)) * getGlobalProperties().nbre_joueurs);
-    }
-  };
-*/
+  
   const setButtonState = (id: string, enabled: boolean) => {
     setButtonStates(prev => ({
       ...prev,

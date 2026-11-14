@@ -10,12 +10,12 @@
     "sdkVersion": "57.0.0",
     "ios": {
       "supportsTablet": false,
-      "buildNumber": "60"
+      "buildNumber": "61"
     },
     "android": {
       "predictiveBackGestureEnabled": false,
       "package": "com.mainault.agb_app_333",
-      "versionCode": 138
+      "versionCode": 139
     },
     "web": {
       "output": "static",

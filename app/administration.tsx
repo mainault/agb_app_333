@@ -1061,6 +1061,15 @@ export default function Administration() {
                   style={styles.flex}
                   contentContainerStyle={styles.listContent}
                 >
+                  <TouchableOpacity
+                    style={styles.categoryItem}
+                    disabled={busy}
+                    onPress={() => router.push('/membres-admin' as any)}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.categoryText}>Gestion des membres</Text>
+                    <Text style={styles.categoryChevron}>›</Text>
+                  </TouchableOpacity>
                   {ADMIN_CATEGORIES.map((category) => (
                     <TouchableOpacity
                       key={category.id}

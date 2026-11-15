@@ -138,7 +138,7 @@ export default function AdminMembers() {
         operationType: 'getMobileAdminMembers',
       });
       if (!Array.isArray(response.usersArray))
-        throw new Error('Liste des membres invalide.');
+        throw new Error('Liste des utilisateurs invalide.');
       if (alive.current) {
         setPeople(response.usersArray);
         setClubCode(response.codeClub ?? '');
@@ -315,24 +315,15 @@ export default function AdminMembers() {
     }
     const execute = () =>
       void run(async () => {
-        const timingStart = Date.now();
-        const debugTraceId =
-          'member_' +
-          timingStart.toString(36) +
-          '_' +
-          Math.random().toString(36).slice(2, 8);
         let accepted = false;
         try {
           const response = await sendAdminRequest<{
             member: Member;
             committed: boolean;
             emailRenew: string;
-            serverTiming?: Record<string, number>;
-            debugTraceId?: string;
           }>({
             ...context,
             operationType: 'saveMobileAdminMember',
-            debugTraceId,
             CRUD: creating ? 'create' : 'modify',
             licenceOrigine: original?.licence ?? '',
             ...Object.fromEntries(KEYS.map((key) => [key, fields[key] ?? ''])),
@@ -351,7 +342,6 @@ export default function AdminMembers() {
           let mailWarning = '';
           // Même diffusion de renouvellement que le formulaire web, après succès seulement.
           if (response.emailRenew !== '0') {
-            const mailStart = Date.now();
             try {
               await sendAdminRequest({
                 ...context,
@@ -360,31 +350,37 @@ export default function AdminMembers() {
             } catch {
               mailWarning =
                 ' L’envoi des emails de renouvellement n’a pas pu être confirmé. Vérifiez le journal avant de relancer une diffusion.';
-            } finally {
             }
           }
           if (!alive.current) return;
-          setPeople((previous) =>
-            [
-              ...previous.filter(
-                (person) =>
-                  person.licence !== original?.licence &&
-                  person.licence !== response.member.licence,
-              ),
-              {
-                licence: response.member.licence,
-                nom: response.member.nom,
-                prenom: response.member.prenom,
-                whs_index: response.member.whs_index,
-                actif: response.member.actif,
-              },
-            ].sort((left, right) =>
-              (left.nom + left.prenom).localeCompare(
-                right.nom + right.prenom,
-                'fr',
-              ),
-            ),
-          );
+          // Remplacer la fiche à sa position actuelle, sans retrier toute la liste.
+          // En création, ajouter la nouvelle fiche en fin de liste.
+          setPeople((previous) => {
+            const updated: Person = {
+              licence: response.member.licence,
+              nom: response.member.nom,
+              prenom: response.member.prenom,
+              whs_index: response.member.whs_index,
+              actif: response.member.actif,
+            };
+            const next: Person[] = [];
+            let inserted = false;
+            for (const person of previous) {
+              if (
+                person.licence === original?.licence ||
+                person.licence === updated.licence
+              ) {
+                if (!inserted) {
+                  next.push(updated);
+                  inserted = true;
+                }
+              } else {
+                next.push(person);
+              }
+            }
+            if (!inserted) next.push(updated);
+            return next;
+          });
           setNotice('Fiche membre enregistrée.');
           if (mailWarning) setError('La fiche est enregistrée.' + mailWarning);
         } catch (exception) {
@@ -529,7 +525,7 @@ export default function AdminMembers() {
             <Ionicons name="arrow-back" size={21} color="#123f6b" />
             <Text style={s.backText}>Retour à l’administration</Text>
           </TouchableOpacity>
-          <Text style={s.title}>Gestion des membres</Text>
+          <Text style={s.title}>Gestion des utilisateurs</Text>
           {loaded && (
             <>
               <View style={s.modeRow} accessibilityRole="radiogroup">

@@ -1067,7 +1067,7 @@ export default function Administration() {
                     onPress={() => router.push('/membres-admin' as any)}
                     accessibilityRole="button"
                   >
-                    <Text style={styles.categoryText}>Gestion des membres</Text>
+                    <Text style={styles.categoryText}>Gestion des utilisateurs</Text>
                     <Text style={styles.categoryChevron}>›</Text>
                   </TouchableOpacity>
                   {ADMIN_CATEGORIES.map((category) => (

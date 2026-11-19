@@ -816,6 +816,16 @@ const ResaScreen = () => {
     const dropdownKey = getDropdownKey(index);
     const isDisabled = disabledDropdowns[dropdownKey] && !(menuEquipeIncomplete && index === 0);
 
+    const registeredMembers = getTeamMembersFromCompetition();
+    const captainLicence = String(registeredMembers[0]?.licence ?? '');
+    const canClearPlayer = index > 0
+      && Boolean(value)
+      && !isDisabled
+      && !menuEquipeIncomplete
+      && String(formule ?? '').includes('Scramble')
+      && captainLicence !== ''
+      && String(getGlobalJsonObject().licence ?? '') === captainLicence;
+
     const getSelectedLabel = () => {
       if (menuEquipeIncomplete && index === 0) {
         if (!value) return "Sélectionnez une équipe";
@@ -855,6 +865,18 @@ const ResaScreen = () => {
             {getSelectedLabel()}
           </Text>
         </TouchableOpacity>
+          {canClearPlayer && (
+            <TouchableOpacity
+              style={styles.clearPlayerButton}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Retirer le joueur ${index + 1} de la sélection`}
+              accessibilityHint="Le retrait sera enregistré après validation de l’équipe."
+              onPress={() => handleDropDownChange(index, null)}
+            >
+              <Text style={styles.clearPlayerText}>×</Text>
+            </TouchableOpacity>
+          )}
       </View>
     );
   });
@@ -1061,7 +1083,10 @@ const ResaScreen = () => {
           break;
         }
 
-        if (getGlobalProperties().sous_menu === "desinscription") {
+        if (
+          jsonObject.action === "removeTeam"
+          || getGlobalProperties().sous_menu === "desinscription"
+        ) {
           router.replace("/");
           break;
         }
@@ -1932,7 +1957,7 @@ const ResaScreen = () => {
       mailAction = "Confirmation inscription compétition";
     }
     let _tranche = jsonObject.tranche.substring(jsonObject.tranche.indexOf(">") + 1, jsonObject.tranche.indexOf("</"));
-    if (jsonObject.removedMembers.length > 0) {
+    if ((jsonObject.removedMembers || []).length > 0) {
       const removedMembersRemoveData = {
           operationType: "sendTeamResaMailRemoveMember",
           action: "removeUser",
@@ -2255,33 +2280,84 @@ const ResaScreen = () => {
     repasDataState,
   ]);
 
-  // Gestion de la désinscription d'une RESA
+  // Le départ du capitaine supprime toute l’équipe, comme sur le Web.
   const handleRemove = async () => {
+    const context = getGlobalJsonObject();
+    const properties = getGlobalProperties();
+    const members = Array.isArray(properties.members) ? properties.members : [];
+    const connectedLicence = String(context.licence ?? '');
+    const captainLicence = String(members[0]?.licence ?? '');
+    const removeWholeTeam = String(context.formule ?? '').includes('Scramble')
+      && captainLicence !== ''
+      && connectedLicence === captainLicence;
 
-    const confirmed = await showAlert("Confirmation", "Êtes-vous sûr de vouloir vous désinscrire ?", {
+    // Utiliser la position enregistrée, pas une tranche modifiée à l’écran.
+    const savedTeam = getGlobalTeamLeader().globalTeamLeaderObject;
+    const savedTranche = savedTeam?.tranche?.id;
+    const savedPeriode = extractPeriodeFromHtml(
+      String(savedTeam?.position?.title ?? '')
+    );
+
+    if (removeWholeTeam && (!savedTranche || !savedPeriode)) {
+      await showAlert(
+        'Gestion des erreurs',
+        'La position enregistrée de l’équipe est indisponible. Revenez à l’accueil puis rouvrez la réservation avant de supprimer l’équipe.'
+      );
+      return;
+    }
+
+    const confirmed = await showAlert(
+      'Confirmation',
+      removeWholeTeam
+        ? 'Vous êtes le capitaine. Votre désinscription entraînera celle de tous les joueurs de l’équipe. Continuer ?'
+        : 'Êtes-vous sûr de vouloir vous désinscrire ?',
+      {
         buttons: [
-          { text: "Non", onPress: () => false, style: 'cancel' },
-          { text: "Oui", onPress: () => true },
+          { text: 'Non', onPress: () => false, style: 'cancel' },
+          { text: 'Oui', onPress: () => true },
         ],
       }
     );
-    if (!confirmed) {
+    if (!confirmed) return;
+
+    if (removeWholeTeam) {
+      const data = {
+        operationType: 'setMassResaTeam',
+        createTeam: 'NO',
+        teamResa: 'YES',
+        action: 'removeTeam',
+        nbrOfPlayers: members.length,
+        isMobile: '1',
+        support,
+        jauge: properties.jauge,
+        updateTeam: 'OK',
+        nom_competition: context.nom_competition,
+        teamLeader: properties.teamLeaderNomPrenom,
+        teamLeaderLicence: captainLicence,
+        tranche: String(savedTranche),
+        periode: savedPeriode,
+        isEclectic: context.isEclectic,
+        initialNbrPlayers: members.length,
+        nbrScramblePlayers: properties.nbrScramblePlayers,
+      };
+      await fetchDataFromServer(data);
       return;
     }
+
     const data = {
       operationType: 'removeResaUser',
-      action: "removeUser",
-      nom_competition: getGlobalJsonObject().nom_competition,
-      licence: getGlobalJsonObject().licence,
+      action: 'removeUser',
+      nom_competition: context.nom_competition,
+      licence: context.licence,
       sendMail: true,
-      isEclectic: getGlobalJsonObject().isEclectic,
+      isEclectic: context.isEclectic,
       isMobile: '1',
       support,
       menu: params.parentMenuName,
-      sous_menu: "Désinscription - User",
-      repere: selectedRepere
+      sous_menu: 'Désinscription - User',
+      repere: selectedRepere,
     };
-    fetchDataFromServer(data);
+    await fetchDataFromServer(data);
   };
 
   const handleCancel = () => {
@@ -2896,6 +2972,18 @@ const styles = StyleSheet.create({
     flex: 4,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  clearPlayerButton: {
+    width: 24,
+    minHeight: 44,
+    marginLeft: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearPlayerText: {
+    color: '#b42318',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   selectedDropdownLabel: {
     color: '#099237ff',

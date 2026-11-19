@@ -62,12 +62,12 @@ const KEYS = [
   'pays',
   'mobile',
 ];
-const fingerprint = (member: Member) =>
-  JSON.stringify(KEYS.map((key) => member[key] ?? ''));
+const fingerprint = (member: Member) => JSON.stringify(KEYS.map((key) => member[key] ?? ''));
 const normalize = (value: string) =>
   value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+
     .toLocaleLowerCase('fr');
 const blank = (): Member => ({
   ...Object.fromEntries(KEYS.map((key) => [key, ''])),
@@ -100,14 +100,8 @@ export default function AdminMembers() {
   const [uncertain, setUncertain] = useState(false);
   const pending = useRef(false);
   const alive = useRef(true);
-  const dirty =
-    !!member &&
-    !deleting &&
-    (creating || fingerprint(member) !== fingerprint(original ?? {}));
-  const context = {
-    isMobile: '1',
-    support: Platform.OS === 'ios' ? 'APP_IOS' : 'APP_ANDROID',
-  };
+  const dirty = !!member && !deleting && (creating || fingerprint(member) !== fingerprint(original ?? {}));
+  const context = {isMobile: '1', support: Platform.OS === 'ios' ? 'APP_IOS' : 'APP_ANDROID', };
   const run = async (work: () => Promise<void>) => {
     if (pending.current) return;
     pending.current = true;

@@ -584,10 +584,10 @@ const ResaScreen = () => {
       }
       else if (isTeamIncomplete && isTeamLeader) {
         dropdowns = {
-          dropdown_1: true,  // Toujours désactivée (team leader)
-          dropdown_2: dropdowns.dropdown_2 === true && (getGlobalProperties().formule.includes("2") && getGlobalProperties().members.length < 2)  ? false : true,
-          dropdown_3: dropdowns.dropdown_3 === false && (getGlobalProperties().formule.includes("3") && getGlobalProperties().members.length < 3)  ? false : true,
-          dropdown_4: dropdowns.dropdown_4 === false && (getGlobalProperties().formule.includes("4") && getGlobalProperties().members.length < 4)  ? false : true,
+          dropdown_1: true,
+          dropdown_2: false,
+          dropdown_3: maxPlayers >= 3 ? false : true,
+          dropdown_4: maxPlayers >= 4 ? false : true,
         };
       }
       else if (isTeamLeader) {
@@ -799,7 +799,7 @@ const ResaScreen = () => {
   // Fonction pour filtrer les items
   const filterItems = (text: string) => {
     setSearchText(text);
-    if (!activeDropdownIndex) return;
+    if (activeDropdownIndex === null) return;
 
     const dropdownItems = getDropdownData(activeDropdownIndex);
     if (text.trim() === '') {
@@ -867,7 +867,7 @@ const ResaScreen = () => {
   }, [viewportHeight, contentHeight]);
 
   // Modal pour les dropdowns
-  const DropdownModal = () => {
+  const renderDropdownModal = () => {
     if (!dropdownModalVisible || activeDropdownIndex === null) return null;
       return (
         <Modal
@@ -875,6 +875,7 @@ const ResaScreen = () => {
           transparent={true}
           animationType="slide"
           onRequestClose={closeDropdownModal}
+          onShow={() => searchInputRef.current?.focus()}
         >
           <TouchableWithoutFeedback onPress={closeDropdownModal}>
             <View style={styles.modalOverlay}>
@@ -889,6 +890,7 @@ const ResaScreen = () => {
                     autoFocus={false}
                   />
                   <FlatList
+                    keyboardShouldPersistTaps="handled"
                     data={filteredItems}
                     keyExtractor={(item, idx) => idx.toString()}
                     renderItem={({ item }) => (
@@ -2594,7 +2596,7 @@ const ResaScreen = () => {
                 );
               })}
             </View>
-              <DropdownModal />
+              {renderDropdownModal()}
               <View style={styles.tranchesContainer}>
                 {tranches.map((tranche) => (
                   <View
